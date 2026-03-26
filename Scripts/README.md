@@ -10,3 +10,7 @@ setup.sh
 
 ## pynq_z2
 
+
+## test
+
+测试脚本
