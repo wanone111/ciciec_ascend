@@ -5,44 +5,13 @@
     ],
     "flow": "system",
     "platform_allowlist": [
-        "zcu104",
-        "vck190",
-        "u200",
-        "aws-vu9p-f1"
+        "vck190"
     ],
     "platform_blocklist": [
         "u280",
         "u250"
     ],
     "platform_properties": {
-        "u200": {
-            "host": {
-                "compiler": {
-                    "includepaths": [
-                        "$(OPENCV_INCLUDE)"
-                    ]
-                },
-                "linker": {
-                    "librarypaths": [
-                        "$(OPENCV_LIB)"
-                    ]
-                }
-            }
-        },
-        "aws-vu9p-f1": {
-            "host": {
-                "compiler": {
-                    "includepaths": [
-                        "$(OPENCV_INCLUDE)"
-                    ]
-                },
-                "linker": {
-                    "librarypaths": [
-                        "$(OPENCV_LIB)"
-                    ]
-                }
-            }
-        },
         "vck190": {
             "host": {
                 "compiler": {
@@ -55,22 +24,6 @@
                     "librarypaths": [
                         "$(SYSROOT)/usr/lib",
                         "${SYSROOT}/lib"
-                    ]
-                }
-            }
-        },
-        "zcu104": {
-            "host": {
-                "compiler": {
-                    "includepaths": [
-                        "$(SYSROOT)/usr/include",
-                        "$(SYSROOT)/usr/include/opencv4"
-                    ]
-                },
-                "linker": {
-                    "librarypaths": [
-                        "$(SYSROOT)/usr/lib",
-                        "${SYSROOT}lib"
                     ]
                 }
             }

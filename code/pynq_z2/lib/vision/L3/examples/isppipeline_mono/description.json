@@ -5,9 +5,7 @@
     ],
     "flow": "system",
     "platform_allowlist": [
-        "zcu104",
         "vck190",
-        "zcu102",
         "u50"
     ],
     "platform_blocklist": [
@@ -25,45 +23,6 @@
                 "linker": {
                     "librarypaths": [
                         "$(OPENCV_LIB)"
-                    ]
-                }
-            }
-        },
-        "zcu102": {
-            "host": {
-                "compiler": {
-                    "includepaths": [
-                        "$(SYSROOT)/usr/include",
-                        "$(SYSROOT)/usr/include/opencv4"
-                    ]
-                },
-                "linker": {
-                    "librarypaths": [
-                        "$(SYSROOT)/usr/lib",
-                        "${SYSROOT}/opt/xilinx/xrt/lib"
-                    ]
-                }
-            },
-            "v++": {
-                "linker": {
-                    "ldclflags": [
-                        "--vivado.impl.strategies Performance_Explore"
-                    ]
-                }
-            }
-        },
-        "zcu104": {
-            "host": {
-                "compiler": {
-                    "includepaths": [
-                        "$(SYSROOT)/usr/include",
-                        "$(SYSROOT)/usr/include/opencv4"
-                    ]
-                },
-                "linker": {
-                    "librarypaths": [
-                        "$(SYSROOT)/usr/lib",
-                        "${SYSROOT}/opt/xilinx/xrt/lib"
                     ]
                 }
             }

@@ -1,5 +1,5 @@
 # Copyright (C) 2019-2022, Xilinx, Inc.
-# Copyright (C) 2022-2025, Advanced Micro Devices, Inc.
+# Copyright (C) 2022-2026, Advanced Micro Devices, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ ifeq ($(PLATFORM),)
 PLATFORM := $(DEVICE)
 endif
 ifeq ($(PLATFORM),)
-PLATFORM := u200
+PLATFORM := vck190
 endif
 
 # add warnning for sw_emu
@@ -65,8 +65,8 @@ ifeq ($(TARGET),sw_emu)
 $(error Error: The sw_emu target is no longer supported starting from 2025.1.)
 endif
 # #################### Checking if PLATFORM in whitelist ############################
-PLATFORM_ALLOWLIST += u200 aws-vu9p-f1
-PLATFORM_BLOCKLIST += vck190 u280 u250 zcu104
+PLATFORM_ALLOWLIST += vck190
+PLATFORM_BLOCKLIST += u280 u250 zcu104
 
 include ./utils.mk
 TEMP_DIR := _x_temp.$(TARGET).$(PLATFORM_NAME)
@@ -102,11 +102,11 @@ VPP_FLAGS += $(EXTRA_VPP_FLAGS)
 ########################## Setting up Host Variables ##########################
 
 #Inclue Required Host Source Files
-ifneq (,$(shell echo $(XPLATFORM) | awk '/u200/'))
+ifneq (,$(shell echo $(XPLATFORM) | awk '/vck190/'))
 HOST_SRCS += $(XFLIB_DIR)/L2/examples/ispstats/xf_ispstats_tb.cpp $(XFLIB_DIR)/ext/xcl2/xcl2.cpp 
-CXXFLAGS +=  -I $(OPENCV_INCLUDE) -I $(XFLIB_DIR)/L2/tests/ispstats/ispstats_NPPC1_16UC1_16UC1_ISPSTATS_BAYER -I $(XFLIB_DIR)/ext/xcl2/ -I $(XFLIB_DIR)/L1/include
+CXXFLAGS +=  -I $(SYSROOT)/usr/include -I $(SYSROOT)/usr/include/opencv4 -I $(XFLIB_DIR)/L2/tests/ispstats/ispstats_NPPC1_16UC1_16UC1_ISPSTATS_BAYER -I $(XFLIB_DIR)/ext/xcl2/ -I $(XFLIB_DIR)/L1/include
 CXXFLAGS += -O3 -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include
-LDFLAGS +=  -L $(OPENCV_LIB)
+LDFLAGS +=  -L $(SYSROOT)/usr/lib -L ${SYSROOT}/lib
 LDFLAGS +=  -l opencv_videoio -l opencv_imgcodecs -l opencv_core -l opencv_imgproc -l opencv_features2d -l opencv_flann -l opencv_video -l opencv_calib3d -l opencv_highgui
 
 else 

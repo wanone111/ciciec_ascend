@@ -5,8 +5,7 @@
     ],
     "flow": "system",
     "platform_allowlist": [
-        "zcu104",
-        "u200"
+        "vck190"
     ],
     "platform_blocklist": [
         "u280",
@@ -14,21 +13,7 @@
         "u50"
     ],
     "platform_properties": {
-        "u200": {
-            "host": {
-                "compiler": {
-                    "includepaths": [
-                        "$(OPENCV_INCLUDE)"
-                    ]
-                },
-                "linker": {
-                    "librarypaths": [
-                        "$(OPENCV_LIB)"
-                    ]
-                }
-            }
-        },
-        "zcu104": {
+        "vck190": {
             "host": {
                 "compiler": {
                     "includepaths": [
@@ -39,7 +24,7 @@
                 "linker": {
                     "librarypaths": [
                         "$(SYSROOT)/usr/lib",
-                        "${SYSROOT}/opt/xilinx/xrt/lib"
+                        "${SYSROOT}/lib"
                     ]
                 }
             }

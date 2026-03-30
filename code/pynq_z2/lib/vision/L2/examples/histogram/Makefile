@@ -1,5 +1,5 @@
 # Copyright (C) 2019-2022, Xilinx, Inc.
-# Copyright (C) 2022-2025, Advanced Micro Devices, Inc.
+# Copyright (C) 2022-2026, Advanced Micro Devices, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ ifeq ($(PLATFORM),)
 PLATFORM := $(DEVICE)
 endif
 ifeq ($(PLATFORM),)
-PLATFORM := zcu104
+PLATFORM := vck190
 endif
 
 # add warnning for sw_emu
@@ -65,7 +65,7 @@ ifeq ($(TARGET),sw_emu)
 $(error Error: The sw_emu target is no longer supported starting from 2025.1.)
 endif
 # #################### Checking if PLATFORM in whitelist ############################
-PLATFORM_ALLOWLIST += zcu104 vck190 u200 aws-vu9p-f1
+PLATFORM_ALLOWLIST += vck190 u200
 PLATFORM_BLOCKLIST += u280 u250
 
 include ./utils.mk
@@ -107,20 +107,6 @@ HOST_SRCS += $(XFLIB_DIR)/L2/examples/histogram/xf_histogram_tb.cpp $(XFLIB_DIR)
 CXXFLAGS +=  -I $(OPENCV_INCLUDE) -I $(XFLIB_DIR)/L2/examples/histogram/config -I $(XFLIB_DIR)/ext/xcl2/ -I $(XFLIB_DIR)/L1/include
 CXXFLAGS += -O3 -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include
 LDFLAGS +=  -L $(OPENCV_LIB)
-LDFLAGS +=  -l opencv_videoio -l opencv_imgcodecs -l opencv_core -l opencv_imgproc -l opencv_features2d -l opencv_flann -l opencv_video -l opencv_calib3d -l opencv_highgui
-
-else ifneq (,$(shell echo $(XPLATFORM) | awk '/aws-vu9p-f1/'))
-HOST_SRCS += $(XFLIB_DIR)/L2/examples/histogram/xf_histogram_tb.cpp $(XFLIB_DIR)/ext/xcl2/xcl2.cpp 
-CXXFLAGS +=  -I $(OPENCV_INCLUDE) -I $(XFLIB_DIR)/L2/examples/histogram/config -I $(XFLIB_DIR)/ext/xcl2/ -I $(XFLIB_DIR)/L1/include
-CXXFLAGS += -O3 -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include
-LDFLAGS +=  -L $(OPENCV_LIB)
-LDFLAGS +=  -l opencv_videoio -l opencv_imgcodecs -l opencv_core -l opencv_imgproc -l opencv_features2d -l opencv_flann -l opencv_video -l opencv_calib3d -l opencv_highgui
-
-else ifneq (,$(shell echo $(XPLATFORM) | awk '/zcu104/'))
-HOST_SRCS += $(XFLIB_DIR)/L2/examples/histogram/xf_histogram_tb.cpp $(XFLIB_DIR)/ext/xcl2/xcl2.cpp 
-CXXFLAGS +=  -I $(SYSROOT)/usr/include -I $(SYSROOT)/usr/include/opencv4 -I $(XFLIB_DIR)/L2/examples/histogram/config -I $(XFLIB_DIR)/ext/xcl2/ -I $(XFLIB_DIR)/L1/include
-CXXFLAGS += -O3 -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include -I$(XILINX_HLS)/include
-LDFLAGS +=  -L $(SYSROOT)/usr/lib -L ${SYSROOT}/lib
 LDFLAGS +=  -l opencv_videoio -l opencv_imgcodecs -l opencv_core -l opencv_imgproc -l opencv_features2d -l opencv_flann -l opencv_video -l opencv_calib3d -l opencv_highgui
 
 else ifneq (,$(shell echo $(XPLATFORM) | awk '/vck190/'))
@@ -165,15 +151,6 @@ endif
 VPP_FLAGS +=  -I $(XFLIB_DIR)/L2/examples/histogram/config -I $(XFLIB_DIR)/L1/include/
 
 ######################### binary container global settings ##########################
-ifneq (,$(shell echo $(XPLATFORM) | awk '/zcu104/'))
-VPP_FLAGS_histogram_accel += --hls.clock 200000000:histogram_accel
-ifneq ($(HOST_ARCH_temp), x86)
-VPP_LDFLAGS_krnl_histogram += --clock.defaultFreqHz 200000000
-else
-VPP_LDFLAGS_krnl_histogram += --kernel_frequency 200
-endif
-
-else 
 VPP_FLAGS_histogram_accel += --hls.clock 300000000:histogram_accel
 ifneq ($(HOST_ARCH_temp), x86)
 VPP_LDFLAGS_krnl_histogram += --clock.defaultFreqHz 300000000
@@ -181,7 +158,6 @@ else
 VPP_LDFLAGS_krnl_histogram += --kernel_frequency 300
 endif
 
-endif
 ifneq ($(PACKAGE_NEEDED), on)
 BINARY_CONTAINERS += $(BUILD_DIR)/krnl_histogram.xclbin
 else
