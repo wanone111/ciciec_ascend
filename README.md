@@ -18,6 +18,7 @@ AIPP固化：在模型转换阶段，编写AIPP配置文件，将减均值、归
 
 wsl Ubuntu22.04
 conda
+opencv 4.4.0
 vitis 2025.2
 下载完成之后
 执行/opt/Xilinx/2025.2.1/Vitis/scripts/installLibs.sh
