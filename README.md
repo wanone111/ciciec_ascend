@@ -17,7 +17,7 @@ AIPP固化：在模型转换阶段，编写AIPP配置文件，将减均值、归
 ## 开发环境以及工具
 
 wsl Ubuntu22.04
-conda 
+conda
 vitis 2025.2
 下载完成之后
 执行/opt/Xilinx/2025.2.1/Vitis/scripts/installLibs.sh
@@ -36,4 +36,3 @@ PYNQ+310B
 
 高鲁棒
 310B
-
