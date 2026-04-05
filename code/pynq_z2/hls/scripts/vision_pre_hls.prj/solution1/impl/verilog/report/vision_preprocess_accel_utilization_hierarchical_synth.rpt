@@ -1,0 +1,55 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+--------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2.1 (lin64) Build 6403652 Thu Mar 19 13:47:00 MDT 2026
+| Date         : Sun Apr  5 15:36:58 2026
+| Host         : rog running 64-bit Ubuntu 22.04.5 LTS
+| Command      : report_utilization -hierarchical -hierarchical_depth 6 -file ./report/vision_preprocess_accel_utilization_hierarchical_synth.rpt
+| Design       : bd_0_wrapper
+| Device       : xc7z020clg400-1
+| Speed File   : -1
+| Design State : Synthesized
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-----------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+|                                         Instance                                        |                                                  Module                                                  | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
++-----------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+| bd_0_wrapper                                                                            |                                                                                                    (top) |       2608 |       2256 |       0 |  352 | 3668 |      0 |      1 |         11 |
+|   bd_0_i                                                                                |                                                                                                     bd_0 |       2608 |       2256 |       0 |  352 | 3668 |      0 |      1 |         11 |
+|     hls_inst                                                                            |                                                                                          bd_0_hls_inst_0 |       2608 |       2256 |       0 |  352 | 3668 |      0 |      1 |         11 |
+|       inst                                                                              |                                                                  bd_0_hls_inst_0_vision_preprocess_accel |       2608 |       2256 |       0 |  352 | 3668 |      0 |      1 |         11 |
+|         (inst)                                                                          |                                                                  bd_0_hls_inst_0_vision_preprocess_accel |        285 |        284 |       0 |    1 |  641 |      0 |      0 |          0 |
+|         control_s_axi_U                                                                 |                                                    bd_0_hls_inst_0_vision_preprocess_accel_control_s_axi |        372 |        372 |       0 |    0 |  382 |      0 |      0 |          0 |
+|         gmem0_m_axi_U                                                                   |                                                      bd_0_hls_inst_0_vision_preprocess_accel_gmem0_m_axi |        561 |        469 |       0 |   92 |  860 |      0 |      1 |          0 |
+|           bus_read                                                                      |                                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem0_m_axi_read |        369 |        369 |       0 |    0 |  623 |      0 |      0 |          0 |
+|             rreq_burst_conv                                                             |                                      bd_0_hls_inst_0_vision_preprocess_accel_gmem0_m_axi_burst_converter |        293 |        293 |       0 |    0 |  521 |      0 |      0 |          0 |
+|             rs_rdata                                                                    |                            bd_0_hls_inst_0_vision_preprocess_accel_gmem0_m_axi_reg_slice__parameterized0 |         40 |         40 |       0 |    0 |   71 |      0 |      0 |          0 |
+|           load_unit_0                                                                   |                                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem0_m_axi_load |        192 |        100 |       0 |   92 |  237 |      0 |      1 |          0 |
+|             (load_unit_0)                                                               |                                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem0_m_axi_load |          1 |          1 |       0 |    0 |   94 |      0 |      0 |          0 |
+|             fifo_rreq                                                                   |                                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem0_m_axi_fifo |        147 |         55 |       0 |   92 |  106 |      0 |      0 |          0 |
+|         gmem1_m_axi_U                                                                   |                                                      bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi |       1047 |        795 |       0 |  252 | 1338 |      0 |      0 |          0 |
+|           bus_write                                                                     |                                                bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_write |        511 |        448 |       0 |   63 |  828 |      0 |      0 |          0 |
+|             wreq_burst_conv                                                             |                                      bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_burst_converter |        301 |        301 |       0 |    0 |  529 |      0 |      0 |          0 |
+|             wreq_throttle                                                               |                                             bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_throttle |        183 |        121 |       0 |   62 |  276 |      0 |      0 |          0 |
+|           store_unit_0                                                                  |                                                bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_store |        536 |        347 |       0 |  189 |  510 |      0 |      0 |          0 |
+|             (store_unit_0)                                                              |                                                bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_store |         59 |         59 |       0 |    0 |  219 |      0 |      0 |          0 |
+|             buff_wdata                                                                  |                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_fifo__parameterized3 |         65 |         29 |       0 |   36 |   53 |      0 |      0 |          0 |
+|             bus_wide_gen.buff_wdata_in                                                  |                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_fifo__parameterized1 |         65 |         47 |       0 |   18 |   32 |      0 |      0 |          0 |
+|             bus_wide_gen.wreq_offset                                                    |                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_fifo__parameterized0 |         65 |         31 |       0 |   34 |   51 |      0 |      0 |          0 |
+|             conservative_gen.fifo_burst                                                 |                                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_fifo |         51 |         47 |       0 |    4 |   21 |      0 |      0 |          0 |
+|             fifo_wreq                                                                   |                                 bd_0_hls_inst_0_vision_preprocess_accel_gmem1_m_axi_fifo__parameterized2 |        201 |        105 |       0 |   96 |  107 |      0 |      0 |          0 |
+|         grp_vision_preprocess_accel_Pipeline_VITIS_LOOP_50_1_VITIS_LOOP_52_2_fu_177     | bd_0_hls_inst_0_vision_preprocess_accel_vision_preprocess_accel_Pipeline_VITIS_LOOP_50_1_VITIS_LOOP_52_2 |        238 |        231 |       0 |    7 |  413 |      0 |      0 |          7 |
+|           (grp_vision_preprocess_accel_Pipeline_VITIS_LOOP_50_1_VITIS_LOOP_52_2_fu_177) | bd_0_hls_inst_0_vision_preprocess_accel_vision_preprocess_accel_Pipeline_VITIS_LOOP_50_1_VITIS_LOOP_52_2 |        154 |        147 |       0 |    7 |  377 |      0 |      0 |          0 |
+|           mul_32ns_32s_62_2_1_U1                                                        |                                              bd_0_hls_inst_0_vision_preprocess_accel_mul_32ns_32s_62_2_1 |         78 |         78 |       0 |    0 |   34 |      0 |      0 |          4 |
+|         mul_31ns_31ns_62_2_1_U20                                                        |                                             bd_0_hls_inst_0_vision_preprocess_accel_mul_31ns_31ns_62_2_1 |        105 |        105 |       0 |    0 |   34 |      0 |      0 |          4 |
++-----------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+
+

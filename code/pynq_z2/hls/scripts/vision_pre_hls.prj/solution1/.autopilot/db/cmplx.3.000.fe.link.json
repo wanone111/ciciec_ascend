@@ -1,0 +1,22 @@
+{
+  "0": {
+    "basicblocks": 33,
+    "calls": "",
+    "control_depth": 1,
+    "def_use_depth": 4,
+    "file": "top.cpp",
+    "fileloc": 4,
+    "instructions": 223,
+    "loads": {
+      "L": 1,
+      "T": 1
+    },
+    "memory_accesses": 23,
+    "name": "vision_preprocess_accel",
+    "stores": {
+      "L": 2,
+      "T": 1
+    },
+    "total_instructions": 1167
+  }
+}

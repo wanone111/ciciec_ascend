@@ -2,7 +2,7 @@
 
 [AMD算子库](https://github.com/Xilinx/Vitis_Libraries)
 
-预处理部分包括
-卡尔曼滤波
-灰度
-二值化
+视频链路打通与分工方案见：
+
+- [fpga_video_pipeline_bringup_plan.md](./fpga_video_pipeline_bringup_plan.md)
+- [hls/README.md](./hls/README.md)

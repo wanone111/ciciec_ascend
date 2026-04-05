@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2025.2.1 (64-bit)
+# SW Build 6403652 on Thu Mar 19 13:47:00 MDT 2026
+# IP Build 6403511 on Thu Mar 19 12:41:45 MDT 2026
+# SharedData Build 6403650 on Thu Mar 19 14:02:13 MDT 2026
+# Start of session at: Sun Apr  5 15:36:04 2026
+# Process ID         : 28889
+# Current directory  : /home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1
+# Command line       : vivado -log bd_0_hls_inst_0.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source bd_0_hls_inst_0.tcl
+# Log file           : /home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/bd_0_hls_inst_0.vds
+# Journal file       : /home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/impl/verilog/project.runs/bd_0_hls_inst_0_synth_1/vivado.jou
+# Running On         : rog
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 22.04.5 LTS
+# Processor Detail   : Intel(R) Core(TM) i9-14900HX
+# CPU Frequency      : 2419.199 MHz
+# CPU Physical cores : 16
+# CPU Logical cores  : 32
+# Host memory        : 16563 MB
+# Swap memory        : 4294 MB
+# Total Virtual      : 20858 MB
+# Available Virtual  : 17233 MB
+#-----------------------------------------------------------
+source bd_0_hls_inst_0.tcl -notrace

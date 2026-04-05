@@ -1,0 +1,755 @@
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:2258:5: remark: Added loop label VITIS_LOOP_676_1:   [xilinx-label-all-loops]
+    for (unsigned i = low; i != high+1; ++i) {
+    ^
+    VITIS_LOOP_676_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:2258:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:2272:5: remark: Added loop label VITIS_LOOP_690_1:   [xilinx-label-all-loops]
+    for (unsigned i = low; i != high+1; ++i) {
+    ^
+    VITIS_LOOP_690_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:2272:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:2286:5: remark: Added loop label VITIS_LOOP_704_1:   [xilinx-label-all-loops]
+    for (unsigned i = low; i != high+1; ++i) {
+    ^
+    VITIS_LOOP_704_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:2286:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:5835:7: remark: Added loop label VITIS_LOOP_1251_1:   [xilinx-label-all-loops]
+      for (i = 0; i < __N - 1; ++i) {
+      ^
+      VITIS_LOOP_1251_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:5835:7: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51826:5: remark: Added loop label VITIS_LOOP_307_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_307_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51826:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51840:5: remark: Added loop label VITIS_LOOP_321_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_321_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51840:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51855:5: remark: Added loop label VITIS_LOOP_336_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_336_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51855:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51870:5: remark: Added loop label VITIS_LOOP_351_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_351_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51870:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51885:5: remark: Added loop label VITIS_LOOP_366_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_366_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51885:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51900:5: remark: Added loop label VITIS_LOOP_381_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_381_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51900:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51915:5: remark: Added loop label VITIS_LOOP_396_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_396_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51915:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51930:5: remark: Added loop label VITIS_LOOP_411_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_411_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51930:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51945:5: remark: Added loop label VITIS_LOOP_426_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < N; k++) {
+    ^
+    VITIS_LOOP_426_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:51945:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52022:9: remark: Added loop label VITIS_LOOP_511_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < (rows * ((cols + NPC - 1) >> xfNPixelsPerCycle<NPC>::datashift)); ++i) {
+        ^
+        VITIS_LOOP_511_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52022:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52230:5: remark: Added loop label VITIS_LOOP_719_1:   [xilinx-label-all-loops]
+    for (int r = 0; r < rows; r++) {
+    ^
+    VITIS_LOOP_719_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52230:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52231:9: remark: Added loop label VITIS_LOOP_720_2:   [xilinx-label-all-loops]
+        for (int c = 0; c < packcols; c++) {
+        ^
+        VITIS_LOOP_720_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52231:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52232:13: remark: Added loop label VITIS_LOOP_721_3:   [xilinx-label-all-loops]
+            for (int p = 0; p < nppc; p++) {
+            ^
+            VITIS_LOOP_721_3: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52232:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52234:17: remark: Added loop label VITIS_LOOP_723_4:   [xilinx-label-all-loops]
+                for (int ch = 0; ch < DataType<T, NPPC>::channel; ch++) {
+                ^
+                VITIS_LOOP_723_4: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52234:17: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52272:5: remark: Added loop label VITIS_LOOP_761_1:   [xilinx-label-all-loops]
+    for (int r = 0; r < rows; r++) {
+    ^
+    VITIS_LOOP_761_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52272:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52273:9: remark: Added loop label VITIS_LOOP_762_2:   [xilinx-label-all-loops]
+        for (int c = 0; c < cols; c++) {
+        ^
+        VITIS_LOOP_762_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52273:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52275:13: remark: Added loop label VITIS_LOOP_764_3:   [xilinx-label-all-loops]
+            for (int ch = 0; ch < DataType<T, NPPC>::channel; ch++) {
+            ^
+            VITIS_LOOP_764_3: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52275:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52276:17: remark: Added loop label VITIS_LOOP_765_4:   [xilinx-label-all-loops]
+                for (int b = 0; b < cv_nbytes; ++b) {
+                ^
+                VITIS_LOOP_765_4: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52276:17: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52330:5: remark: Added loop label VITIS_LOOP_819_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < rows; i++) {
+    ^
+    VITIS_LOOP_819_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52330:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52331:9: remark: Added loop label VITIS_LOOP_820_2:   [xilinx-label-all-loops]
+        for (int j = 0; j<cols>> (xfNPixelsPerCycle<NPPC>::datashift); j++) {
+        ^
+        VITIS_LOOP_820_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52331:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52339:13: remark: Added loop label VITIS_LOOP_828_3:   [xilinx-label-all-loops]
+            for (int k = 0; k < (1 << (xfNPixelsPerCycle<NPPC>::datashift)); k++) {
+            ^
+            VITIS_LOOP_828_3: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52339:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52524:13: remark: Added loop label VITIS_LOOP_1021_1:   [xilinx-label-all-loops]
+            for (c = 0; c < cols_addrbound; c++) {
+            ^
+            VITIS_LOOP_1021_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52524:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52932:13: remark: Added loop label VITIS_LOOP_1429_1:   [xilinx-label-all-loops]
+            for (int rowIdx = 0, offset = 0; rowIdx < rows; rowIdx++, offset += offset_1row) {
+            ^
+            VITIS_LOOP_1429_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52932:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52960:13: remark: Added loop label VITIS_LOOP_1457_1:   [xilinx-label-all-loops]
+            for (int rowIdx = 0, offset = 0; rowIdx < rows; rowIdx++, offset += offset_1row) {
+            ^
+            VITIS_LOOP_1457_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52960:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52990:13: remark: Added loop label VITIS_LOOP_1487_1:   [xilinx-label-all-loops]
+            for (int rowIdx = 0, offset = 0; rowIdx < rows; rowIdx++, offset += offset_1row) {
+            ^
+            VITIS_LOOP_1487_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:52990:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53020:13: remark: Added loop label VITIS_LOOP_1517_1:   [xilinx-label-all-loops]
+            for (int rowIdx = 0, offset = 0; rowIdx < rows; rowIdx++, offset += offset_1row) {
+            ^
+            VITIS_LOOP_1517_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53020:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53558:5: remark: Added loop label VITIS_LOOP_122_1:   [xilinx-label-all-loops]
+    for (i = 0; i < ROWS; i++) {
+    ^
+    VITIS_LOOP_122_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53558:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53562:9: remark: Added loop label VITIS_LOOP_126_2:   [xilinx-label-all-loops]
+        for (j = 0; j < COLS - 1; j++) {
+        ^
+        VITIS_LOOP_126_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53562:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53589:5: remark: Added loop label VITIS_LOOP_166_1:   [xilinx-label-all-loops]
+    for (i = 0; i < ROWS; i++) {
+    ^
+    VITIS_LOOP_166_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53589:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53593:9: remark: Added loop label VITIS_LOOP_170_2:   [xilinx-label-all-loops]
+        for (j = COLS - 1; j > 0; j--) {
+        ^
+        VITIS_LOOP_170_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53593:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53620:5: remark: Added loop label VITIS_LOOP_210_1:   [xilinx-label-all-loops]
+    for (i = 0; i < ROWS - 1; i++) {
+    ^
+    VITIS_LOOP_210_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53620:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53624:9: remark: Added loop label VITIS_LOOP_214_2:   [xilinx-label-all-loops]
+        for (j = 0; j < COLS; j++) {
+        ^
+        VITIS_LOOP_214_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53624:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53651:5: remark: Added loop label VITIS_LOOP_254_1:   [xilinx-label-all-loops]
+    for (i = ROWS - 1; i > 0; i--) {
+    ^
+    VITIS_LOOP_254_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53651:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53655:9: remark: Added loop label VITIS_LOOP_258_2:   [xilinx-label-all-loops]
+        for (j = 0; j < COLS; j++) {
+        ^
+        VITIS_LOOP_258_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53655:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53701:5: remark: Added loop label VITIS_LOOP_330_1:   [xilinx-label-all-loops]
+    for (j = 0; j < COLS; j++) {
+    ^
+    VITIS_LOOP_330_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53701:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53764:5: remark: Added loop label VITIS_LOOP_435_1:   [xilinx-label-all-loops]
+    for (i = 0; i < ROWS; i++) {
+    ^
+    VITIS_LOOP_435_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:53764:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54052:5: remark: Added loop label VITIS_LOOP_824_1:   [xilinx-label-all-loops]
+    for (i = ROWS - 1; i > 0; i--) {
+    ^
+    VITIS_LOOP_824_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54052:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54078:5: remark: Added loop label VITIS_LOOP_867_1:   [xilinx-label-all-loops]
+    for (i = 0; i < ROWS - 1; i++) {
+    ^
+    VITIS_LOOP_867_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54078:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54134:5: remark: Added loop label VITIS_LOOP_968_1:   [xilinx-label-all-loops]
+    for (i = 0; i < ROWS; i++) {
+    ^
+    VITIS_LOOP_968_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54134:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54230:5: remark: Added loop label VITIS_LOOP_39_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_39_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54230:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54249:5: remark: Added loop label VITIS_LOOP_58_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_58_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54249:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54277:5: remark: Added loop label VITIS_LOOP_86_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_86_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54277:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54310:5: remark: Added loop label VITIS_LOOP_119_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_119_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54310:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54344:5: remark: Added loop label VITIS_LOOP_153_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_153_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54344:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54372:5: remark: Added loop label VITIS_LOOP_181_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_181_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54372:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54396:5: remark: Added loop label VITIS_LOOP_205_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_205_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54396:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54419:5: remark: Added loop label VITIS_LOOP_228_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < loopcount; i++) {
+    ^
+    VITIS_LOOP_228_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54419:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54454:5: remark: Added loop label VITIS_LOOP_263_1:   [xilinx-label-all-loops]
+    for (uint16_t r = 0; r < K_ROWS; r++) {
+    ^
+    VITIS_LOOP_263_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54454:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54456:9: remark: Added loop label VITIS_LOOP_265_2:   [xilinx-label-all-loops]
+        for (uint16_t c = 0; c < K_COLS; c++) {
+        ^
+        VITIS_LOOP_265_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54456:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54516:5: remark: Added loop label VITIS_LOOP_325_1:   [xilinx-label-all-loops]
+    for (ap_int<9> i = 0; i < loopIter; i++) {
+    ^
+    VITIS_LOOP_325_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54516:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54588:5: remark: Added loop label VITIS_LOOP_397_1:   [xilinx-label-all-loops]
+    for (i = 0; i < 6; i++, ind++) {
+    ^
+    VITIS_LOOP_397_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54588:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54659:5: remark: Added loop label VITIS_LOOP_468_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < imheight; i++) {
+    ^
+    VITIS_LOOP_468_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54659:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54664:9: remark: Added loop label VITIS_LOOP_473_2:   [xilinx-label-all-loops]
+        for (int j = 0; j < (imwidth >> NPC); j++) {
+        ^
+        VITIS_LOOP_473_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54664:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54690:9: remark: Added loop label VITIS_LOOP_499_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < loop_count; i++) {
+        ^
+        VITIS_LOOP_499_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54690:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54796:9: remark: Added loop label VITIS_LOOP_623_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < loop_count; i++) {
+        ^
+        VITIS_LOOP_623_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54796:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54910:9: remark: Added loop label VITIS_LOOP_737_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < loop_count; i++) {
+        ^
+        VITIS_LOOP_737_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54910:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54942:9: remark: Added loop label VITIS_LOOP_788_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < loop_count; i++) {
+        ^
+        VITIS_LOOP_788_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:54942:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55052:5: remark: Added loop label VITIS_LOOP_60_1:   [xilinx-label-all-loops]
+    for (ap_uint<13> j = 0; j < col_loop_cnt; j++) {
+    ^
+    VITIS_LOOP_60_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55052:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55100:5: remark: Added loop label VITIS_LOOP_108_1:   [xilinx-label-all-loops]
+    for (int k = 0; k < cnt; k++) {
+    ^
+    VITIS_LOOP_108_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55100:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55333:5: remark: Added loop label VITIS_LOOP_127_1:   [xilinx-label-all-loops]
+    for (int k = 0, l = 0; k < StreamType<WORDWIDTH>::bitdepth; k += 8, l++) {
+    ^
+    VITIS_LOOP_127_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55333:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55353:5: remark: Added loop label VITIS_LOOP_147_1:   [xilinx-label-all-loops]
+    for (k = 0; k < (StreamType<WORDWIDTH>::bitdepth); k += 8) {
+    ^
+    VITIS_LOOP_147_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55353:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55376:5: remark: Added loop label VITIS_LOOP_170_1:   [xilinx-label-all-loops]
+    for (k = 0; k < (StreamType<WORDWIDTH>::bitdepth); k += STEP) {
+    ^
+    VITIS_LOOP_170_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55376:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55395:5: remark: Added loop label VITIS_LOOP_189_1:   [xilinx-label-all-loops]
+    for (k = 0; k < StreamType<WORDDEPTH>::bitdepth; k += 8) {
+    ^
+    VITIS_LOOP_189_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55395:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55413:5: remark: Added loop label VITIS_LOOP_207_1:   [xilinx-label-all-loops]
+    for (int k = 0, l = 0; k < (StreamType<WORDWIDTH>::bitdepth); k += 8, l++) {
+    ^
+    VITIS_LOOP_207_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55413:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55720:5: remark: Added loop label VITIS_LOOP_46_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < height; i++) {
+    ^
+    VITIS_LOOP_46_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55720:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55725:9: remark: Added loop label VITIS_LOOP_51_2:   [xilinx-label-all-loops]
+        for (int j = 0; j < width; j++) {
+        ^
+        VITIS_LOOP_51_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55725:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55784:9: remark: Added loop label VITIS_LOOP_110_1:   [xilinx-label-all-loops]
+        for (int k = 0; k < width; k++) {
+        ^
+        VITIS_LOOP_110_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55784:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55873:9: remark: Added loop label VITIS_LOOP_199_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_199_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55873:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55975:9: remark: Added loop label VITIS_LOOP_301_1:   [xilinx-label-all-loops]
+        for (int k = 0; k < width; k++) {
+        ^
+        VITIS_LOOP_301_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:55975:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:56067:9: remark: Added loop label VITIS_LOOP_393_1:   [xilinx-label-all-loops]
+        for (i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_393_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:56067:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:56262:9: remark: Added loop label VITIS_LOOP_588_1:   [xilinx-label-all-loops]
+        for (int j = 0; j < width; j++) {
+        ^
+        VITIS_LOOP_588_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:56262:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57054:5: remark: Added loop label VITIS_LOOP_43_1:   [xilinx-label-all-loops]
+    for (int i = 0; i < height; i++) {
+    ^
+    VITIS_LOOP_43_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57054:5: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57059:9: remark: Added loop label VITIS_LOOP_48_2:   [xilinx-label-all-loops]
+        for (int j = 0; j < (width >> xfNPixelsPerCycle<NPC>::datashift); j++) {
+        ^
+        VITIS_LOOP_48_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57059:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57122:13: remark: Added loop label VITIS_LOOP_111_1:   [xilinx-label-all-loops]
+            for (int l = 0; l<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; l++) {
+            ^
+            VITIS_LOOP_111_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57122:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57216:13: remark: Added loop label VITIS_LOOP_205_1:   [xilinx-label-all-loops]
+            for (l = 0; l<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; l++) {
+            ^
+            VITIS_LOOP_205_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57216:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57308:13: remark: Added loop label VITIS_LOOP_307_1:   [xilinx-label-all-loops]
+            for (int l = 0; l<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; l++) {
+            ^
+            VITIS_LOOP_307_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57308:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57386:13: remark: Added loop label VITIS_LOOP_385_1:   [xilinx-label-all-loops]
+            for (int l = 0; l<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; l++) {
+            ^
+            VITIS_LOOP_385_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57386:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57468:13: remark: Added loop label VITIS_LOOP_467_1:   [xilinx-label-all-loops]
+            for (int l = 0; l<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; l++) {
+            ^
+            VITIS_LOOP_467_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57468:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57547:13: remark: Added loop label VITIS_LOOP_546_1:   [xilinx-label-all-loops]
+            for (int l = 0; l<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; l++) {
+            ^
+            VITIS_LOOP_546_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57547:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57658:13: remark: Added loop label VITIS_LOOP_657_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_657_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57658:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57761:13: remark: Added loop label VITIS_LOOP_760_1:   [xilinx-label-all-loops]
+            for (k = 0, l = 0; k < ((1 << xfNPixelsPerCycle<NPC>::datashift) >> 1); k++, l += 16) {
+            ^
+            VITIS_LOOP_760_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57761:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57834:13: remark: Added loop label VITIS_LOOP_833_1:   [xilinx-label-all-loops]
+            for (int k = 0, l = 0; k < (1 << (2)); k++, l += 16) {
+            ^
+            VITIS_LOOP_833_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57834:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57854:9: remark: Added loop label VITIS_LOOP_853_2:   [xilinx-label-all-loops]
+        for (int j = 0; j < (_u_image.cols >> xfNPixelsPerCycle<NPC>::datashift); j++) {
+        ^
+        VITIS_LOOP_853_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57854:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57914:13: remark: Added loop label VITIS_LOOP_913_1:   [xilinx-label-all-loops]
+            for (int k = 0, l = 0; k < (1 << (xfNPixelsPerCycle<NPC>::datashift)); k += 4, l += 16) {
+            ^
+            VITIS_LOOP_913_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57914:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57996:13: remark: Added loop label VITIS_LOOP_995_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_995_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:57996:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58118:13: remark: Added loop label VITIS_LOOP_1124_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_1124_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58118:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58221:13: remark: Added loop label VITIS_LOOP_1234_1:   [xilinx-label-all-loops]
+            for (int k = 0, l = 0; k < (1 << (xfNPixelsPerCycle<NPC>::datashift)); k += 2, l += 16) {
+            ^
+            VITIS_LOOP_1234_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58221:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58234:9: remark: Added loop label VITIS_LOOP_1247_2:   [xilinx-label-all-loops]
+        for (j = 0; j < (width >> xfNPixelsPerCycle<NPC>::datashift); j++) {
+        ^
+        VITIS_LOOP_1247_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58234:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58293:13: remark: Added loop label VITIS_LOOP_1306_1:   [xilinx-label-all-loops]
+            for (k = 0, l = 0; k < (1 << (xfNPixelsPerCycle<NPC>::datashift)); k += 4, l += 16) {
+            ^
+            VITIS_LOOP_1306_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58293:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58374:13: remark: Added loop label VITIS_LOOP_1530_1:   [xilinx-label-all-loops]
+            for (k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_1530_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58374:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58495:13: remark: Added loop label VITIS_LOOP_1658_1:   [xilinx-label-all-loops]
+            for (k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_1658_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58495:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58586:13: remark: Added loop label VITIS_LOOP_1784_1:   [xilinx-label-all-loops]
+            for (k = 0, l = 0; k < (1 << (xfNPixelsPerCycle<NPC>::datashift)); k += 2, l += 16) {
+            ^
+            VITIS_LOOP_1784_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58586:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58601:9: remark: Added loop label VITIS_LOOP_1799_2:   [xilinx-label-all-loops]
+        for (j = 0; j < (width >> xfNPixelsPerCycle<NPC>::datashift); j++) {
+        ^
+        VITIS_LOOP_1799_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58601:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58652:13: remark: Added loop label VITIS_LOOP_1850_1:   [xilinx-label-all-loops]
+            for (int k = 0; k < (xfNPixelsPerCycle<NPC>::nppc >> 1); k++) {
+            ^
+            VITIS_LOOP_1850_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58652:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58744:13: remark: Added loop label VITIS_LOOP_1942_1:   [xilinx-label-all-loops]
+            for (int k = 0; k < (xfNPixelsPerCycle<NPC>::nppc >> 1); k++) {
+            ^
+            VITIS_LOOP_1942_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58744:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58829:13: remark: Added loop label VITIS_LOOP_2027_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1;
+            ^
+            VITIS_LOOP_2027_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58829:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58898:13: remark: Added loop label VITIS_LOOP_2096_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1;
+            ^
+            VITIS_LOOP_2096_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58898:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58969:13: remark: Added loop label VITIS_LOOP_2167_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_2167_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:58969:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59050:13: remark: Added loop label VITIS_LOOP_2248_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_2248_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59050:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59127:13: remark: Added loop label VITIS_LOOP_2325_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_2325_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59127:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59195:13: remark: Added loop label VITIS_LOOP_2393_1:   [xilinx-label-all-loops]
+            for (int k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_2393_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59195:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59260:13: remark: Added loop label VITIS_LOOP_2458_1:   [xilinx-label-all-loops]
+            for (k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_2458_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59260:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59340:13: remark: Added loop label VITIS_LOOP_2538_1:   [xilinx-label-all-loops]
+            for (k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_2538_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59340:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59420:13: remark: Added loop label VITIS_LOOP_2618_1:   [xilinx-label-all-loops]
+            for (k = 0; k<(1 << xfNPixelsPerCycle<NPC>::datashift)>> 1; k++) {
+            ^
+            VITIS_LOOP_2618_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:59420:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61164:13: remark: Added loop label VITIS_LOOP_4740_1:   [xilinx-label-all-loops]
+            for (k = 0; k < NPC; k++) {
+            ^
+            VITIS_LOOP_4740_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61164:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61325:9: remark: Added loop label VITIS_LOOP_4911_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_4911_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61325:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61468:9: remark: Added loop label VITIS_LOOP_5071_1:   [xilinx-label-all-loops]
+        for (int i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_5071_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61468:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61613:9: remark: Added loop label VITIS_LOOP_5233_1:   [xilinx-label-all-loops]
+        for (i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_5233_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61613:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61758:9: remark: Added loop label VITIS_LOOP_5395_1:   [xilinx-label-all-loops]
+        for (i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_5395_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61758:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61860:13: remark: Added loop label VITIS_LOOP_5514_1:   [xilinx-label-all-loops]
+            for (ap_uint<13> k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_5514_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61860:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61936:13: remark: Added loop label VITIS_LOOP_5590_1:   [xilinx-label-all-loops]
+            for (ap_uint<13> k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_5590_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:61936:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62009:13: remark: Added loop label VITIS_LOOP_5663_1:   [xilinx-label-all-loops]
+            for (int k = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++) {
+            ^
+            VITIS_LOOP_5663_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62009:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62086:13: remark: Added loop label VITIS_LOOP_5740_1:   [xilinx-label-all-loops]
+            for (int k = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++) {
+            ^
+            VITIS_LOOP_5740_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62086:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62170:13: remark: Added loop label VITIS_LOOP_5824_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_5824_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62170:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62260:13: remark: Added loop label VITIS_LOOP_5914_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_5914_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62260:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62336:13: remark: Added loop label VITIS_LOOP_5999_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_5999_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62336:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62421:13: remark: Added loop label VITIS_LOOP_6084_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6084_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62421:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62505:13: remark: Added loop label VITIS_LOOP_6168_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6168_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62505:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62586:13: remark: Added loop label VITIS_LOOP_6249_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6249_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62586:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62668:13: remark: Added loop label VITIS_LOOP_6331_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6331_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62668:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62748:13: remark: Added loop label VITIS_LOOP_6411_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6411_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62748:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62837:13: remark: Added loop label VITIS_LOOP_6500_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6500_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62837:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62970:13: remark: Added loop label VITIS_LOOP_6633_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6633_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:62970:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63100:13: remark: Added loop label VITIS_LOOP_6784_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6784_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63100:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63214:13: remark: Added loop label VITIS_LOOP_6898_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_6898_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63214:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63327:13: remark: Added loop label VITIS_LOOP_7011_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_7011_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63327:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63440:13: remark: Added loop label VITIS_LOOP_7124_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_7124_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63440:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63545:13: remark: Added loop label VITIS_LOOP_7237_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_7237_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63545:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63655:13: remark: Added loop label VITIS_LOOP_7363_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_7363_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63655:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63744:13: remark: Added loop label VITIS_LOOP_7461_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_7461_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63744:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63836:13: remark: Added loop label VITIS_LOOP_7562_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_7562_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63836:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63855:9: remark: Added loop label VITIS_LOOP_7581_2:   [xilinx-label-all-loops]
+        for (int i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_7581_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63855:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63944:13: remark: Added loop label VITIS_LOOP_7685_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_7685_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63944:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63963:9: remark: Added loop label VITIS_LOOP_7704_2:   [xilinx-label-all-loops]
+        for (int i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_7704_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:63963:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64051:13: remark: Added loop label VITIS_LOOP_7807_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_7807_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64051:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64070:9: remark: Added loop label VITIS_LOOP_7826_2:   [xilinx-label-all-loops]
+        for (int i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_7826_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64070:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64158:13: remark: Added loop label VITIS_LOOP_7929_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_7929_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64158:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64177:9: remark: Added loop label VITIS_LOOP_7948_2:   [xilinx-label-all-loops]
+        for (int i = 0; i < width; i++) {
+        ^
+        VITIS_LOOP_7948_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64177:9: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64267:13: remark: Added loop label VITIS_LOOP_8053_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_8053_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64267:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64377:13: remark: Added loop label VITIS_LOOP_8180_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_8180_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64377:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64465:13: remark: Added loop label VITIS_LOOP_8277_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_8277_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:64465:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65104:13: remark: Added loop label VITIS_LOOP_9022_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC_UV>::nppc); l++) {
+            ^
+            VITIS_LOOP_9022_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65104:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65206:13: remark: Added loop label VITIS_LOOP_9156_1:   [xilinx-label-all-loops]
+            for (int l = 0; l < (xfNPixelsPerCycle<NPC>::nppc); l++) {
+            ^
+            VITIS_LOOP_9156_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65206:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65297:13: remark: Added loop label VITIS_LOOP_9263_1:   [xilinx-label-all-loops]
+            for (int k = 0, offset = 0; k < xfNPixelsPerCycle<NPC>::nppc; k++, offset += 3) {
+            ^
+            VITIS_LOOP_9263_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65297:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65408:13: remark: Added loop label VITIS_LOOP_80_1:   [xilinx-label-all-loops]
+            for (k = 0; k < (StreamType<WORDWIDTH_SRC>::bitdepth); k += PixelType<DEPTH>::bitdepth) {
+            ^
+            VITIS_LOOP_80_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65408:13: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65541:2: remark: Added loop label VITIS_LOOP_50_1:   [xilinx-label-all-loops]
+ for (int r = 0; r < aligned_h; ++r) {
+ ^
+ VITIS_LOOP_50_1: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65541:2: note: FIX-IT applied suggested code changes
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65543:3: remark: Added loop label VITIS_LOOP_52_2:   [xilinx-label-all-loops]
+  for (int c = 0; c < aligned_w; ++c) {
+  ^
+  VITIS_LOOP_52_2: 
+/home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/scripts/vision_pre_hls.prj/solution1/.autopilot/db/top.pp.0.cpp:65543:3: note: FIX-IT applied suggested code changes
