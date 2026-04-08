@@ -1,82 +1,119 @@
-# 双板通信代码
+# 双板通信代码（ZeroMQ 视频链路原型）
 
-当前目录用于打通 PYNQ-Z2 到 PC/310B 的视频链路，通信层采用 ZeroMQ。
+当前目录用于打通 PYNQ-Z2 到 PC/310B（当前也可先在 PC 上验证）的单向视频链路，通信层采用 ZeroMQ。
 
-## 1. 文件说明
+## 1. 当前状态（以仓库现状为准）
 
-- `video_stream.h`：视频帧协议头定义。
-- `video_pub.cpp`：发送端（PYNQ 侧），含摄像头采集 + ROI + 轻量 ISP + YUV420 打包发送。
-- `video_sub.cpp`：接收端（PC 或 310B 侧），含验帧、延迟/FPS 统计、可视化预览。
-- `pc_latency_client.py`：小包 RTT 延迟测试。
-- `pc_throughput_client.py`：TCP 吞吐测试。
+本目录已具备可构建的 CMake 工程与视频流原型代码，核心能力如下：
 
-## 2. 协议约束（当前版本）
+- 发送端：采集摄像头帧，JPEG 编码后通过 ZeroMQ PUSH 发送。
+- 接收端：ZeroMQ PULL 接收，解析后 JPEG 解码并实时显示。
+- 线程模型：主线程采集/显示，后台线程负责网络收发。
+- 拥塞策略：队列满时丢弃旧帧，优先保留新帧，降低端到端延迟累积。
 
-- `magic` 必须是 `VS_MAGIC`。
-- `version` 必须是 `VS_VERSION`。
-- `pixel_format` 目前仅支持 `VS_FMT_YUV420P8`。
-- `payload_bytes` 必须等于 `width * height * 3 / 2`。
+当前仍是“链路打通验证版”，未完成项包括：
 
-备注：当前 `crc32` 字段预留，尚未启用校验。
+- 发送端 IP 与端口仍为硬编码（`192.168.2.100:5555`），未参数化。
+- 尚未接入方案文档中的 ROI/ISP/控制通道等功能。
+- 尚未加入消息校验与更完整协议头版本管理。
 
-## 3. 依赖安装
+## 2. 目录与文件说明
 
-Ubuntu / Debian 示例：
+- `include/zmq_streamer.hpp`
+  - `FramePacket`：帧号、时间戳与 JPEG 负载。
+  - `ZmqVideoSender`：发送端封装（PUSH）。
+  - `ZmqVideoReceiver`：接收端封装（PULL）。
+  - 当前已添加关键流程注释（线程模型、拥塞策略、协议组包/解包）。
+- `src/pynq_zmq_pub.cpp`
+  - 发送端示例主程序。
+  - 摄像头采集 -> resize -> 时间戳 -> 入发送队列。
+- `src/310B_zmq_sub.cpp`
+  - 接收端示例主程序。
+  - 拉流 -> 解码 -> 延迟估算 -> 画面显示。
+- `CMakeLists.txt`
+  - 已补齐，支持构建两个可执行文件。
+
+## 3. 数据路径与协议（当前实现）
+
+### 3.1 数据路径
+
+1. 发送端采集摄像头画面（默认 640x640@30fps）。
+2. 每帧 JPEG 编码（质量 80）。
+3. 组帧后通过 ZeroMQ 发送。
+4. 接收端拉取消息并解析。
+5. OpenCV 解码显示，并叠加帧号和估计延迟。
+
+### 3.2 单帧消息格式
+
+当前发送格式为：
+
+- `4B`：`frame_id`（`uint32_t`）
+- `8B`：`timestamp`（`double`，秒）
+- `N B`：JPEG 字节流
+
+即总长度为 `12 + jpeg_size`。
+
+## 4. 通信与性能策略
+
+- 套接字模型：`PUSH -> PULL`
+- 非阻塞发送：`dontwait`
+- 接收线程非阻塞轮询 + 短睡眠退避
+- `sndhwm` / `rcvhwm` 设置为 8
+- 队列满丢旧帧，优先“最新帧”
+
+该策略目标是降低实时链路尾延迟，代价是高负载时可能出现可见丢帧。
+
+## 5. 依赖环境
+
+至少需要：
+
+- C++17 编译器（g++/clang++）
+- OpenCV4
+- ZeroMQ（`libzmq`）及其 C++ 头文件（`cppzmq`，即 `zmq.hpp`）
+- pthread
+- CMake >= 3.16
+- pkg-config
+
+## 6. 构建与运行（推荐 CMake）
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y build-essential pkg-config libzmq3-dev libopencv-dev
+cd code/communication
+cmake -S . -B build
+cmake --build build -j
 ```
 
-## 4. 编译
+生成目标：
 
-在当前目录执行：
+- `build/pynq_zmq_pub`
+- `build/zmq_sub_310b`
 
-```bash
-g++ -O2 -std=c++17 video_pub.cpp -o video_pub $(pkg-config --cflags --libs opencv4 libzmq)
-g++ -O2 -std=c++17 video_sub.cpp -o video_sub $(pkg-config --cflags --libs opencv4 libzmq)
-```
+运行顺序建议：
 
-## 5. 启动顺序（推荐）
+1. 在接收端主机启动 `./build/zmq_sub_310b`。
+2. 在发送端主机启动 `./build/pynq_zmq_pub`。
+3. 确认发送端代码中的目标 IP 与接收端 IP 一致。
 
-### 5.1 在接收端（PC 或 310B）启动
+## 7. 已知环境问题（本机当前验证）
 
-```bash
-./video_sub --connect tcp://<PYNQ_IP>:5555 --show 1 --hwm 2
-```
+在 conda 环境 `310B_env` 下，链接阶段可能出现 ABI 不匹配错误（例如 `libhwy` / `libopencv_videoio` 的符号版本问题）。
 
-退出按键：`q` 或 `ESC`。
+常见处理方式：
 
-### 5.2 在发送端（PYNQ）启动
+- 使用系统工具链 + 系统 OpenCV 重新配置并构建。
+- 或保持 conda 方案，但统一编译器与 OpenCV/`libstdc++` 的 ABI 版本。
 
-```bash
-./video_pub --bind tcp://*:5555 --camera 0 --width 640 --height 480 --fps 30 --roi 0,0,1,1 --gamma 2.2 --denoise 3 --show 0
-```
+## 8. 与总体方案的关系
 
-常用 ROI 示例（中心区域）：
+本目录当前承担“先跑通链路、可视化验证延迟”的阶段目标。
 
-```bash
---roi 0.125,0.125,0.75,0.75
-```
+后续若进入完整赛题链路，建议在此基础上继续补齐：
 
-## 6. 打通判据
+- 可配置 ROI
+- 轻量 ISP（白平衡/降噪/gamma）
+- 控制通道（参数热更新）
+- 正式帧头与协议版本管理
 
-满足以下条件可认为“视频通路已打通”：
+## 9. 注意事项
 
-1. `video_pub` 无持续报错（摄像头可读、发送成功）。
-2. `video_sub` 能持续显示画面。
-3. `video_sub` 每秒输出 FPS/平均延迟统计，且帧号持续递增。
-4. `invalid_or_drop` 不持续快速增长。
-
-## 7. 常见问题定位
-
-1. 收不到帧：先检查 IP/端口是否一致，再检查发送端是否 `--bind tcp://*:5555`。
-2. 摄像头打开失败：确认设备索引，常见是 `/dev/video0` 对应 `--camera 0`。
-3. FPS 很低：先把 `--denoise` 调小、`--roi` 缩小，再观察统计变化。
-4. 延迟升高：优先检查网络拥塞和接收端显示负载，必要时使用 `--show 0` 仅做链路验证。
-
-## 8. 下一步（面向 310B）
-
-1. 在 310B 侧复用 `video_sub.cpp` 的协议解析逻辑。
-2. 将 YUV420 转模型输入格式的步骤放在 310B，避免 PYNQ 侧重复计算。
-3. 控制通道新增 REQ/REP，用于在线调整 ROI、gamma 和降噪参数。
+- 发送端 `sleep_for(33ms)` 与摄像头实际帧率可能不完全一致，可能引入节拍偏差。
+- 当前时间戳使用系统时间（`system_clock`），跨设备时钟不同步会影响延迟绝对值。
