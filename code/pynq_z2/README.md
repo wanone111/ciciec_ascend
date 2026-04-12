@@ -4,5 +4,4 @@
 
 视频链路打通与分工方案见：
 
-- [fpga_video_pipeline_bringup_plan.md](./fpga_video_pipeline_bringup_plan.md)
 - [hls/README.md](./hls/README.md)
