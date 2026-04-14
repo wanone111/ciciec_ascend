@@ -33,10 +33,11 @@ inline uint64_t get_timestamp_us() noexcept {
 #pragma pack(push, 1)
 
 struct UdpHeader {
-    uint16_t magic;   
+    uint16_t frame_id;    // 帧 ID，发送时递增
     uint16_t seq_num;    // 序列号，发送时递增
-    uint64_t timestamp=get_timestamp_us();  // 发送时的时间戳，单位微秒
+    uint16_t total; // 该帧总包数
     uint16_t payload_len;// 有效载荷长度
+    uint64_t timestamp=get_timestamp_us();  // 发送时的时间戳，单位微秒
 };
 
 #pragma pack(pop)
@@ -48,6 +49,20 @@ namespace udp_net{
     // 接收缓冲区大小：UDP 单包最大受 MTU 限制（通常 1500 字节）。
     // 此处设为 4096 仅用于测试，生产环境发送视频需按 MTU 分片或使用 SO_SNDBUF/RCVBUF 调优。
     constexpr int BUF_SIZE = 4096;
+
+    // NV12 视频参数：当前阶段固定为 1280x960@60fps。
+    constexpr int VIDEO_WIDTH = 1280;
+    constexpr int VIDEO_HEIGHT = 960;
+    constexpr int VIDEO_FPS = 60;
+
+    // NV12 每帧字节数 = width * height * 3 / 2。
+    constexpr int NV12_FRAME_BYTES = VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2;
+
+    // 应用层分片负载长度：1200 字节可以规避常见 MTU 导致的 IP 分片。
+    constexpr int UDP_PAYLOAD_BYTES = 1200;
+
+    // 接收端每 30 帧回一次 ACK，降低控制开销。
+    constexpr int ACK_EVERY_N_FRAMES = 30;
 
     // 双端口隔离：310B 用不同端口区分 PC（结果回传）和 PYNQ（视频流接收）
     constexpr int PORT_PC = PC_PORT;      // 与 PC 通信端口
@@ -84,7 +99,7 @@ namespace udp_net{
             return false;
         }
         std::cout << "[UDP] 成功绑定端口 " << port << std::endl;
-        return true;
+        return true; 
     }
 
     /**
