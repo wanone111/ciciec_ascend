@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)                                             
 set(CMAKE_CXX_EXTENSIONS OFF)                                                     # 关闭编译器私有扩展，保证可移植性
 
 option(ENABLE_OPENCV_DISPLAY "Enable OpenCV display path in pc_udp" OFF)         # 定义开关：是否启用 PC 端 OpenCV 显示
+option(ENABLE_OPENCV_CAPTURE "Enable OpenCV capture path in pynq_udp" ON)        # 定义开关：是否启用 PYNQ 端 OpenCV 采集
 find_package(OpenCV QUIET)                                                        # 尝试查找 OpenCV 依赖，仅用于 PC 端可选显示
 
 add_executable(pc_udp src/client_udp.cpp)                                         # 添加 PC 端可执行文件目标
@@ -18,3 +19,9 @@ endif()                                                                         
 
 add_executable(pynq_udp src/pynq_udp.cpp)                                         # 添加 PYNQ 端可执行文件目标
 target_include_directories(pynq_udp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)  # 为 PYNQ 目标添加头文件搜索路径
+if(ENABLE_OPENCV_CAPTURE AND OpenCV_FOUND)
+	target_compile_definitions(pynq_udp PRIVATE HAVE_OPENCV=1)
+	target_link_libraries(pynq_udp PRIVATE ${OpenCV_LIBS})
+elseif(ENABLE_OPENCV_CAPTURE)
+	message(WARNING "OpenCV not found; pynq_udp will build but will exit at runtime without capture support")
+endif()

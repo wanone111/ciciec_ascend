@@ -1,4 +1,7 @@
 #include "udp_common.h"                            // 引入 UDP 公共工具头文件
+#ifdef HAVE_OPENCV
+#include <opencv2/opencv.hpp>
+#endif
 #include <iostream>                                // 引入标准输出流
 #include <string>                                  // 引入字符串类型
 #include <chrono>                                  // 引入时间相关工具
@@ -6,55 +9,99 @@
 #include <vector>                                  // 引入动态数组类型
 #include <algorithm>                               // 引入 std::min 算法
 #include <cstdlib>                                 // 引入环境变量读取接口
-#include <fcntl.h>                                 // 引入 open 相关常量与函数
-#include <sys/mman.h>                              // 引入 mmap 相关接口
-#include <sys/stat.h>                              // 引入 fstat 相关接口
+#include <cctype>
 
 using namespace udp_net;                           // 使用 udp_net 命名空间，简化函数调用
 
+#ifdef HAVE_OPENCV
+static bool is_digits(const std::string& s) {
+    if (s.empty()) {
+        return false;
+    }
+    for (unsigned char ch : s) {
+        if (!std::isdigit(ch)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool try_open_camera_path(cv::VideoCapture& cap, const std::string& dev_path, std::string& chosen) {
+    if (cap.open(dev_path, cv::CAP_V4L2)) {
+        chosen = dev_path + " (CAP_V4L2)";
+        return true;
+    }
+    cap.release();
+    if (cap.open(dev_path)) {
+        chosen = dev_path + " (default backend)";
+        return true;
+    }
+    return false;
+}
+#endif
+
 int main() {                                       // 主函数入口
-    const char* dma_dev_env = std::getenv("UDP_DMA_DEV"); // 读取 DMA 设备路径环境变量
-    const std::string dma_dev = dma_dev_env ? dma_dev_env : "/dev/udmabuf0"; // 设置 DMA 设备默认路径
+#ifndef HAVE_OPENCV
+    std::cerr << "[PYNQ] OpenCV is required for PS USB capture; rebuild with OpenCV enabled" << std::endl;
+    return 1;
+#else
+    const char* camera_dev_env = std::getenv("UDP_CAMERA_DEV");
+    std::vector<std::string> candidates;
+    if (camera_dev_env) {
+        std::string configured = camera_dev_env;
+        // 与 Python 脚本行为一致：优先按 /dev/videoX 设备路径打开。
+        if (is_digits(configured)) {
+            candidates.emplace_back("/dev/video" + configured);
+        } else {
+            candidates.emplace_back(configured);
+        }
+    } else {
+        candidates.emplace_back("/dev/video0");
+        candidates.emplace_back("/dev/video1");
+    }
 
-    int dma_fd = open(dma_dev.c_str(), O_RDONLY);  // 以只读方式打开 DMA 缓冲设备
-    if (dma_fd < 0) {                               // 判断 DMA 设备是否打开失败
-        std::cerr << "[PYNQ] open dma device failed: " << dma_dev << ", err=" << strerror(errno) << std::endl; // 打印 DMA 打开失败日志
-        return 1;                                   // 返回错误码
-    }                                               // 结束 DMA 设备打开判断
+    cv::VideoCapture cap;
+    std::string chosen_dev;
+    for (const auto& candidate : candidates) {
+        if (try_open_camera_path(cap, candidate, chosen_dev)) {
+            break;
+        }
+        cap.release();
+    }
+    if (!cap.isOpened()) {
+        std::cerr << "[PYNQ] open camera failed; candidates=";
+        for (size_t i = 0; i < candidates.size(); ++i) {
+            std::cerr << candidates[i] << (i + 1 < candidates.size() ? "," : "");
+        }
+        std::cerr << std::endl;
+        std::cerr << "[PYNQ] hint: set UDP_CAMERA_DEV=/dev/videoX (e.g. /dev/video0)" << std::endl;
+        return 1;
+    }
 
-    struct stat dma_stat{};                         // 定义结构体保存设备文件状态
-    if (fstat(dma_fd, &dma_stat) != 0) {            // 读取 DMA 设备文件状态
-        std::cerr << "[PYNQ] fstat dma device failed: " << strerror(errno) << std::endl; // 打印 fstat 失败日志
-        close(dma_fd);                              // 关闭 DMA 设备文件
-        return 1;                                   // 返回错误码
-    }                                               // 结束 fstat 判断
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, VIDEO_HEIGHT);
+    cap.set(cv::CAP_PROP_FPS, VIDEO_FPS);
+    cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
 
-    if (dma_stat.st_size < NV12_FRAME_BYTES) {      // 判断 DMA 缓冲区大小是否足够容纳一帧 NV12
-        std::cerr << "[PYNQ] dma buffer too small, size=" << dma_stat.st_size << ", need=" << NV12_FRAME_BYTES << std::endl; // 打印缓冲区不足日志
-        close(dma_fd);                              // 关闭 DMA 设备文件
-        return 1;                                   // 返回错误码
-    }                                               // 结束缓冲区大小判断
-
-    void* dma_map = mmap(nullptr, dma_stat.st_size, PROT_READ, MAP_SHARED, dma_fd, 0); // 将 DMA 缓冲区映射到用户空间
-    if (dma_map == MAP_FAILED) {                    // 判断 mmap 是否失败
-        std::cerr << "[PYNQ] mmap dma buffer failed: " << strerror(errno) << std::endl; // 打印 mmap 失败日志
-        close(dma_fd);                              // 关闭 DMA 设备文件
-        return 1;                                   // 返回错误码
-    }                                               // 结束 mmap 判断
-
-    const uint8_t* dma_frame_ptr = reinterpret_cast<const uint8_t*>(dma_map); // 获取 DMA 缓冲区起始指针
+    const int got_w = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+    const int got_h = static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    const double got_fps = cap.get(cv::CAP_PROP_FPS);
+    std::cout << "[PYNQ] camera opened: " << chosen_dev << " got=" << got_w << "x" << got_h << "@" << got_fps << std::endl;
+#endif
 
     int fd_pynq = create_socket();                  // 创建 PYNQ 侧 UDP socket
     if (fd_pynq < 0) {                              // 判断 socket 是否创建失败
-        munmap(dma_map, dma_stat.st_size);          // 释放 DMA 映射
-        close(dma_fd);                              // 关闭 DMA 设备文件
+#ifdef HAVE_OPENCV
+        cap.release();
+#endif
         return 1;                                   // 返回错误码
     }                                               // 结束 socket 创建判断
 
     if (!bind_port(fd_pynq, PORT_PYNQ)) {           // 绑定到 PYNQ 本地端口，用于接收 PC ACK
         close(fd_pynq);                             // 绑定失败时关闭 UDP socket
-        munmap(dma_map, dma_stat.st_size);          // 释放 DMA 映射
-        close(dma_fd);                              // 关闭 DMA 设备文件
+#ifdef HAVE_OPENCV
+        cap.release();
+#endif
         return 1;                                   // 返回错误码
     }                                               // 结束端口绑定判断
 
@@ -62,22 +109,45 @@ int main() {                                       // 主函数入口
 
     timeval timeout_cfg{};                          // 定义超时配置结构体
     timeout_cfg.tv_sec = 0;                         // 设置秒级超时为 0
-    timeout_cfg.tv_usec = 20000;                    // 设置接收超时为 20ms，避免卡住 60fps 主循环
+    timeout_cfg.tv_usec = 20000;                    // 设置接收超时为 20ms，避免卡住发送主循环
     setsockopt(fd_pynq, SOL_SOCKET, SO_RCVTIMEO, &timeout_cfg, sizeof(timeout_cfg)); // 设置 ACK 接收超时
 
     uint16_t frame_id = 0;                          // 定义帧 ID，按帧递增
     uint32_t frames_sent = 0;                       // 定义发送帧计数器
-    const int frame_bytes = NV12_FRAME_BYTES;       // 获取固定 NV12 帧字节数
+    const int frame_bytes = RGB_FRAME_BYTES;        // 获取固定 RGB 帧字节数
     const uint16_t total = static_cast<uint16_t>((frame_bytes + UDP_PAYLOAD_BYTES - 1) / UDP_PAYLOAD_BYTES); // 计算固定总分片数量
     const auto frame_interval = std::chrono::microseconds(1000000 / VIDEO_FPS); // 计算单帧周期时间
 
-    std::cout << "[PYNQ] start DMA->UDP NV12 stream 1280x960@60fps" << std::endl; // 打印 DMA 视频流启动信息
-    std::cout << "[PYNQ] dma device=" << dma_dev << ", chunks/frame=" << total << std::endl; // 打印 DMA 设备与分片信息
+    std::vector<uint8_t> packet(sizeof(UdpHeader) + UDP_PAYLOAD_BYTES); // 复用发送缓存，避免每包重复分配
+
+    std::cout << "[PYNQ] start PS USB->UDP RGB stream " << VIDEO_WIDTH << "x" << VIDEO_HEIGHT << "@" << VIDEO_FPS << "fps" << std::endl;
+    std::cout << "[PYNQ] camera device=" << chosen_dev << ", capture_fmt=BGR, send_fmt=RGB24" << std::endl;
+    std::cout << "[PYNQ] chunks/frame=" << total << ", payload=" << UDP_PAYLOAD_BYTES << std::endl;
 
     while (true) {                                  // 进入持续发送循环
         auto loop_begin = std::chrono::steady_clock::now(); // 记录当前循环开始时间
         const uint64_t ts_us = get_timestamp_us();  // 记录该帧统一发送时间戳
         bool send_failed = false;                   // 定义当前帧发送失败标志
+
+#ifdef HAVE_OPENCV
+        cv::Mat frame_bgr;
+        if (!cap.read(frame_bgr) || frame_bgr.empty()) {
+            std::cerr << "[PYNQ] read camera frame failed" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+            continue;
+        }
+
+        if (frame_bgr.cols != VIDEO_WIDTH || frame_bgr.rows != VIDEO_HEIGHT) {
+            cv::resize(frame_bgr, frame_bgr, cv::Size(VIDEO_WIDTH, VIDEO_HEIGHT), 0.0, 0.0, cv::INTER_LINEAR);
+        }
+
+        cv::Mat frame_rgb;
+        cv::cvtColor(frame_bgr, frame_rgb, cv::COLOR_BGR2RGB);
+        if (!frame_rgb.isContinuous()) {
+            frame_rgb = frame_rgb.clone();
+        }
+        const uint8_t* frame_ptr = frame_rgb.data;
+#endif
 
         for (uint16_t seq = 0; seq < total; ++seq) { // 按分片序号循环发送该帧
             const int offset = static_cast<int>(seq) * UDP_PAYLOAD_BYTES; // 计算本分片在帧内偏移
@@ -90,11 +160,11 @@ int main() {                                       // 主函数入口
             header.payload_len = chunk_len;          // 填充分片载荷长度字段
             header.timestamp = ts_us;                // 填充统一时间戳字段
 
-            std::vector<uint8_t> packet(sizeof(UdpHeader) + chunk_len); // 分配完整 UDP 包缓存（头 + 载荷）
             std::memcpy(packet.data(), &header, sizeof(UdpHeader)); // 将头结构拷贝到包起始位置
-            std::memcpy(packet.data() + sizeof(UdpHeader), dma_frame_ptr + offset, chunk_len); // 从 DMA 缓冲区复制当前分片载荷
+            std::memcpy(packet.data() + sizeof(UdpHeader), frame_ptr + offset, chunk_len); // 从 RGB 帧缓存复制当前分片载荷
 
-            int sent = sendto(fd_pynq, packet.data(), packet.size(), 0, reinterpret_cast<const sockaddr*>(&pc_addr), sizeof(pc_addr)); // 发送当前分片
+            int sent = sendto(fd_pynq, packet.data(), sizeof(UdpHeader) + chunk_len, 0,
+                              reinterpret_cast<const sockaddr*>(&pc_addr), sizeof(pc_addr)); // 发送当前分片
             if (sent < 0) {                          // 判断分片发送是否失败
                 std::cerr << "[PYNQ] send chunk failed, frame=" << frame_id << ", seq=" << seq << std::endl; // 打印分片发送失败日志
                 send_failed = true;                  // 标记该帧发送失败
@@ -130,7 +200,8 @@ int main() {                                       // 主函数入口
     }                                                 // 结束持续发送循环
 
     close(fd_pynq);                                   // 关闭 socket（正常流程下不会执行）
-    munmap(dma_map, dma_stat.st_size);                // 释放 DMA 映射（正常流程下不会执行）
-    close(dma_fd);                                    // 关闭 DMA 设备（正常流程下不会执行）
+#ifdef HAVE_OPENCV
+    cap.release();
+#endif
     return 0;                                         // 返回成功码
 }                                                     // 主函数结束

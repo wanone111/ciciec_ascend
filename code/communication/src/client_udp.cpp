@@ -6,6 +6,7 @@
 #include <string>                                    // 引入字符串类型
 #include <vector>                                    // 引入动态数组容器
 #include <cstdlib>                                   // 引入环境变量读取接口
+#include <fstream>
 
 using namespace udp_net;                             // 使用 udp_net 命名空间，简化函数调用
 
@@ -29,9 +30,22 @@ int main() {                                         // 主函数入口
 #endif                                               // 结束 OpenCV 条件分支
     if (show_window) {                               // 判断是否启用显示窗口
 #ifdef HAVE_OPENCV                                  // 若构建时启用了 OpenCV
-        cv::namedWindow("pc_nv12_stream", cv::WINDOW_NORMAL);        // 创建可缩放显示窗口
+        cv::namedWindow("pc_rgb_stream", cv::WINDOW_NORMAL);         // 创建可缩放显示窗口
 #endif                                               // 结束 OpenCV 窗口创建分支
     }                                                // 结束窗口创建判断
+
+    const char* raw_path_env = std::getenv("UDP_SAVE_PATH");
+    const std::string raw_path = raw_path_env ? raw_path_env : "recv_output.rgb";
+    const std::string index_path = raw_path + ".index.csv";
+    std::ofstream raw_file(raw_path, std::ios::binary | std::ios::out | std::ios::trunc);
+    std::ofstream index_file(index_path, std::ios::out | std::ios::trunc);
+    if (!raw_file.is_open() || !index_file.is_open()) {
+        std::cerr << "[PC] open output file failed, raw=" << raw_path << ", index=" << index_path << std::endl;
+        close(fd_pc);
+        return 1;
+    }
+    index_file << "frame_id,timestamp_us,offset_bytes,size_bytes\n";
+    uint64_t raw_offset = 0;
 
     uint16_t active_frame_id = 0;                   // 记录当前正在重组的帧 ID
     uint16_t active_total = 0;                      // 记录当前帧总分片数
@@ -44,7 +58,8 @@ int main() {                                         // 主函数入口
     uint32_t complete_frames = 0;                   // 记录完整接收帧数
     uint32_t dropped_frames = 0;                    // 记录丢弃帧数（缺包或异常）
 
-    std::cout << "[PC] start NV12 receiver 1280x960@60fps" << std::endl; // 打印接收端启动日志
+    std::cout << "[PC] start RGB receiver " << VIDEO_WIDTH << "x" << VIDEO_HEIGHT << "@" << VIDEO_FPS << "fps" << std::endl; // 打印接收端启动日志
+    std::cout << "[PC] raw save path=" << raw_path << std::endl;
 
     while (true) {                                   // 进入持续接收循环
         char recv_buf[BUF_SIZE];                     // 定义单次接收缓冲区
@@ -109,28 +124,37 @@ int main() {                                         // 主函数入口
         }                                                                // 结束重复分片判断
 
         if (received_count == active_total) {                            // 判断当前帧是否已经收齐所有分片
-            std::vector<uint8_t> nv12_frame;                             // 定义重组后 NV12 帧缓存
-            nv12_frame.reserve(NV12_FRAME_BYTES);                        // 预留固定帧大小，减少内存扩容次数
+            std::vector<uint8_t> rgb_frame;                              // 定义重组后 RGB 帧缓存
+            rgb_frame.reserve(RGB_FRAME_BYTES);                          // 预留固定帧大小，减少内存扩容次数
 
             for (uint16_t i = 0; i < active_total; ++i) {                // 按序拼接每个分片数据
-                nv12_frame.insert(nv12_frame.end(), chunks[i].begin(), chunks[i].end()); // 将分片数据追加到完整帧缓存
+                rgb_frame.insert(rgb_frame.end(), chunks[i].begin(), chunks[i].end()); // 将分片数据追加到完整帧缓存
             }                                                             // 结束分片拼接循环
 
-            if (static_cast<int>(nv12_frame.size()) != NV12_FRAME_BYTES) { // 判断重组帧大小是否符合 NV12 固定长度
+            if (static_cast<int>(rgb_frame.size()) != RGB_FRAME_BYTES) { // 判断重组帧大小是否符合 RGB 固定长度
                 ++dropped_frames;                                         // 统计帧大小异常导致的丢帧
-                std::cerr << "[PC] drop bad frame size, frame=" << active_frame_id << ", size=" << nv12_frame.size() << std::endl; // 打印帧大小异常日志
+                std::cerr << "[PC] drop bad frame size, frame=" << active_frame_id << ", size=" << rgb_frame.size() << std::endl; // 打印帧大小异常日志
                 has_active_frame = false;                                 // 清空活动帧状态，等待下一帧
                 continue;                                                 // 跳过后续处理流程
             }                                                             // 结束帧大小合法性判断
+
+            raw_file.write(reinterpret_cast<const char*>(rgb_frame.data()), static_cast<std::streamsize>(rgb_frame.size()));
+            if (!raw_file.good()) {
+                std::cerr << "[PC] write raw frame failed, frame=" << active_frame_id << std::endl;
+                close(fd_pc);
+                return 1;
+            }
+            index_file << active_frame_id << "," << active_ts << "," << raw_offset << "," << rgb_frame.size() << "\n";
+            raw_offset += static_cast<uint64_t>(rgb_frame.size());
 
             ++complete_frames;                                            // 增加完整接收帧统计计数
 
             if (show_window) {                                            // 判断是否启用可视化显示
 #ifdef HAVE_OPENCV                                                        // 若构建时启用了 OpenCV
-                cv::Mat nv12_mat(VIDEO_HEIGHT * 3 / 2, VIDEO_WIDTH, CV_8UC1, nv12_frame.data()); // 使用 NV12 内存构造 Mat 视图
-                cv::Mat bgr;                                              // 定义 BGR 显示图像容器
-                cv::cvtColor(nv12_mat, bgr, cv::COLOR_YUV2BGR_NV12);     // 将 NV12 转换为 BGR 便于显示
-                cv::imshow("pc_nv12_stream", bgr);                       // 显示当前完整帧
+                cv::Mat rgb_mat(VIDEO_HEIGHT, VIDEO_WIDTH, CV_8UC3, rgb_frame.data()); // 使用 RGB 内存构造 Mat 视图
+                cv::Mat bgr;                                              // OpenCV 默认按 BGR 显示
+                cv::cvtColor(rgb_mat, bgr, cv::COLOR_RGB2BGR);           // 将 RGB 转换为 BGR 便于显示
+                cv::imshow("pc_rgb_stream", bgr);                        // 显示当前完整帧
                 cv::waitKey(1);                                           // 处理窗口事件并刷新显示
 #endif                                                                    // 结束 OpenCV 显示分支
             }                                                             // 结束显示分支

@@ -50,13 +50,13 @@ namespace udp_net{
     // 此处设为 4096 仅用于测试，生产环境发送视频需按 MTU 分片或使用 SO_SNDBUF/RCVBUF 调优。
     constexpr int BUF_SIZE = 4096;
 
-    // NV12 视频参数：当前阶段固定为 1280x960@60fps。
+    // 视频参数：最小可行链路固定为 1280x720@30fps。
     constexpr int VIDEO_WIDTH = 1280;
-    constexpr int VIDEO_HEIGHT = 960;
-    constexpr int VIDEO_FPS = 60;
+    constexpr int VIDEO_HEIGHT = 720;
+    constexpr int VIDEO_FPS = 30;
 
-    // NV12 每帧字节数 = width * height * 3 / 2。
-    constexpr int NV12_FRAME_BYTES = VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2;
+    // RGB24 每帧字节数 = width * height * 3。
+    constexpr int RGB_FRAME_BYTES = VIDEO_WIDTH * VIDEO_HEIGHT * 3;
 
     // 应用层分片负载长度：1200 字节可以规避常见 MTU 导致的 IP 分片。
     constexpr int UDP_PAYLOAD_BYTES = 1200;
