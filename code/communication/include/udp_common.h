@@ -3,9 +3,11 @@
 #define UDP_COMMON_H
 
 #include <cerrno>                                   // errno 相关定义
+#include <cstdint>                                  // 定长整数类型
 #include <cstring>                                  // strerror 和 memcpy
 #include <iostream>                                 // 标准输出流
 #include <string>                                   // std::string
+#include <vector>                                   // 二进制缓冲区
 #include <sys/socket.h>                             // socket/recvfrom/sendto
 #include <netinet/in.h>                             // sockaddr_in
 #include <arpa/inet.h>                              // inet_pton/htons
@@ -17,11 +19,113 @@
 #define ASCEND_310B_PC_IP "192.168.137.100"        // 310B 的 eth1 IP（用于 310B <-> PC）
 #define PC_PORT 5555                                 // PC 监听端口
 #define PYNQ_PORT 9090                               // PYNQ/310B 监听端口
+#define VIDEO_WIDTH 640                              // 默认视频宽度（可按现场修改）
+#define VIDEO_HEIGHT 480                             // 默认视频高度（可按现场修改）
+#define VIDEO_FPS 15                                 // 默认视频帧率（可按现场修改）
+
 
 namespace udp_net {                                  // UDP 辅助命名空间
 
 constexpr int BUF_SIZE = 1024;                       // ACK 消息缓冲区大小
 constexpr int ACK_TIMEOUT_SEC = 1;                   // ACK 接收超时时间
+constexpr std::size_t UDP_SAFE_PAYLOAD = 1200;       // 单包安全载荷，避免链路层分片
+constexpr uint32_t VIDEO_MAGIC = 0x56494430;         // 协议魔数 "VID0"
+constexpr uint8_t VIDEO_VERSION = 1;                 // 协议版本号
+constexpr uint8_t PIX_FMT_RGB24 = 1;                 // 像素格式枚举：RGB24
+constexpr uint8_t PIX_FMT_MJPEG = 2;                 // 像素格式枚举：MJPEG
+constexpr int FRAME_TIMEOUT_MS = 800;                // 帧重组超时时间，超时丢帧
+constexpr int DEFAULT_UDP_RCVBUF_BYTES = 8 * 1024 * 1024; // 默认 UDP 接收缓冲区大小
+constexpr int DEFAULT_UDP_SNDBUF_BYTES = 8 * 1024 * 1024; // 默认 UDP 发送缓冲区大小
+
+enum class MsgType : uint8_t {                       // 协议消息类型
+    VIDEO_FRAGMENT = 1,                              // 视频分片消息
+    CONTROL_TEXT = 2                                 // 文本控制消息
+};
+
+#pragma pack(push, 1)                                // 强制 1 字节对齐，避免不同平台填充差异
+struct VideoPacketHeader {                           // 视频 UDP 分片包头
+    uint32_t magic;                                  // 协议魔数，固定为 VIDEO_MAGIC
+    uint8_t version;                                 // 协议版本
+    uint8_t msg_type;                                // 消息类型，见 MsgType
+    uint16_t header_bytes;                           // 包头字节数，便于后续扩展
+    uint32_t frame_id;                               // 帧序号，发送端递增
+    uint16_t frag_idx;                               // 当前分片序号，从 0 开始
+    uint16_t frag_cnt;                               // 当前帧总分片数
+    uint16_t payload_bytes;                          // 当前分片载荷字节数
+    uint16_t width;                                  // 视频宽度
+    uint16_t height;                                 // 视频高度
+    uint8_t pixel_format;                            // 像素格式，当前固定 RGB24
+    uint8_t reserved0;                               // 预留字段，后续扩展
+    uint64_t timestamp_us;                           // 采集时间戳（微秒）
+};
+#pragma pack(pop)
+
+static_assert(sizeof(VideoPacketHeader) == 32, "VideoPacketHeader size must be 32 bytes"); // 编译期校验
+
+inline VideoPacketHeader host_to_net(VideoPacketHeader h) { // 将主机字节序包头转换为网络字节序
+    h.magic = htonl(h.magic);                        // 转换 32 位魔数
+    h.header_bytes = htons(h.header_bytes);          // 转换 16 位包头长度
+    h.frame_id = htonl(h.frame_id);                  // 转换 32 位帧号
+    h.frag_idx = htons(h.frag_idx);                  // 转换 16 位分片序号
+    h.frag_cnt = htons(h.frag_cnt);                  // 转换 16 位分片总数
+    h.payload_bytes = htons(h.payload_bytes);        // 转换 16 位载荷长度
+    h.width = htons(h.width);                        // 转换 16 位宽度
+    h.height = htons(h.height);                      // 转换 16 位高度
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    h.timestamp_us = __builtin_bswap64(h.timestamp_us); // 转换 64 位时间戳
+#endif
+    return h;                                        // 返回网络字节序结果
+}
+
+inline VideoPacketHeader net_to_host(VideoPacketHeader h) { // 将网络字节序包头转换为主机字节序
+    h.magic = ntohl(h.magic);                        // 转换 32 位魔数
+    h.header_bytes = ntohs(h.header_bytes);          // 转换 16 位包头长度
+    h.frame_id = ntohl(h.frame_id);                  // 转换 32 位帧号
+    h.frag_idx = ntohs(h.frag_idx);                  // 转换 16 位分片序号
+    h.frag_cnt = ntohs(h.frag_cnt);                  // 转换 16 位分片总数
+    h.payload_bytes = ntohs(h.payload_bytes);        // 转换 16 位载荷长度
+    h.width = ntohs(h.width);                        // 转换 16 位宽度
+    h.height = ntohs(h.height);                      // 转换 16 位高度
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    h.timestamp_us = __builtin_bswap64(h.timestamp_us); // 转换 64 位时间戳
+#endif
+    return h;                                        // 返回主机字节序结果
+}
+
+inline bool parse_video_header(const std::vector<uint8_t>& packet, VideoPacketHeader* out) { // 解析并校验视频包头
+    if (!out) {                                      // 判空保护
+        return false;                                // 输出参数为空直接失败
+    }
+    if (packet.size() < sizeof(VideoPacketHeader)) { // 必须至少包含完整包头
+        return false;                                // 长度不足
+    }
+
+    VideoPacketHeader net_hdr{};                     // 临时网络字节序包头
+    std::memcpy(&net_hdr, packet.data(), sizeof(net_hdr)); // 拷贝包头原始字节
+    VideoPacketHeader hdr = net_to_host(net_hdr);    // 转为主机字节序
+
+    if (hdr.magic != VIDEO_MAGIC) {                  // 校验魔数
+        return false;                                // 非视频协议包
+    }
+    if (hdr.version != VIDEO_VERSION) {              // 校验版本
+        return false;                                // 版本不匹配
+    }
+    if (hdr.header_bytes != sizeof(VideoPacketHeader)) { // 校验包头长度
+        return false;                                // 长度不匹配
+    }
+    if (hdr.msg_type != static_cast<uint8_t>(MsgType::VIDEO_FRAGMENT)) { // 校验消息类型
+        return false;                                // 不是视频分片
+    }
+    if (packet.size() != sizeof(VideoPacketHeader) + hdr.payload_bytes) { // 校验包总长度
+        return false;                                // 长度不一致
+    }
+    if (hdr.pixel_format != PIX_FMT_RGB24 && hdr.pixel_format != PIX_FMT_MJPEG) { // 校验像素格式
+        return false;                                // 当前仅支持 RGB24 和 MJPEG
+    }
+
+    *out = hdr;                                      // 输出解析结果
+    return true;                                     // 解析成功
+}
 
 inline int create_socket() {                         // 创建 UDP socket
     int fd = socket(AF_INET, SOCK_DGRAM, 0);         // 申请 IPv4 UDP socket
@@ -31,6 +135,19 @@ inline int create_socket() {                         // 创建 UDP socket
     }                                                // 结束失败判断
     return fd;                                       // 返回 socket 描述符
 }                                                    // 创建 socket 结束
+
+inline void tune_socket_buffers(int fd, int rcvbuf_bytes, int sndbuf_bytes) { // 设置 UDP 套接字收发缓冲区大小
+    if (rcvbuf_bytes > 0) {                          // 设置接收缓冲区分支
+        if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &rcvbuf_bytes, sizeof(rcvbuf_bytes)) < 0) { // 设置接收缓冲区
+            std::cerr << "[UDP] setsockopt SO_RCVBUF failed: " << strerror(errno) << std::endl; // 打印错误
+        }
+    }
+    if (sndbuf_bytes > 0) {                          // 设置发送缓冲区分支
+        if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &sndbuf_bytes, sizeof(sndbuf_bytes)) < 0) { // 设置发送缓冲区
+            std::cerr << "[UDP] setsockopt SO_SNDBUF failed: " << strerror(errno) << std::endl; // 打印错误
+        }
+    }
+}
 
 inline bool bind_port(int fd, int port) {            // 将 socket 绑定到本地端口
     sockaddr_in addr{};                              // 定义本地地址结构
@@ -78,6 +195,39 @@ inline int send_msg(int fd, const std::string& msg, const sockaddr_in& dst) { //
     return sent;                                     // 返回发送结果
 }                                                    // 发送消息结束
 
+
+inline int send_bytes(int fd, const uint8_t* data, std::size_t size, const sockaddr_in& dst) { // 发送二进制消息
+    int sent = sendto(fd, data, size, 0, reinterpret_cast<const sockaddr*>(&dst), sizeof(dst)); // 调用 sendto
+    if (sent < 0) {                                  // 判断发送是否失败
+        std::cerr << "[UDP] send bytes failed: " << strerror(errno) << std::endl; // 打印错误
+    }
+    return sent;                                     // 返回发送结果
+}
+
+inline int recv_bytes(int fd, std::vector<uint8_t>* out, sockaddr_in* src = nullptr, socklen_t* srclen = nullptr) { // 接收二进制消息
+    if (!out) {                                      // 判空保护
+        return -1;                                   // 输出缓冲区为空
+    }
+
+    std::vector<uint8_t> buf(2048, 0);              // 预留接收缓冲区（大于 1200+头）
+    sockaddr_in tmp_src{};                           // 临时源地址
+    socklen_t tmp_len = sizeof(tmp_src);             // 临时源地址长度
+    if (!src) {                                      // 未提供源地址时使用临时变量
+        src = &tmp_src;                              // 指向临时源地址
+        srclen = &tmp_len;                           // 指向临时长度
+    }
+
+    int n = recvfrom(fd, buf.data(), buf.size(), 0, reinterpret_cast<sockaddr*>(src), srclen); // 接收数据
+    if (n <= 0) {                                    // 判断是否接收失败或超时
+        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) { // 仅打印真实错误
+            std::cerr << "[UDP] recv bytes failed: " << strerror(errno) << std::endl; // 打印错误
+        }
+        return n;                                    // 返回原始结果
+    }
+
+    out->assign(buf.begin(), buf.begin() + n);       // 拷贝有效字节到输出向量
+    return n;                                        // 返回接收长度
+}
 inline std::string recv_msg(int fd, sockaddr_in* src = nullptr, socklen_t* srclen = nullptr) { // 接收文本消息
     char buf[BUF_SIZE]{};                            // 定义接收缓冲区
     sockaddr_in tmp_src{};                           // 定义临时源地址
