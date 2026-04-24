@@ -1,9 +1,0 @@
-<AutoPilot:ProjectResources xmlns:AutoPilot="com.autoesl.autopilot.ui.directiveView">
-    <sourceFile name="">
-        <directive functionName="vision_preprocess_accel" label="" functionLabel="">
-            <pragma name="TOP">
-                <option name="name" value="vision_preprocess_accel"/>
-            </pragma>
-        </directive>
-    </sourceFile>
-</AutoPilot:ProjectResources>

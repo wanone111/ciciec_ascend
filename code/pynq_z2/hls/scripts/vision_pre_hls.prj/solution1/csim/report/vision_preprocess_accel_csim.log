@@ -1,7 +1,0 @@
-INFO: [SIM 2] *************** CSIM start ***************
-   Compiling ../../../../../tb/top_tb.cpp in debug mode
-   Compiling ../../../../../src/top.cpp in debug mode
-   Generating csim.exe
-TEST PASSED: rows=64 cols=96 roi=(6,4,40,26) threshold=128
-INFO: [SIM 1] CSim done with 0 errors.
-INFO: [SIM 3] *************** CSIM finish ***************
