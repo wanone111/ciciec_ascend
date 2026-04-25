@@ -1,0 +1,2537 @@
+  **** HLS Build v2025.2.1 6397637
+Sourcing Tcl script '/home/bb/competition_ws/pynq_z2/hls/video_preprocess/scripts/run_hls.tcl'
+successful!!!  the start time is Sat Apr 25 23:38:55 CST 2026
+Build output redirected to: /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess
+OpenCV found: /home/bb/miniconda3/envs/310B_env
+INFO: [HLS 200-1510] Running: open_project -reset /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj 
+WARNING: [HLS 200-2182] The 'video_preprocess_prj' project will not automatically appear within Vitis IDE workspaces and is meant only for TCL batch use.  Please use open_component instead of open_project/open_solution to generate Vitis IDE compatible component files and directory structure.
+Resolution: For help on HLS 200-2182 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-2182.html
+INFO: [HLS 200-10] Opening and resetting solution '/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj'.
+INFO: [HLS 200-1510] Running: set_top video_preprocess 
+INFO: [HLS 200-1510] Running: add_files /home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp -cflags -I /home/bb/competition_ws/pynq_z2/hls/video_preprocess/include -I ./ -D__SDSVHLS__ -DXF_USE_AXI4=1 -std=c++17 
+INFO: [HLS 200-10] Adding design file '/home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp' to the project
+INFO: [HLS 200-1510] Running: add_files -tb /home/bb/competition_ws/pynq_z2/hls/video_preprocess/tb/tb_top.cpp -cflags -I /home/bb/competition_ws/pynq_z2/hls/video_preprocess/include -I ./ -D__SDSVHLS__ -DXF_USE_AXI4=1 -std=c++17 -I /home/bb/miniconda3/envs/310B_env/include/opencv4 -csimflags -L/home/bb/miniconda3/envs/310B_env/lib -Wl,-rpath,/home/bb/miniconda3/envs/310B_env/lib -lopencv_core -lopencv_imgproc -lopencv_imgcodecs 
+INFO: [HLS 200-10] Adding test bench file '/home/bb/competition_ws/pynq_z2/hls/video_preprocess/tb/tb_top.cpp' to the project
+INFO: [HLS 200-1510] Running: open_solution -reset solution1 
+INFO: [HLS 200-10] Creating and opening solution '/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1'.
+INFO: [HLS 200-10] Cleaning up the solution database.
+INFO: [HLS 200-1505] Using default flow_target 'vivado'
+Resolution: For help on HLS 200-1505 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-1505.html
+INFO: [HLS 200-1510] Running: set_part xc7z020clg400-1 
+INFO: [HLS 200-1611] Setting target device to 'xc7z020-clg400-1'
+INFO: [HLS 200-1510] Running: create_clock -period 10 
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 10ns.
+
+========== Running C Simulation (CSIM) ==========
+INFO: [HLS 200-1510] Running: csim_design -ldflags -L/home/bb/miniconda3/envs/310B_env/lib -Wl,-rpath,/home/bb/miniconda3/envs/310B_env/lib -lopencv_core -lopencv_imgproc -lopencv_imgcodecs 
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [HLS 200-2191] C-Simulation will use clang-16 as the compiler
+INFO: [HLS 200-2036] Building debug C Simulation binaries
+   Compiling ../../../../../../tb/tb_top.cpp in debug mode
+   Compiling ../../../../../../src/top.cpp in debug mode
+   Generating csim.exe
+/bin/bash: /home/bb/miniconda3/envs/310B_env/lib/libtinfo.so.6: no version information available (required by /bin/bash)
+clang++: warning: -Wl,-rpath,/home/bb/miniconda3/envs/310B_env/lib: 'linker' input unused [-Wunused-command-line-argument]
+clang++: warning: argument unused during compilation: '-L/home/bb/miniconda3/envs/310B_env/lib' [-Wunused-command-line-argument]
+=== Video Preprocess HLS Testbench ===
+Testing: ISP (WB+Gamma+Denoise) -> Dynamic ROI -> RGB2YUV
+
+Generating test input pattern (480x640)...
+Running video_preprocess kernel...
+
+Verifying Y output stream...
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Total Y packets: 307200 (expected: 307200)
+
+Verifying UV output stream...
+Total UV packets: 153600 (expected: 153600)
+
+=== Test Summary ===
+Y stream errors: 0
+UV stream errors: 0
+TEST PASSED!
+INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 307200
+INFO: [SIM 211-1] CSim done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+INFO: [HLS 200-2161] Finished Command csim_design Elapsed time: 00:00:03; Allocated memory: 0.000 MB.
+
+========== Running C Synthesis (CSYNTH) ==========
+INFO: [HLS 200-1510] Running: csynth_design 
+INFO: [HLS 200-111] Finished File checks and directory preparation: CPU user time: 0.5 seconds. CPU system time: 0.1 seconds. Elapsed time: 0.73 seconds; current allocated memory: 615.637 MB.
+INFO: [HLS 200-2191] C-Synthesis will use clang-16 as the compiler
+INFO: [HLS 200-10] Analyzing design file '/home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp' ... 
+WARNING: [HLS 214-111] Static scalars and arrays declared inside a dataflow region will be treated like local variables (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp:61:23)
+Resolution: For help on HLS 214-111 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=214-111.html
+WARNING: [HLS 214-111] Static scalars and arrays declared inside a dataflow region will be treated like local variables (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp:62:23)
+Resolution: For help on HLS 214-111 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=214-111.html
+WARNING: [HLS 214-111] Static scalars and arrays declared inside a dataflow region will be treated like local variables (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp:63:23)
+Resolution: For help on HLS 214-111 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=214-111.html
+WARNING: [HLS 214-114] Since the only kind of statements allowed in a canonical dataflow region are variable declarations and function calls, the compiler may not be able to correctly handle the region (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp:56:9)
+Resolution: For help on HLS 214-114 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=214-114.html
+WARNING: [HLS 200-471] Dataflow form checks found 4 issue(s) in file /home/bb/competition_ws/pynq_z2/hls/video_preprocess/src/top.cpp
+Resolution: For help on HLS 200-471 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-471.html
+INFO: [HLS 200-111] Finished Source Code Analysis and Preprocessing: CPU user time: 3.34 seconds. CPU system time: 0.48 seconds. Elapsed time: 4.49 seconds; current allocated memory: 618.242 MB.
+INFO: [HLS 200-777] Using interface defaults for 'Vivado' flow target.
+INFO: [HLS 200-1995] There were 13,091 instructions in the design after the 'Compile/Link' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 1,114 instructions in the design after the 'Unroll/Inline (step 1)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 829 instructions in the design after the 'Unroll/Inline (step 2)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 817 instructions in the design after the 'Unroll/Inline (step 3)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 708 instructions in the design after the 'Unroll/Inline (step 4)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 889 instructions in the design after the 'Array/Struct (step 1)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 851 instructions in the design after the 'Array/Struct (step 2)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 851 instructions in the design after the 'Array/Struct (step 3)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 851 instructions in the design after the 'Array/Struct (step 4)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 1,110 instructions in the design after the 'Array/Struct (step 5)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 1,107 instructions in the design after the 'Performance (step 1)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 993 instructions in the design after the 'Performance (step 2)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 893 instructions in the design after the 'Performance (step 3)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 893 instructions in the design after the 'Performance (step 4)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 848 instructions in the design after the 'HW Transforms (step 1)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+INFO: [HLS 200-1995] There were 791 instructions in the design after the 'HW Transforms (step 2)' phase of compilation. See the Design Size Report for more details (/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/report/csynth_design_size.rpt:2)
+WARNING: [HLS 214-273] In function 'ssdm_int<8, false>::ssdm_int(unsigned char)', INLINE (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:530:39) of a non dataflow function into a region with DATAFLOW (src/top.cpp:56:1) may break the canonical form (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:530:0)
+WARNING: [HLS 214-273] In function 'pack_roi_window(ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>)', INLINE (include/roi.h:18:1) of a non dataflow function into a region with DATAFLOW (src/top.cpp:56:1) may break the canonical form (include/roi.h:17:0)
+WARNING: [HLS 214-273] In function '_ZN8ssdm_intILi17ELb0EEC2EDU17_', INLINE (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:530:39) of a non dataflow function into a region with DATAFLOW (src/top.cpp:56:1) may break the canonical form (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:530:0)
+WARNING: [HLS 214-273] In function '_ZN8ssdm_intILi17ELb1EEC2EDB17_', INLINE (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:522:39) of a non dataflow function into a region with DATAFLOW (src/top.cpp:56:1) may break the canonical form (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:522:0)
+WARNING: [HLS 214-273] In function 'ssdm_int<16, false>::ssdm_int(unsigned short)', INLINE (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:530:39) of a non dataflow function into a region with DATAFLOW (src/top.cpp:56:1) may break the canonical form (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:530:0)
+WARNING: [HLS 214-273] In function 'ssdm_int<32, true>::ssdm_int(int)', INLINE (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:522:39) of a non dataflow function into a region with DATAFLOW (src/top.cpp:56:1) may break the canonical form (/opt/Xilinx/2025.2.1/Vitis/common/technology/autopilot/etc/ap_common.h:522:0)
+INFO: [HLS 214-131] Inlining function 'saturate(int)' into 'calc_yuv_parallel(ap_uint<8>, ap_uint<8>, ap_uint<8>, ap_uint<8>&, ap_uint<8>&, ap_uint<8>&)' (include/rgb2yuv.h:33:13)
+INFO: [HLS 214-131] Inlining function 'pack_roi_window(ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>)' into 'video_preprocess(hls::stream<hls::axis<ap_uint<24>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<8>, ap_uint<8>, ap_uint<8>)' (src/top.cpp:72:21)
+INFO: [HLS 214-131] Inlining function 'calc_yuv_parallel(ap_uint<8>, ap_uint<8>, ap_uint<8>, ap_uint<8>&, ap_uint<8>&, ap_uint<8>&)' into 'video_preprocess(hls::stream<hls::axis<ap_uint<24>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<8>, ap_uint<8>, ap_uint<8>)' (src/top.cpp:211:17)
+INFO: [HLS 214-131] Inlining function 'denoise_mix(ap_uint<8>, ap_uint<8>, ap_uint<8>)' into 'video_preprocess(hls::stream<hls::axis<ap_uint<24>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<8>, ap_uint<8>, ap_uint<8>)' (src/top.cpp:154:29)
+INFO: [HLS 214-131] Inlining function 'gamma_map(ap_uint<8>, ap_uint<8>)' into 'video_preprocess(hls::stream<hls::axis<ap_uint<24>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<8>, ap_uint<8>, ap_uint<8>)' (src/top.cpp:148:25)
+INFO: [HLS 214-131] Inlining function 'apply_gain_q8(ap_uint<8>, ap_uint<16>)' into 'video_preprocess(hls::stream<hls::axis<ap_uint<24>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<8>, ap_uint<8>, ap_uint<8>)' (src/top.cpp:143:36)
+INFO: [HLS 214-131] Inlining function 'roi_contains(RoiWindow const&, ap_uint<16>, ap_uint<16>)' into 'video_preprocess(hls::stream<hls::axis<ap_uint<24>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<8>, ap_uint<8>, ap_uint<8>)' (src/top.cpp:130:27)
+INFO: [HLS 214-131] Inlining function 'unpack_rgb(ap_uint<24>, ap_uint<1>, ap_uint<8>&, ap_uint<8>&, ap_uint<8>&)' into 'video_preprocess(hls::stream<hls::axis<ap_uint<24>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, hls::stream<hls::axis<ap_uint<8>, 1ul, 1ul, 1ul, (unsigned char)56, false>, 0>&, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<16>, ap_uint<8>, ap_uint<8>, ap_uint<8>)' (src/top.cpp:127:13)
+INFO: [HLS 214-248] Applying array_partition to '_ZZ16video_preprocessRN3hls6streamINS_4axisI7ap_uintILi24EELm1ELm1ELm1ELh56ELb0EEELi0EEERNS0_INS1_IS2_ILi8EELm1ELm1ELm1ELh56ELb0EEELi0EEESA_S2_ILi16EESB_SB_SB_SB_SB_SB_SB_SB_S7_S7_S7_E10prev_row_r': Cyclic partitioning with factor 8 on dimension 1. (src/top.cpp:61:0)
+INFO: [HLS 214-248] Applying array_partition to '_ZZ16video_preprocessRN3hls6streamINS_4axisI7ap_uintILi24EELm1ELm1ELm1ELh56ELb0EEELi0EEERNS0_INS1_IS2_ILi8EELm1ELm1ELm1ELh56ELb0EEELi0EEESA_S2_ILi16EESB_SB_SB_SB_SB_SB_SB_SB_S7_S7_S7_E10prev_row_g': Cyclic partitioning with factor 8 on dimension 1. (src/top.cpp:62:0)
+INFO: [HLS 214-248] Applying array_partition to '_ZZ16video_preprocessRN3hls6streamINS_4axisI7ap_uintILi24EELm1ELm1ELm1ELh56ELb0EEELi0EEERNS0_INS1_IS2_ILi8EELm1ELm1ELm1ELh56ELb0EEELi0EEESA_S2_ILi16EESB_SB_SB_SB_SB_SB_SB_SB_S7_S7_S7_E10prev_row_b': Cyclic partitioning with factor 8 on dimension 1. (src/top.cpp:63:0)
+INFO: [HLS 214-455] Changing loop 'Loop_ROW_LOOP_proc' (src/top.cpp:102:5) to a process function for dataflow in function 'video_preprocess' (src/top.cpp:102:5)
+INFO: [HLS 200-111] Finished Compiling Optimization and Transform: CPU user time: 1.86 seconds. CPU system time: 0.34 seconds. Elapsed time: 6.61 seconds; current allocated memory: 628.074 MB.
+INFO: [HLS 200-111] Finished Checking Pragmas: CPU user time: 0 seconds. CPU system time: 0 seconds. Elapsed time: 0 seconds; current allocated memory: 628.074 MB.
+INFO: [HLS 200-10] Starting code transformations ...
+INFO: [HLS 200-111] Finished Standard Transforms: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.06 seconds; current allocated memory: 629.316 MB.
+INFO: [HLS 200-10] Checking synthesizability ...
+INFO: [HLS 200-111] Finished Checking Synthesizability: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 630.328 MB.
+INFO: [XFORM 203-712] Applying dataflow to function 'video_preprocess' (src/top.cpp:15:1), detected/extracted 3 process function(s): 
+	 'entry_proc'
+	 'Block_entry_proc'
+	 'Loop_ROW_LOOP_proc'.
+INFO: [XFORM 203-401] Performing if-conversion on hyperblock from (src/top.cpp:116:1) to (src/top.cpp:195:23) in function 'Loop_ROW_LOOP_proc'... converting 42 basic blocks.
+INFO: [XFORM 203-11] Balancing expressions in function 'Loop_ROW_LOOP_proc' (src/top.cpp:12:9)...18 expression(s) balanced.
+INFO: [HLS 200-111] Finished Loop, function and other optimizations: CPU user time: 0.13 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.15 seconds; current allocated memory: 654.418 MB.
+INFO: [HLS 200-2060] Failed to convert nested loops 'ROW_LOOP'(src/top.cpp:102:5) and 'COL_LOOP'(src/top.cpp:115:9) in function 'Loop_ROW_LOOP_proc' into perfectly nested loops.
+WARNING: [HLS 200-1990] Performance of loop 'COL_LOOP'(src/top.cpp:115:9) in function 'Loop_ROW_LOOP_proc' can be improved with loop rewind inference if the loop bound can be asserted to execute at least once.
+WARNING: [HLS 200-1991] Performance of loop 'COL_LOOP'(src/top.cpp:115:9) in function 'Loop_ROW_LOOP_proc' can be improved with loop rewind inference if the loop can be encapsulated as a standalone function.
+WARNING: [HLS 200-1992] Performance of loop 'COL_LOOP'(src/top.cpp:115:9) in function 'Loop_ROW_LOOP_proc' can be improved with loop rewind inference if the loop is called from a region that can be executed in overlapped fashion such as a dataflow region or the top function.
+WARNING: [HLS 200-1990] Performance of loop 'ROW_LOOP'(src/top.cpp:102:5) in function 'Loop_ROW_LOOP_proc' can be improved with loop rewind inference if the loop bound can be asserted to execute at least once.
+WARNING: [HLS 200-1991] Performance of loop 'ROW_LOOP'(src/top.cpp:102:5) in function 'Loop_ROW_LOOP_proc' can be improved with loop rewind inference if the loop can be encapsulated as a standalone function.
+WARNING: [HLS 200-1992] Performance of loop 'ROW_LOOP'(src/top.cpp:102:5) in function 'Loop_ROW_LOOP_proc' can be improved with loop rewind inference if the loop is called from a region that can be executed in overlapped fashion such as a dataflow region or the top function.
+WARNING: [HLS 200-957] Unable to rewind loop 'ROW_LOOP' (src/top.cpp:102) in function 'Loop_ROW_LOOP_proc': loop nest is not flattened.
+Resolution: For help on HLS 200-957 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-957.html
+WARNING: [HLS 200-1614] Cosimulation may deadlock if process Loop_ROW_LOOP_proc has a streamed top-level array input and has predecessor processes. If a deadlock occurs, please consider converting the streamed array into an hls::stream
+INFO: [HLS 200-111] Finished Architecture Synthesis: CPU user time: 0.12 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.14 seconds; current allocated memory: 675.684 MB.
+INFO: [HLS 200-10] Starting hardware synthesis ...
+INFO: [HLS 200-10] Synthesizing 'video_preprocess' ...
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'entry_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.01 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.04 seconds; current allocated memory: 675.684 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 675.684 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'Block_entry_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.03 seconds. CPU system time: 0 seconds. Elapsed time: 0.03 seconds; current allocated memory: 676.508 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 676.508 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'Loop_ROW_LOOP_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [HLS 200-486] Changing DSP latency (root=add_ln27_2) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=add_ln27_1) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=add_ln27) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=y_2) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=y_1) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=y) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=add_ln33_4) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=add_ln33_3) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=add_ln30_4) to 3 in order to utilize available DSP registers.
+INFO: [HLS 200-486] Changing DSP latency (root=add_ln30_3) to 3 in order to utilize available DSP registers.
+INFO: [SCHED 204-61] Pipelining loop 'COL_LOOP'.
+WARNING: [HLS 200-880] The II Violation in module 'Loop_ROW_LOOP_proc' (loop 'COL_LOOP'): Unable to enforce a carried dependence constraint (II = 1, distance = 1, offset = 1) between axis write operation ('uv_dst_V_data_V_write_ln235', src/top.cpp:235->src/top.cpp:102) on port 'uv_dst_V_data_V' (src/top.cpp:235->src/top.cpp:102) and axis write operation ('uv_dst_V_data_V_write_ln223', src/top.cpp:223->src/top.cpp:102) on port 'uv_dst_V_data_V' (src/top.cpp:223->src/top.cpp:102).
+Resolution: For help on HLS 200-880 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-880.html
+WARNING: [HLS 200-2252] The pipeline rewind option for loop COL_LOOP cannot be applied because has the only successor of the entry basic block that is not in the pipeline
+INFO: [HLS 200-1470] Pipelining result : Target II = 1, Final II = 2, Depth = 15, loop 'COL_LOOP'
+WARNING: [HLS 200-871] Estimated clock period (9.018 ns) exceeds the target (target clock period: 10.000 ns, clock uncertainty: 2.700 ns, effective delay budget: 7.300 ns).
+Resolution: For help on HLS 200-871 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-871.html
+WARNING: [HLS 200-1016] The critical path in module 'Loop_ROW_LOOP_proc' consists of the following:
+	'phi' operation 8 bit ('prev_denoise_r') with incoming values : ('isp_r', src/top.cpp:17->src/top.cpp:102) [148]  (0.000 ns)
+	'mul' operation 16 bit of DSP[409] ('mul_ln58_1', src/top.cpp:58->src/top.cpp:102) [408]  (3.360 ns)
+	'add' operation 16 bit of DSP[409] ('y', src/top.cpp:58->src/top.cpp:102) [409]  (3.020 ns)
+	'sparsemux' operation 8 bit ('out_r', src/top.cpp:17->src/top.cpp:102) [429]  (1.588 ns)
+	'mul' operation 15 bit of DSP[439] ('mul_ln27_1', src/top.cpp:27->src/top.cpp:102) [437]  (1.050 ns)
+
+Resolution: For help on HLS 200-1016 see docs.amd.com/access/sources/dita/topic?Doc_Version=2025.2%20English&url=ug1448-hls-guidance&resourceid=200-1016.html
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.15 seconds. CPU system time: 0 seconds. Elapsed time: 0.15 seconds; current allocated memory: 682.832 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.04 seconds. CPU system time: 0 seconds. Elapsed time: 0.04 seconds; current allocated memory: 682.832 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-42] -- Implementing module 'video_preprocess' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SCHED 204-11] Starting scheduling ...
+INFO: [SCHED 204-11] Finished scheduling.
+INFO: [HLS 200-111] Finished Scheduling: CPU user time: 0.05 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.05 seconds; current allocated memory: 682.832 MB.
+INFO: [BIND 205-100] Starting micro-architecture generation ...
+INFO: [BIND 205-101] Performing variable lifetime analysis.
+INFO: [BIND 205-101] Exploring resource sharing.
+INFO: [BIND 205-101] Binding ...
+INFO: [BIND 205-100] Finished micro-architecture generation.
+INFO: [HLS 200-111] Finished Binding: CPU user time: 0.01 seconds. CPU system time: 0 seconds. Elapsed time: 0.01 seconds; current allocated memory: 682.832 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'entry_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'entry_proc'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.02 seconds. CPU system time: 0 seconds. Elapsed time: 0.04 seconds; current allocated memory: 682.832 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'Block_entry_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [RTGEN 206-100] Finished creating RTL model for 'Block_entry_proc'.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.03 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.03 seconds; current allocated memory: 682.832 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'Loop_ROW_LOOP_proc' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_7_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ubkb' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_6_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ucud' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_5_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_udEe' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_4_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ueOg' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_3_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ufYi' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_2_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ug8j' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_1_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uhbi' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uibs' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_15_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ujbC' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_9_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ukbM' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_8_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ulbW' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_14_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_umb6' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_13_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uncg' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_12_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uocq' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_11_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_upcA' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_10_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uqcK' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_23_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_urcU' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_22_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_usc4' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_21_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_utde' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_20_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uudo' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_19_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uvdy' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_18_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uwdI' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_17_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uxdS' due to the length limit 80
+INFO: [SYN 201-210] Renamed object name 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uint_ap_uint_ap_uint_16_RAM_2P_AUTO_1R1W' to 'Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_uyd2' due to the length limit 80
+INFO: [RTGEN 206-100] Generating core module 'mac_muladd_8ns_5ns_15s_15_4_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mac_muladd_8ns_6s_15ns_16_4_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mac_muladd_8ns_7ns_8ns_15_4_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mac_muladd_8ns_7s_16s_16_4_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mac_muladd_8ns_8ns_15ns_16_4_1': 1 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mac_muladd_8ns_8ns_16s_16_1_1': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mac_muladd_8ns_8s_16s_16_4_1': 2 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_16ns_8ns_24_1_1': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'mul_9ns_8ns_16_1_1': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'sparsemux_17_3_8_1_1': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'sparsemux_17_7_8_1_1': 3 instance(s).
+INFO: [RTGEN 206-100] Generating core module 'sparsemux_7_2_8_1_1': 6 instance(s).
+INFO: [RTGEN 206-100] Finished creating RTL model for 'Loop_ROW_LOOP_proc'.
+INFO: [RTMG 210-278] Implementing memory 'video_preprocess_Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ubkb' using auto RAMs.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.13 seconds. CPU system time: 0.02 seconds. Elapsed time: 0.16 seconds; current allocated memory: 690.055 MB.
+INFO: [HLS 200-10] ----------------------------------------------------------------
+INFO: [HLS 200-10] -- Generating RTL for module 'video_preprocess' 
+INFO: [HLS 200-10] ----------------------------------------------------------------
+WARNING: [RTGEN 206-101] Design contains AXI ports. Reset is fixed to synchronous and active low.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/src_V_data_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/src_V_keep_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/src_V_strb_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/src_V_user_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/src_V_last_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/src_V_id_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/src_V_dest_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/y_dst_V_data_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/y_dst_V_keep_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/y_dst_V_strb_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/y_dst_V_user_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/y_dst_V_last_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/y_dst_V_id_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/y_dst_V_dest_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/uv_dst_V_data_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/uv_dst_V_keep_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/uv_dst_V_strb_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/uv_dst_V_user_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/uv_dst_V_last_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/uv_dst_V_id_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/uv_dst_V_dest_V' to 'axis' (register, both mode).
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/rows' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/cols' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/roi_x' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/roi_y' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/roi_w' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/roi_h' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/wb_r_gain' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/wb_g_gain' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/wb_b_gain' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/gamma_mode' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/denoise_strength' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on port 'video_preprocess/input_is_bgr' to 's_axilite & ap_none'.
+INFO: [RTGEN 206-500] Setting interface mode on function 'video_preprocess' to 's_axilite & ap_ctrl_hs'.
+INFO: [RTGEN 206-100] Bundling port 'rows', 'cols', 'roi_x', 'roi_y', 'roi_w', 'roi_h', 'wb_r_gain', 'wb_g_gain', 'wb_b_gain', 'gamma_mode', 'denoise_strength', 'input_is_bgr' and 'return' to AXI-Lite port control.
+INFO: [RTGEN 206-100] Finished creating RTL model for 'video_preprocess'.
+INFO: [RTMG 210-285] Implementing FIFO 'wb_r_gain_c_U(video_preprocess_fifo_w16_d3_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'wb_g_gain_c_U(video_preprocess_fifo_w16_d3_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'wb_b_gain_c_U(video_preprocess_fifo_w16_d3_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'gamma_mode_c_U(video_preprocess_fifo_w8_d3_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'input_is_bgr_c_U(video_preprocess_fifo_w8_d3_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'denoise_strength_c_U(video_preprocess_fifo_w8_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'roi_x0_0_loc_channel_U(video_preprocess_fifo_w11_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'roi_y0_0_loc_channel_U(video_preprocess_fifo_w10_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'spec_select_loc_channel_U(video_preprocess_fifo_w11_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'roi_y1_0_loc_channel_U(video_preprocess_fifo_w10_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'proc_rows_0_loc_channel_U(video_preprocess_fifo_w10_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'proc_cols_0_loc_channel_U(video_preprocess_fifo_w11_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'sub_loc_channel_U(video_preprocess_fifo_w12_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'sub_i_i_i500_loc_channel_U(video_preprocess_fifo_w9_d2_S)' using Shift Registers.
+INFO: [RTMG 210-285] Implementing FIFO 'sub191_loc_channel_U(video_preprocess_fifo_w12_d2_S)' using Shift Registers.
+INFO: [HLS 200-111] Finished Creating RTL model: CPU user time: 0.17 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.18 seconds; current allocated memory: 706.000 MB.
+INFO: [HLS 200-111] Finished Generating all RTL models: CPU user time: 0.19 seconds. CPU system time: 0.01 seconds. Elapsed time: 0.19 seconds; current allocated memory: 706.000 MB.
+INFO: [HLS 200-2225] Wrote inferred directives to file /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/syn/inferred_directives.ini
+INFO: [HLS 200-111] Finished Updating report files: CPU user time: 0.42 seconds. CPU system time: 0.04 seconds. Elapsed time: 0.45 seconds; current allocated memory: 711.785 MB.
+INFO: [VHDL 208-304] Generating VHDL RTL for video_preprocess.
+INFO: [VLOG 209-307] Generating Verilog RTL for video_preprocess.
+INFO: [HLS 200-790] **** Loop Constraint Status: All loop constraints were NOT satisfied.
+INFO: [HLS 200-789] **** Estimated Fmax: 110.89 MHz
+INFO: [HLS 200-2161] Finished Command csynth_design Elapsed time: 00:00:13; Allocated memory: 96.336 MB.
+
+========== Running C/RTL Co-Simulation (COSIM) ==========
+INFO: [HLS 200-1510] Running: cosim_design -ldflags -L/home/bb/miniconda3/envs/310B_env/lib -Wl,-rpath,/home/bb/miniconda3/envs/310B_env/lib -lopencv_core -lopencv_imgproc -lopencv_imgcodecs 
+INFO: [COSIM 212-47] Using XSIM for RTL simulation.
+INFO: [COSIM 212-14] Instrumenting C test bench ...
+   Build using "/opt/Xilinx/2025.2.1/Vitis/lnx64/tools/clang-16/bin/clang++"
+   Compiling apatb_video_preprocess.cpp
+   Compiling apatb_video_preprocess_util.cpp
+   Compiling tb_top.cpp_pre.cpp.tb.cpp
+   Compiling top.cpp_pre.cpp.tb.cpp
+   Compiling apatb_video_preprocess_ir.ll
+   Generating cosim.tv.exe
+INFO: [COSIM 212-302] Starting C TB testing ... 
+=== Video Preprocess HLS Testbench ===
+Testing: ISP (WB+Gamma+Denoise) -> Dynamic ROI -> RGB2YUV
+
+Generating test input pattern (480x640)...
+Running video_preprocess kernel...
+
+Verifying Y output stream...
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Total Y packets: 307200 (expected: 307200)
+
+Verifying UV output stream...
+Total UV packets: 153600 (expected: 153600)
+
+=== Test Summary ===
+Y stream errors: 0
+UV stream errors: 0
+TEST PASSED!
+INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 307200
+INFO: [COSIM 212-333] Generating C post check test bench ...
+INFO: [COSIM 212-12] Generating RTL test bench ...
+INFO: [COSIM 212-1] *** C/RTL co-simulation file generation completed. ***
+INFO: [COSIM 212-323] Starting verilog simulation. 
+INFO: [COSIM 212-15] Starting XSIM ...
+Vivado Simulator v2025.2.1
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: /opt/Xilinx/2025.2.1/Vivado/bin/unwrapped/lnx64.o/xelab xil_defaultlib.apatb_video_preprocess_top xil_defaultlib.glbl -Oenable_linking_all_libraries -prj video_preprocess.prj -L smartconnect_v1_0 -L axi_protocol_checker_v1_1_12 -L axi_protocol_checker_v1_1_13 -L axis_protocol_checker_v1_1_11 -L axis_protocol_checker_v1_1_12 -L xil_defaultlib -L unisims_ver -L xpm -L floating_point_v7_1_21 -L floating_point_v7_0_26 --lib ieee_proposed=./ieee_proposed -L uvm -relax -i ./svr -i ./svtb -i ./file_agent -i ./video_preprocess_subsystem -s video_preprocess 
+Multi-threading is on. Using 30 slave threads.
+WARNING: [XSIM 43-3431] One or more environment variables have been detected which affect the operation of the C compiler. These are typically not set in standard installations and are not tested by AMD, however they may be appropriate for your system, so the flow will attempt to continue.  If errors occur, try running xelab with the "-mt off -v 1" switches to see more information from the C compiler. The following environment variables have been detected:
+    LIBRARY_PATH
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/glbl.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module glbl
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/AESL_deadlock_report_unit.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module AESL_deadlock_report_unit
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mac_muladd_8ns_5ns_15s_15_4_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_5ns_15s_15_4_1_DSP48_0
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_5ns_15s_15_4_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/AESL_deadlock_idx0_monitor.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module AESL_deadlock_idx0_monitor
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_entry_proc.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_entry_proc
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_sparsemux_7_2_8_1_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_sparsemux_7_2_8_1_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_fifo_w16_d3_S.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w16_d3_S
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w16_d3_S_ShiftReg
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/AESL_deadlock_kernel_monitor_top.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module AESL_deadlock_kernel_monitor_top
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mac_muladd_8ns_8ns_16s_16_1_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_8ns_16s_16_1_1_DSP48_0
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_8ns_16s_16_1_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_Loop_ROW_LOOP_proc.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_Loop_ROW_LOOP_proc
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_fifo_w8_d3_S.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w8_d3_S
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w8_d3_S_ShiftReg
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/AESL_deadlock_detection_unit.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module AESL_deadlock_detect_unit
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mac_muladd_8ns_7ns_8ns_15_4_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_7ns_8ns_15_4_1_DSP48_0
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_7ns_8ns_15_4_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/AESL_deadlock_idx1_monitor.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module AESL_deadlock_idx1_monitor
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mac_muladd_8ns_8s_16s_16_4_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_8s_16s_16_4_1_DSP48_0
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_8s_16s_16_4_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_regslice_both.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_regslice_both
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mac_muladd_8ns_6s_15ns_16_4_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_6s_15ns_16_4_1_DSP48_0
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_6s_15ns_16_4_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess.autotb.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module apatb_video_preprocess_top
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_sparsemux_17_7_8_1_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_sparsemux_17_7_8_1_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_Block_entry_proc.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_Block_entry_proc
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ubkb.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_Loop_ROW_LOOP_proc_video_preprocess_stream_stream_stream_ap_uint_ap_uint_ap_ubkb
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_fifo_w10_d2_S.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w10_d2_S
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w10_d2_S_ShiftReg
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mac_muladd_8ns_8ns_15ns_16_4_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_8ns_15ns_16_4_1_DSP48_0
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_8ns_15ns_16_4_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_fifo_w11_d2_S.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w11_d2_S
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w11_d2_S_ShiftReg
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_fifo_w9_d2_S.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w9_d2_S
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w9_d2_S_ShiftReg
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_fifo_w8_d2_S.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w8_d2_S
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w8_d2_S_ShiftReg
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_sparsemux_17_3_8_1_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_sparsemux_17_3_8_1_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_control_s_axi.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_control_s_axi
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/AESL_deadlock_detector.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module AESL_deadlock_detector
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_fifo_w12_d2_S.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w12_d2_S
+INFO: [VRFC 10-311] analyzing module video_preprocess_fifo_w12_d2_S_ShiftReg
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mul_16ns_8ns_24_1_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mul_16ns_8ns_24_1_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mac_muladd_8ns_7s_16s_16_4_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_7s_16s_16_4_1_DSP48_0
+INFO: [VRFC 10-311] analyzing module video_preprocess_mac_muladd_8ns_7s_16s_16_4_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_mul_9ns_8ns_16_1_1.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module video_preprocess_mul_9ns_8ns_16_1_1
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/dataflow_monitor.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module dataflow_monitor
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/file_agent/file_agent_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/svr/svr_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/svr/svr_if.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/axivip/axi_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/axivip/axi_if.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/video_preprocess_subsystem/video_preprocess_subsystem_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/svtb/misc_interface.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/sim/verilog/svtb/sv_module_top.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module sv_module_top
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+WARNING: [XSIM 43-4099] "/proj/primebuilds/9999.0_PRIME_0428_0031/installs/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv" Line 4356. Module uvm_pkg doesn't have a timescale but at least one module in design has a timescale.
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package xil_defaultlib.$unit_sv_module_top_sv
+Compiling package uvm.uvm_pkg
+Compiling package std.std
+Compiling package xil_defaultlib.svr_pkg
+Compiling package xil_defaultlib.file_agent_pkg
+Compiling package xil_defaultlib.axi_pkg
+Compiling package xil_defaultlib.video_preprocess_subsystem_pkg
+Compiling package xil_defaultlib.$unit_dataflow_monitor_sv
+Compiling module xil_defaultlib.video_preprocess_control_s_axi
+Compiling module xil_defaultlib.video_preprocess_entry_proc
+Compiling module xil_defaultlib.video_preprocess_Block_entry_pro...
+Compiling module xil_defaultlib.video_preprocess_Loop_ROW_LOOP_p...
+Compiling module xil_defaultlib.video_preprocess_mul_16ns_8ns_24...
+Compiling module xil_defaultlib.video_preprocess_sparsemux_17_7_...
+Compiling module xil_defaultlib.video_preprocess_mul_9ns_8ns_16_...
+Compiling module xil_defaultlib.video_preprocess_sparsemux_17_3_...
+Compiling module xil_defaultlib.video_preprocess_sparsemux_7_2_8...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_mac_muladd_8ns_...
+Compiling module xil_defaultlib.video_preprocess_regslice_both(D...
+Compiling module xil_defaultlib.video_preprocess_regslice_both(D...
+Compiling module xil_defaultlib.video_preprocess_regslice_both(D...
+Compiling module xil_defaultlib.video_preprocess_regslice_both
+Compiling module xil_defaultlib.video_preprocess_Loop_ROW_LOOP_p...
+Compiling module xil_defaultlib.video_preprocess_fifo_w16_d3_S_S...
+Compiling module xil_defaultlib.video_preprocess_fifo_w16_d3_S_d...
+Compiling module xil_defaultlib.video_preprocess_fifo_w8_d3_S_Sh...
+Compiling module xil_defaultlib.video_preprocess_fifo_w8_d3_S_de...
+Compiling module xil_defaultlib.video_preprocess_fifo_w8_d2_S_Sh...
+Compiling module xil_defaultlib.video_preprocess_fifo_w8_d2_S_de...
+Compiling module xil_defaultlib.video_preprocess_fifo_w11_d2_S_S...
+Compiling module xil_defaultlib.video_preprocess_fifo_w11_d2_S_d...
+Compiling module xil_defaultlib.video_preprocess_fifo_w10_d2_S_S...
+Compiling module xil_defaultlib.video_preprocess_fifo_w10_d2_S_d...
+Compiling module xil_defaultlib.video_preprocess_fifo_w12_d2_S_S...
+Compiling module xil_defaultlib.video_preprocess_fifo_w12_d2_S_d...
+Compiling module xil_defaultlib.video_preprocess_fifo_w9_d2_S_Sh...
+Compiling module xil_defaultlib.video_preprocess_fifo_w9_d2_S_de...
+Compiling module xil_defaultlib.video_preprocess
+Compiling module xil_defaultlib.misc_interface_default
+Compiling module xil_defaultlib.svr_if(DATA_WIDTH=34)
+Compiling module xil_defaultlib.svr_if(DATA_WIDTH=14)
+Compiling module xil_defaultlib.axi_if(ADDR_WIDTH=7,STRB_WIDTH=4...
+Compiling module xil_defaultlib.sv_module_top
+Compiling module xil_defaultlib.AESL_deadlock_detect_unit(PROC_N...
+Compiling module xil_defaultlib.AESL_deadlock_detect_unit(PROC_N...
+Compiling module xil_defaultlib.AESL_deadlock_detect_unit(PROC_N...
+Compiling module xil_defaultlib.AESL_deadlock_report_unit(PROC_N...
+Compiling module xil_defaultlib.AESL_deadlock_detector_1
+Compiling module xil_defaultlib.AESL_deadlock_idx1_monitor
+Compiling module xil_defaultlib.AESL_deadlock_idx0_monitor
+Compiling module xil_defaultlib.AESL_deadlock_kernel_monitor_top...
+Compiling module xil_defaultlib.df_fifo_intf_default
+Compiling module xil_defaultlib.df_process_intf_default
+Compiling module xil_defaultlib.nodf_module_intf_default
+Compiling module xil_defaultlib.pp_loop_intf(FSM_WIDTH=5)
+Compiling module xil_defaultlib.seq_loop_intf(FSM_WIDTH=5)
+Compiling module xil_defaultlib.dataflow_monitor_1
+Compiling module xil_defaultlib.apatb_video_preprocess_top
+Compiling module xil_defaultlib.glbl
+Built simulation snapshot video_preprocess
+
+****** xsim v2025.2.1 (64-bit)
+  **** SW Build 6403652 on Thu Mar 19 13:47:00 MDT 2026
+  **** IP Build 6403511 on Thu Mar 19 12:41:45 MDT 2026
+  **** SharedData Build 6403650 on Thu Mar 19 14:02:13 MDT 2026
+  **** Start of session at: Sat Apr 25 23:39:45 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source xsim.dir/video_preprocess/xsim_script.tcl
+# xsim {video_preprocess} -testplusarg UVM_VERBOSITY=UVM_NONE -testplusarg UVM_TESTNAME=video_preprocess_test_lib -testplusarg UVM_TIMEOUT=20000000000000 -autoloadwcfg -tclbatch {video_preprocess.tcl}
+Time resolution is 1 ps
+source video_preprocess.tcl
+## run all
+UVM_INFO /opt/Xilinx/2025.2.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18601) @ 0: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+UVM-1.2
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_NO_DEPRECATED undefined.
+
+  You are using a version of the UVM library that has been compiled
+  with `UVM_OBJECT_DO_NOT_NEED_CONSTRUCTOR undefined.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO /opt/Xilinx/2025.2.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18648) @ 0: reporter [NO_DPI_TSTNAME] UVM_NO_DPI defined--getting UVM_TESTNAME directly, without DPI
+UVM_INFO /opt/Xilinx/2025.2.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(18752) @ 0: reporter [UVMTOP] UVM testbench topology:
+------------------------------------------------------------------------------------------------------------
+Name                                               Type                                Size  Value          
+------------------------------------------------------------------------------------------------------------
+uvm_test_top                                       video_preprocess_test_lib           -     @374           
+  top_env                                          video_preprocess_env                -     @385           
+    axi_lite_control                               uvm_env                             -     @444           
+      item_rtr_port                                uvm_analysis_port                   -     @463           
+      item_wtr_port                                uvm_analysis_port                   -     @453           
+      master                                       uvm_agent                           -     @866           
+        ardrv                                      uvm_driver #(REQ,RSP)               -     @1541          
+          item_read_imp                            uvm_analysis_port                   -     @1570          
+          rsp_port                                 uvm_analysis_port                   -     @1560          
+          seq_item_port                            uvm_seq_item_pull_port              -     @1550          
+          m_num_sent                               integral                            32    'h0            
+        arsqr                                      axi_sequencer                       -     @1580          
+          rsp_export                               uvm_analysis_export                 -     @1589          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @1707          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+        awdrv                                      uvm_driver #(REQ,RSP)               -     @1013          
+          item_read_imp                            uvm_analysis_port                   -     @1042          
+          rsp_port                                 uvm_analysis_port                   -     @1032          
+          seq_item_port                            uvm_seq_item_pull_port              -     @1022          
+          m_num_sent                               integral                            32    'h0            
+        awsqr                                      axi_sequencer                       -     @1052          
+          rsp_export                               uvm_analysis_export                 -     @1061          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @1179          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+        bdrv                                       uvm_driver #(REQ,RSP)               -     @1365          
+          item_read_imp                            uvm_analysis_port                   -     @1394          
+          rsp_port                                 uvm_analysis_port                   -     @1384          
+          seq_item_port                            uvm_seq_item_pull_port              -     @1374          
+          m_num_sent                               integral                            32    'h0            
+        bsqr                                       axi_sequencer                       -     @1404          
+          rsp_export                               uvm_analysis_export                 -     @1413          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @1531          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+        rdrv                                       uvm_driver #(REQ,RSP)               -     @1717          
+          item_read_imp                            uvm_analysis_port                   -     @1746          
+          rsp_port                                 uvm_analysis_port                   -     @1736          
+          seq_item_port                            uvm_seq_item_pull_port              -     @1726          
+          m_num_sent                               integral                            32    'h0            
+        rsqr                                       axi_sequencer                       -     @1756          
+          rsp_export                               uvm_analysis_export                 -     @1765          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @1883          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+        wdrv                                       uvm_driver #(REQ,RSP)               -     @1189          
+          item_read_imp                            uvm_analysis_port                   -     @1218          
+          rsp_port                                 uvm_analysis_port                   -     @1208          
+          seq_item_port                            uvm_seq_item_pull_port              -     @1198          
+          m_num_sent                               integral                            32    'h0            
+        wsqr                                       axi_sequencer                       -     @1228          
+          rsp_export                               uvm_analysis_export                 -     @1237          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @1355          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+      monitor                                      uvm_monitor                         -     @688           
+        item_ar2r_port                             uvm_analysis_port                   -     @757           
+        item_ar_port                               uvm_analysis_port                   -     @727           
+        item_aw2b_port                             uvm_analysis_port                   -     @747           
+        item_aw_port                               uvm_analysis_port                   -     @697           
+        item_b_port                                uvm_analysis_port                   -     @717           
+        item_r_port                                uvm_analysis_port                   -     @737           
+        item_w_port                                uvm_analysis_port                   -     @707           
+        checks_enable                              integral                            1     'h1            
+        coverage_enable                            integral                            1     'h1            
+      state                                        axi_state                           -     @767           
+        ar2r_imp                                   uvm_analysis_imp_ar2r               -     @836           
+        ar_imp                                     uvm_analysis_imp_ar                 -     @806           
+        aw2b_imp                                   uvm_analysis_imp_aw2b               -     @826           
+        aw_imp                                     uvm_analysis_imp_aw                 -     @776           
+        b_imp                                      uvm_analysis_imp_b                  -     @796           
+        item_rtr_port                              uvm_analysis_port                   -     @856           
+        item_wtr_port                              uvm_analysis_port                   -     @846           
+        r_imp                                      uvm_analysis_imp_r                  -     @816           
+        w_imp                                      uvm_analysis_imp_w                  -     @786           
+        avg_rate                                   integral                            32    'h0            
+        exp_rate                                   integral                            32    'h0            
+        win_size                                   integral                            32    'h0            
+        bqnum_for_slaseq                           integral                            32    'h0            
+        rq_from_model_num                          integral                            32    'h0            
+      vsqr                                         axi_virtual_sequencer               -     @875           
+        rsp_export                                 uvm_analysis_export                 -     @884           
+        seq_item_export                            uvm_seq_item_pull_imp               -     @1002          
+        arbitration_queue                          array                               0     -              
+        lock_queue                                 array                               0     -              
+        num_last_reqs                              integral                            32    'd1            
+        num_last_rsps                              integral                            32    'd1            
+      cfg                                          axi_cfg                             -     @406           
+        has_checker                                integral                            1     'h1            
+        has_coverage                               integral                            1     'h1            
+        id_num                                     integral                            32    'h1            
+        reset_level                                reset_level_enum                    32    RESET_LEVEL_LOW
+        drv_type                                   drv_type_enum                       32    MASTER         
+        write_latency_mode                         latency_mode_enum                   32    CHANNEL_FIRST  
+        read_latency_mode                          latency_mode_enum                   32    CHANNEL_FIRST  
+        clatency                                   axi_latency                         -     @440           
+          wr_latency                               integral                            32    'h0            
+          rd_latency                               integral                            32    'h0            
+    env_master_svr_src                             uvm_env                             -     @407           
+      m_agt                                        uvm_agent                           -     @1961          
+        drv                                        uvm_driver #(REQ,RSP)               -     @2109          
+          rsp_port                                 uvm_analysis_port                   -     @2128          
+          seq_item_port                            uvm_seq_item_pull_port              -     @2118          
+        mon                                        uvm_monitor                         -     @2138          
+          item_collect_port                        uvm_analysis_port                   -     @2149          
+        sqr                                        uvm_sequencer                       -     @1972          
+          rsp_export                               uvm_analysis_export                 -     @1981          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @2099          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+    env_slave_svr_uv_dst                           uvm_env                             -     @430           
+      s_agt                                        uvm_agent                           -     @2167          
+        drv                                        uvm_driver #(REQ,RSP)               -     @2315          
+          rsp_port                                 uvm_analysis_port                   -     @2334          
+          seq_item_port                            uvm_seq_item_pull_port              -     @2324          
+        mon                                        uvm_monitor                         -     @2344          
+          item_collect_port                        uvm_analysis_port                   -     @2355          
+        sqr                                        uvm_sequencer                       -     @2178          
+          rsp_export                               uvm_analysis_export                 -     @2187          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @2305          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+    env_slave_svr_y_dst                            uvm_env                             -     @420           
+      s_agt                                        uvm_agent                           -     @2373          
+        drv                                        uvm_driver #(REQ,RSP)               -     @2521          
+          rsp_port                                 uvm_analysis_port                   -     @2540          
+          seq_item_port                            uvm_seq_item_pull_port              -     @2530          
+        mon                                        uvm_monitor                         -     @2550          
+          item_collect_port                        uvm_analysis_port                   -     @2561          
+        sqr                                        uvm_sequencer                       -     @2384          
+          rsp_export                               uvm_analysis_export                 -     @2393          
+          seq_item_export                          uvm_seq_item_pull_imp               -     @2511          
+          arbitration_queue                        array                               0     -              
+          lock_queue                               array                               0     -              
+          num_last_reqs                            integral                            32    'd1            
+          num_last_rsps                            integral                            32    'd1            
+    refm                                           video_preprocess_reference_model    -     @473           
+      trans_num_idx                                integral                            32    'h0            
+    subsys_mon                                     video_preprocess_subsystem_monitor  -     @486           
+      control_rtr_imp                              uvm_analysis_imp_axi_rtr_control    -     @535           
+      control_wtr_imp                              uvm_analysis_imp_axi_wtr_control    -     @525           
+      scbd                                         video_preprocess_scoreboard         -     @2583          
+        refm                                       video_preprocess_reference_model    -     @473           
+          trans_num_idx                            integral                            32    'h0            
+        file_rd_TVOUT_transaction_size             <unknown>                           -     @2593          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          TV_FILE_num                              integral                            32    'h0            
+          HEX_read                                 integral                            32    'h0            
+          DEC_read                                 integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+          TV_FILE_COMPARE                          string                              0     ""             
+          fp_compare                               integral                            32    'hxxxxxxxx     
+        TVOUT_transaction_size_queue               da(integral)                        0     -              
+        file_wr_port_y_dst_y_dst_TDATA             <unknown>                           -     @2594          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_y_dst_y_dst_TDATA          integral                            32    'h0            
+        write_section_done_y_dst_y_dst_TDATA       integral                            32    'h0            
+        file_wr_port_y_dst_y_dst_TKEEP             <unknown>                           -     @2595          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_y_dst_y_dst_TKEEP          integral                            32    'h0            
+        write_section_done_y_dst_y_dst_TKEEP       integral                            32    'h0            
+        file_wr_port_y_dst_y_dst_TSTRB             <unknown>                           -     @2596          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_y_dst_y_dst_TSTRB          integral                            32    'h0            
+        write_section_done_y_dst_y_dst_TSTRB       integral                            32    'h0            
+        file_wr_port_y_dst_y_dst_TUSER             <unknown>                           -     @2597          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_y_dst_y_dst_TUSER          integral                            32    'h0            
+        write_section_done_y_dst_y_dst_TUSER       integral                            32    'h0            
+        file_wr_port_y_dst_y_dst_TLAST             <unknown>                           -     @2598          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_y_dst_y_dst_TLAST          integral                            32    'h0            
+        write_section_done_y_dst_y_dst_TLAST       integral                            32    'h0            
+        file_wr_port_y_dst_y_dst_TID               <unknown>                           -     @2599          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_y_dst_y_dst_TID            integral                            32    'h0            
+        write_section_done_y_dst_y_dst_TID         integral                            32    'h0            
+        file_wr_port_y_dst_y_dst_TDEST             <unknown>                           -     @2600          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_y_dst_y_dst_TDEST          integral                            32    'h0            
+        write_section_done_y_dst_y_dst_TDEST       integral                            32    'h0            
+        file_wr_port_uv_dst_uv_dst_TDATA           <unknown>                           -     @2601          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_uv_dst_uv_dst_TDATA        integral                            32    'h0            
+        write_section_done_uv_dst_uv_dst_TDATA     integral                            32    'h0            
+        file_wr_port_uv_dst_uv_dst_TKEEP           <unknown>                           -     @2602          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_uv_dst_uv_dst_TKEEP        integral                            32    'h0            
+        write_section_done_uv_dst_uv_dst_TKEEP     integral                            32    'h0            
+        file_wr_port_uv_dst_uv_dst_TSTRB           <unknown>                           -     @2603          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_uv_dst_uv_dst_TSTRB        integral                            32    'h0            
+        write_section_done_uv_dst_uv_dst_TSTRB     integral                            32    'h0            
+        file_wr_port_uv_dst_uv_dst_TUSER           <unknown>                           -     @2604          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_uv_dst_uv_dst_TUSER        integral                            32    'h0            
+        write_section_done_uv_dst_uv_dst_TUSER     integral                            32    'h0            
+        file_wr_port_uv_dst_uv_dst_TLAST           <unknown>                           -     @2605          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_uv_dst_uv_dst_TLAST        integral                            32    'h0            
+        write_section_done_uv_dst_uv_dst_TLAST     integral                            32    'h0            
+        file_wr_port_uv_dst_uv_dst_TID             <unknown>                           -     @2606          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_uv_dst_uv_dst_TID          integral                            32    'h0            
+        write_section_done_uv_dst_uv_dst_TID       integral                            32    'h0            
+        file_wr_port_uv_dst_uv_dst_TDEST           <unknown>                           -     @2607          
+          TV_FILE                                  string                              0     ""             
+          fp                                       integral                            32    'hxxxxxxxx     
+          file_open                                integral                            32    'h0            
+          write_file_done                          integral                            32    'h0            
+          write_section_done                       integral                            32    'h0            
+          TRANSACTION_NUM                          integral                            32    'h0            
+          transaction_num_idx                      integral                            32    'h0            
+          TRANSACTION_DEPTH                        integral                            32    'h0            
+          TRANSACTION_DEPTH_queue                  da(integral)                        0     -              
+          TRANSACTION_DEPTH_queue_for_depth_check  da(integral)                        0     -              
+          transaction_depth_idx                    integral                            32    'h0            
+          ap_done_num_idx                          integral                            32    'h0            
+          is_binary                                integral                            32    'h0            
+        write_file_done_uv_dst_uv_dst_TDEST        integral                            32    'h0            
+        write_section_done_uv_dst_uv_dst_TDEST     integral                            32    'h0            
+      svr_master_src_imp                           uvm_analysis_imp_svr_master_src     -     @495           
+      svr_slave_uv_dst_imp                         uvm_analysis_imp_svr_slave_uv_dst   -     @515           
+      svr_slave_y_dst_imp                          uvm_analysis_imp_svr_slave_y_dst    -     @505           
+    video_preprocess_virtual_sqr                   video_preprocess_virtual_sequencer  -     @545           
+      rsp_export                                   uvm_analysis_export                 -     @554           
+      seq_item_export                              uvm_seq_item_pull_imp               -     @672           
+      arbitration_queue                            array                               0     -              
+      lock_queue                                   array                               0     -              
+      num_last_reqs                                integral                            32    'd1            
+      num_last_rsps                                integral                            32    'd1            
+    env_master_svr_src                             uvm_env                             -     @407           
+    env_slave_svr_y_dst                            uvm_env                             -     @420           
+    env_slave_svr_uv_dst                           uvm_env                             -     @430           
+    refm                                           video_preprocess_reference_model    -     @473           
+    video_preprocess_virtual_sqr                   video_preprocess_virtual_sequencer  -     @545           
+    video_preprocess_cfg                           video_preprocess_config             -     @399           
+      port_src_cfg                                 svr_config                          -     @400           
+        svr_type                                   svr_inst_type                       32    SVR_MASTER     
+        prt_type                                   svr_protocol_type                   32    AXIS           
+        is_active                                  svr_active_passive_enum             1     SVR_ACTIVE     
+        reset_level                                svr_reset_level_enum                1     RESET_LEVEL_LOW
+        spec_cfg                                   svr_spec_cfg_enum                   32    NORMAL         
+        clatency                                   svr_latency                         -     @401           
+          transfer_latency                         integral                            32    'h0            
+      port_y_dst_cfg                               svr_config                          -     @402           
+        svr_type                                   svr_inst_type                       32    SVR_SLAVE      
+        prt_type                                   svr_protocol_type                   32    AXIS           
+        is_active                                  svr_active_passive_enum             1     SVR_ACTIVE     
+        reset_level                                svr_reset_level_enum                1     RESET_LEVEL_LOW
+        spec_cfg                                   svr_spec_cfg_enum                   32    NORMAL         
+        clatency                                   svr_latency                         -     @403           
+          transfer_latency                         integral                            32    'h0            
+      port_uv_dst_cfg                              svr_config                          -     @404           
+        svr_type                                   svr_inst_type                       32    SVR_SLAVE      
+        prt_type                                   svr_protocol_type                   32    AXIS           
+        is_active                                  svr_active_passive_enum             1     SVR_ACTIVE     
+        reset_level                                svr_reset_level_enum                1     RESET_LEVEL_LOW
+        spec_cfg                                   svr_spec_cfg_enum                   32    NORMAL         
+        clatency                                   svr_latency                         -     @405           
+          transfer_latency                         integral                            32    'h0            
+      control_cfg                                  axi_cfg                             -     @406           
+        has_checker                                integral                            1     'h1            
+        has_coverage                               integral                            1     'h1            
+        id_num                                     integral                            32    'h1            
+        reset_level                                reset_level_enum                    32    RESET_LEVEL_LOW
+        drv_type                                   drv_type_enum                       32    MASTER         
+        write_latency_mode                         latency_mode_enum                   32    CHANNEL_FIRST  
+        read_latency_mode                          latency_mode_enum                   32    CHANNEL_FIRST  
+        clatency                                   axi_latency                         -     @440           
+          wr_latency                               integral                            32    'h0            
+          rd_latency                               integral                            32    'h0            
+      check_ena                                    integral                            32    'h0            
+      cover_ena                                    integral                            32    'h0            
+------------------------------------------------------------------------------------------------------------
+
+UVM_INFO /opt/Xilinx/2025.2.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv(20867) @ 0: reporter [UVM/COMP/NAMECHECK] This implementation of the component name checks requires DPI to be enabled
+////////////////////////////////////////////////////////////////////////////////////
+// Inter-Transaction Progress: Completed Transaction / Total Transaction
+// Intra-Transaction Progress: Measured Latency / Latency Estimation * 100%
+//
+// RTL Simulation : "Inter-Transaction Progress" ["Intra-Transaction Progress"] @ "Simulation Time"
+////////////////////////////////////////////////////////////////////////////////////
+// RTL Simulation : 0 / 1 [0.00%] @ "125000"
+// RTL Simulation : 1 / 1 [100.00%] @ "6216595000"
+////////////////////////////////////////////////////////////////////////////////////
+$finish called at time : 6216665 ns : File "/opt/Xilinx/2025.2.1/Vivado/data/system_verilog/uvm_1.2/xlnx_uvm_package.sv" Line 18699
+run: Time (s): cpu = 00:00:00.02 ; elapsed = 00:01:17 . Memory (MB): peak = 1458.648 ; gain = 0.000 ; free physical = 7748 ; free virtual = 13543
+## quit
+INFO: xsimkernel Simulation Memory Usage: 3521356 KB (Peak: 3521356 KB), Simulation CPU Usage: 80660 ms
+INFO: [Common 17-206] Exiting xsim at Sat Apr 25 23:41:09 2026...
+INFO: [COSIM 212-316] Starting C post checking ...
+=== Video Preprocess HLS Testbench ===
+Testing: ISP (WB+Gamma+Denoise) -> Dynamic ROI -> RGB2YUV
+
+Generating test input pattern (480x640)...
+Running video_preprocess kernel...
+
+Verifying Y output stream...
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Warning: Y row length mismatch
+Total Y packets: 307200 (expected: 307200)
+
+Verifying UV output stream...
+Total UV packets: 153600 (expected: 153600)
+
+=== Test Summary ===
+Y stream errors: 0
+UV stream errors: 0
+TEST PASSED!
+INFO [HLS SIM]: The maximum depth reached by any hls::stream() instance in the design is 307200
+INFO: [COSIM 212-1000] *** C/RTL co-simulation finished: PASS ***
+INFO: [COSIM 212-211] II is measurable only when transaction number is greater than 1 in RTL simulation. Otherwise, they will be marked as all NA. If user wants to calculate them, please make sure there are at least 2 transactions in RTL simulation.
+INFO: [HLS 200-2161] Finished Command cosim_design Elapsed time: 00:01:52; Allocated memory: 11.766 MB.
+Export target: /home/bb/competition_ws/pynq_z2/hls/video_preprocess/ipcore_file/video_preprocess
+INFO: [HLS 200-1510] Running: export_design -format ip_catalog -output /home/bb/competition_ws/pynq_z2/hls/video_preprocess/ipcore_file/video_preprocess 
+INFO: [IMPL 213-8] Exporting RTL as a Vivado IP.
+
+****** Vivado v2025.2.1 (64-bit)
+  **** SW Build 6403652 on Thu Mar 19 13:47:00 MDT 2026
+  **** IP Build 6403511 on Thu Mar 19 12:41:45 MDT 2026
+  **** SharedData Build 6403650 on Thu Mar 19 14:02:13 MDT 2026
+  **** Start of session at: Sat Apr 25 23:41:13 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source run_ippack.tcl -notrace
+INFO: calling package_hls_ip ip_types=vitis sysgen json_file=/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/solution1_data.json outdir=/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip srcdir=/home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1 ippack_options_dict= ippack_options_dict=
+INFO: Copied 1 ipmisc file(s) to /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip/misc
+INFO: Copied 33 verilog file(s) to /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip/hdl/verilog
+INFO: Copied 26 vhdl file(s) to /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip/hdl/vhdl
+INFO: Copied 10 swdriver file(s) to /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip/drivers
+INFO: Import ports from HDL: /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip/hdl/vhdl/video_preprocess.vhd (video_preprocess)
+INFO: Add axi4lite interface s_axi_control
+INFO: Add clock interface ap_clk
+INFO: Add reset interface ap_rst_n
+INFO: Add interrupt interface interrupt
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/opt/Xilinx/2025.2.1/data/ip'.
+INFO: Add axi4stream interface src
+INFO: Add axi4stream interface y_dst
+INFO: Add axi4stream interface uv_dst
+INFO: Calling post_process_vitis to specialize IP
+INFO: Calling post_process_sysgen to specialize IP
+Generating sysgen info xml from json file
+INFO: Created IP /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip/component.xml
+INFO: Created IP archive /home/bb/competition_ws/pynq_z2/hls/video_preprocess/build/hls_video_preprocess/video_preprocess_prj/solution1/impl/ip/xilinx_com_hls_video_preprocess_1_0.zip
+INFO: [Common 17-206] Exiting Vivado at Sat Apr 25 23:41:16 2026...
+INFO: [HLS 200-802] Generated output file ipcore_file/video_preprocess/export.zip
+INFO: [HLS 200-2161] Finished Command export_design Elapsed time: 00:00:04; Allocated memory: 0.027 MB.
+INFO: [HLS 200-112] Total CPU user time: 211.52 seconds. Total CPU system time: 11.21 seconds. Total elapsed time: 137.85 seconds; peak allocated memory: 723.578 MB.
+INFO: [vitis-run 60-791] Total elapsed time: 0h 2m 23s
+INFO: [vitis-run 60-1662] Stopping dispatch session having empty uuid.
