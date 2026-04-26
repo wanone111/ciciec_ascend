@@ -37,10 +37,12 @@ find_library(ASCENDCL_LIB NAMES ascendcl PATHS
 
 add_executable(ascend310b_pose
     src/main.cpp
+    ip_player/ip_video_player.cpp
 )
 
 target_include_directories(ascend310b_pose PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/ip_player
     ${ASCEND_INC_PATH}
 )
 

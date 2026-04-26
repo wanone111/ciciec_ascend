@@ -1,5 +1,6 @@
 
 #include "pose_protocol.h"
+#include "ip_video_player.h"
 
 #include <acl/acl.h>
 
@@ -755,6 +756,11 @@ struct AppConfig {
 	std::string peer_ip = "192.168.137.1";
 	int peer_port = kDefaultResultPort;
 	int device_id = kDefaultDeviceId;
+	
+	// IP 视频联动配置
+	std::string video_pc_ip = "192.168.137.1";
+	int video_port = ascend310b::IpVideoPlayer::kDefaultVideoPort;
+	std::string videos_dir = "/home/data/videos";  // 预生成视频目录
 };
 
 AppConfig parse_args(int argc, char** argv) {
@@ -783,6 +789,12 @@ AppConfig parse_args(int argc, char** argv) {
 			next_int(&cfg.peer_port);
 		} else if (arg == "--device") {
 			next_int(&cfg.device_id);
+		} else if (arg == "--video-pc-ip") {
+			next(&cfg.video_pc_ip);
+		} else if (arg == "--video-port") {
+			next_int(&cfg.video_port);
+		} else if (arg == "--videos-dir") {
+			next(&cfg.videos_dir);
 		}
 	}
 	return cfg;
@@ -797,6 +809,8 @@ int main(int argc, char** argv) {
 	AppConfig cfg = parse_args(argc, argv);
 	std::cout << "[310B] model=" << cfg.model_path << " bind=" << cfg.bind_ip << ':' << cfg.bind_port
 			  << " peer=" << cfg.peer_ip << ':' << cfg.peer_port << std::endl;
+	std::cout << "[310B] video_pc=" << cfg.video_pc_ip << ":" << cfg.video_port 
+			  << " videos_dir=" << cfg.videos_dir << std::endl;
 
 	UdpSocket rx;
 	if (!rx.open_and_bind(cfg.bind_ip, cfg.bind_port)) {
@@ -821,6 +835,20 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 	engine.start_report_loop();
+
+	// 初始化 IP 视频播放器
+	ascend310b::IpVideoPlayer video_player(cfg.video_pc_ip, cfg.video_port);
+	if (!video_player.init()) {
+		std::cerr << "[310B] failed to init video player" << std::endl;
+		return 1;
+	}
+	
+	// 注册预生成的视频资产
+	// 挥手动作视频 (action_flag=1)
+	video_player.registerVideo(ascend310b::IpVideoPlayer::kActionWave, cfg.videos_dir + "/wave1.mp4", 0);
+	video_player.registerVideo(ascend310b::IpVideoPlayer::kActionWave, cfg.videos_dir + "/wave2.mp4", 1);
+	// 欢呼动作视频 (action_flag=2)
+	video_player.registerVideo(ascend310b::IpVideoPlayer::kActionCheer, cfg.videos_dir + "/heart1.mp4", 0);
 
 	BlockingQueue<PoseFrame> frame_queue;
 
@@ -865,6 +893,11 @@ int main(int argc, char** argv) {
 						  << " action_flag=" << result.action_flag
 						  << " action_conf=" << result.action_conf
 						  << " infer_us=" << infer_us << std::endl;
+				
+				// 触发动作对应的视频播放（仅当检测到有效动作时）
+				if (result.action_flag != kActionUnknown && result.action_conf >= kActionScoreThreshold) {
+					video_player.triggerAction(result.action_flag, result.action_conf, result.frame_id);
+				}
 			}
 		}
 	});
