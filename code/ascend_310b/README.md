@@ -1,206 +1,183 @@
-# 昇腾 310B 代码
+# Ascend 310B Pose 服务
 
-定位：系统"语义推理与决策中枢"。剥离所有像素级软计算，专注张量推理、目标追踪、状态机判定与协议分发。
+## 模块定位
+
+本模块负责 310B 侧的单 stream 姿态推理与联动控制：
+
+- 接收 PYNQ 视频 UDP 包（兼容 ROI1 协议与 communication 的 VID0 协议）。
+- 执行姿态推理与动作判定。
+- 将推理结果发送到 PC（UDP JSON）。
+- 将原始视频包旁路转发到 PC（UDP）。
+- 基于动作结果向 PC 发送视频播放控制指令。
+
+当前目标：先保证 310B 推理结果闭环可稳定运行，在此基础上降低旁路丢包。
 
 ## 当前状态
 
-- ✅ **姿态识别模型集成**: `yolo26/yolo26s-pose.om` 已部署
-- ✅ **动作分类逻辑**: 挥手/欢呼等动作的状态机判定
-- ✅ **三端 UDP 通信**: 推理结果通过 UDP 发送给 PC 端
-- ✅ **工程可编译**: 生成 `ascend310b_pose` 可执行文件
-- ✅ **IP 视频联动控制**: 视频资产管理、触发引擎、播放控制已实现（基于 communication 模块）
-- 🔴 **表情捕捉模块**: 待实现（人脸检测、DVPP ROI 处理、表情分类网络）
-- 🔴 **端到端数据通路**: 待联调（推理→视频触发闭环）
-
-## 核心功能
-
-### 已完成
-
-1. **AIPP/DVPP 硬件预处理**: 支持静态 AIPP 配置 (`config/aipp_static.cfg`)
-2. **NPU 姿态推理**: 基于 YOLOv26s-Pose 模型进行骨骼关键点提取（双路并发）
-3. **动作状态机**: 根据关键点判定挥手、欢呼等交互动作
-4. **协议分发**: 通过 UDP 将推理结果 (JSON 格式) 发送至 PC 端
-5. **IP 视频联动模块**: 
-   - 视频资产管理 (`ip_player/ip_video_player.h/cpp`)
-   - 触发动作对应的视频播放
-   - 支持无缝切换和中断控制
-   - **UDP 通信层**: 基于 `communication/src/310B_udp.cpp` 实现视频控制指令发送
-6. **PC 渲染联动**: PC 仅负责视频渲染与 IP 视频播放，推理计算全部在 310B NPU 上完成
-
-### 待完成
-
-1. **表情捕捉链路**
-   - 人脸检测算法集成
-   - DVPP ROI 区域裁剪
-   - 表情分类网络推理
-
-2. **性能优化**
-   - 端到端时延 < 100ms
-   - 动作识别准确率 > 90%
-   - 光照变化鲁棒性测试
+- 已完成：communication 协议接入（支持 VID0 + NV12 重组进推理）。
+- 已完成：单 stream 推理主链路（收包 -> 入队 -> 推理 -> 结果回传）。
+- 已完成：视频旁路转发（独立线程 + 大队列，缓解高包率拥塞）。
+- 已完成：视频联动控制（wave/heart 预生成视频触发）。
+- 已完成：工程可编译，目标文件为 `build/ascend310b_pose`。
+- 待完成：现场压测与丢包率基线固化。
+- 待完成：表情链路（人脸检测/表情分类）。
 
 ## 目录结构
 
-```
+```text
 ascend_310b/
-├── CMakeLists.txt          # 构建配置
-├── README.md               # 本文档
-├── config/
-│   └── aipp_static.cfg     # AIPP 静态配置文件
-├── include/
-│   └── pose_protocol.h     # 姿态推理协议定义
-├── scripts/
-│   └── build.sh            # 编译脚本
-├── src/
-│   └── main.cpp            # 主程序入口（NPU 双路推理 + 状态机+UDP 发送 + 视频触发）
-├── toolchain/
-│   └── aarch64.cmake       # 交叉编译工具链
-├── yolo26/
-│   ├── yolo26s-pose.om     # ✅ 已部署的姿态识别模型
-│   └── yolo26s-pose.pt     # 原始 PyTorch 模型
-└── ip_player/              # ✅ IP 视频播放控制模块
-    ├── ip_video_player.h   # 视频播放器接口定义
-    └── ip_video_player.cpp # 视频播放器实现
-
-communication/              # ✅ 三端 UDP 通信模块
 ├── CMakeLists.txt
+├── README.md
+├── config/
+│   └── aipp_static.cfg
 ├── include/
-│   └── udp_common.h        # UDP 公共工具头文件（含视频控制命令）
-└── src/
-    ├── 310B_udp.cpp        # ✅ 310B NPU 推理 + 视频联动控制（PC 仅渲染）
-    ├── pc_udp.cpp          # PC 端接收程序（渲染 + 视频播放）
-    └── pynq_udp.cpp        # PYNQ 端发送程序（视频采集）
+│   ├── ip_video_player.h
+│   └── pose_protocol.h
+├── models/
+│   └── yolo26/
+│       ├── yolo26s-pose.om
+│       └── yolo26s-pose.pt
+├── scripts/
+│   └── build.sh
+├── src/
+│   ├── ip_video_player.cpp
+│   └── main.cpp
+└── toolchain/
+      └── aarch64.cmake
 ```
 
-## 构建步骤
+## 关键端口约定
+
+- PYNQ -> 310B 输入：`--bind-port`（默认 `9090`）
+- 310B -> PC 推理结果：`--peer-port`（默认 `5566`）
+- 310B -> PC 视频旁路：`--video-forward-port`（默认 `5555`）
+- 310B -> PC 视频控制：`--video-port`（默认 `5567`）
+
+## 构建
+
+在 `code/ascend_310b` 目录执行：
 
 ```bash
-# 进入目录
-cd code/ascend_310b
-
-# 执行构建脚本
-./scripts/build.sh
-
-# 或手动构建
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=toolchain/aarch64.cmake
-cmake --build build -j
+cmake -S . -B build
+cmake --build build -j4
 ```
 
-生成目标：`build/ascend310b_pose`
+生成可执行文件：`build/ascend310b_pose`
 
-## 运行说明
+说明：
+
+- CMake 已处理 Ascend include 自动探测。
+- CMake 会根据主机架构选择匹配的 stub 库路径（x86_64 或 aarch64）。
+
+## 运行
+
+推荐显式传入模型路径（当前仓内模型位于 `models/yolo26`）：
 
 ```bash
-# 启动 310B 推理程序（使用默认配置）
-./build/ascend310b_pose
-
-# 或指定视频目录和 PC 地址
-./build/ascend310b_pose --videos-dir /path/to/videos --video-pc-ip 192.168.137.1
+./build/ascend310b_pose \
+   --model models/yolo26/yolo26s-pose.om \
+   --bind-ip 192.168.2.2 --bind-port 9090 \
+   --peer-ip 192.168.137.1 --peer-port 5566 \
+   --video-forward-ip 192.168.137.1 --video-forward-port 5555 \
+   --video-pc-ip 192.168.137.1 --video-port 5567 \
+   --videos-dir /home/data/videos
 ```
 
-程序将：
-1. 初始化 NPU 和 DVPP
-2. 加载 `yolo26s-pose.om` 模型
-3. 从 UDP 接收视频帧（来自 PYNQ）
-4. **执行 NPU 双路并发推理**（姿态识别 + 动作分类）
-5. 将推理结果通过 UDP 发送至 PC
-6. **根据识别结果触发对应视频播放**
-
-### 系统架构
-
-```
-┌─────────────┐     UDP 视频流      ┌──────────────────┐     UDP 转发      ┌─────────────┐
-│   PYNQ-Z2   │ ──────────────────► │   Ascend 310B    │ ─────────────────►│     PC      │
-│  视频采集   │                     │  NPU 双路推理    │                   │  渲染显示   │
-│  预处理     │                     │  动作分类        │                   │  视频播放   │
-└─────────────┘                     └──────────────────┘                   └─────────────┘
-                                           │                                      ▲
-                                           │         UDP 控制指令                  │
-                                           └──────────────────────────────────────┘
-                                               (video_path, action_type, conf)
-```
-
-### 命令行参数
+## 命令行参数
 
 | 参数 | 说明 | 默认值 |
-|------|------|--------|
-| `--model` | 姿态识别模型路径 | `yolo26/yolo26s-pose.om` |
-| `--bind-ip` | 接收视频帧的绑定 IP | `192.168.2.2` |
-| `--bind-port` | 接收视频帧的端口 | `9090` |
-| `--peer-ip` | PC 端 IP（发送推理结果） | `192.168.137.1` |
-| `--peer-port` | PC 端端口（发送推理结果） | `5566` |
-| `--video-pc-ip` | PC 端 IP（发送视频控制指令） | `192.168.137.1` |
-| `--video-port` | 视频控制端口 | `5567` |
-| `--videos-dir` | 预生成视频文件目录 | `/home/data/videos` |
-| `--device` | NPU 设备 ID | `0` |
+| --- | --- | --- |
+| `--model` | 姿态模型路径 | `yolo26/yolo26s-pose.om` |
+| `--bind-ip` | 接收视频流绑定 IP | `192.168.2.2` |
+| `--bind-port` | 接收视频流端口 | `9090` |
+| `--peer-ip` | 推理结果目标 IP | `192.168.137.1` |
+| `--peer-port` | 推理结果目标端口 | `5566` |
+| `--video-forward-ip` | 视频旁路目标 IP | `192.168.137.1` |
+| `--video-forward-port` | 视频旁路目标端口 | `5555` |
+| `--video-pc-ip` | 视频控制目标 IP | `192.168.137.1` |
+| `--video-port` | 视频控制目标端口 | `5567` |
+| `--videos-dir` | 预生成视频目录 | `/home/data/videos` |
+| `--device` | Ascend 设备 ID | `0` |
 
-## 动作识别协议
+## 协议说明
 
-推理结果通过 UDP 发送至 PC，格式为 JSON：
+### 输入视频协议
+
+- 主协议：`communication/include/udp_common.h` 中定义的 `VideoPacketHeader`（VID0）。
+- 兼容协议：`include/pose_protocol.h` 中 ROI1 头。
+- 对于 VID0，推理链路当前按 NV12 重组并送入 NPU。
+
+### 推理结果（310B -> PC）
+
+UDP 文本 JSON，示例：
 
 ```json
 {
-  "timestamp_us": 1234567890,
-  "action_flag": 1,
-  "confidence": 0.95,
-  "keypoints": [...]
+   "frame_id": 123,
+   "timestamp_ms": 1714200000123,
+   "kps_conf_mean": 0.8123,
+   "action_flag": 1,
+   "action_conf": 0.9345
 }
 ```
 
-- `action_flag`: 0=无动作，1=挥手，2=欢呼，3=其他
-- `confidence`: 置信度 (0.0-1.0)
-- `keypoints`: 骨骼关键点坐标数组
+动作标识：
 
-## 视频控制协议
+- `0`：未知/无动作
+- `1`：挥手
+- `2`：欢呼
 
-视频控制指令通过 UDP 发送至 PC 的 `5567` 端口，格式为 JSON：
+### 视频控制（310B -> PC）
 
-### 播放命令
+UDP 文本 JSON，示例：
+
 ```json
-{
-  "cmd": "play",
-  "video": "/home/data/videos/wave1.mp4",
-  "frame_id": 12345,
-  "confidence": 0.95,
-  "action_type": 1
-}
+{"cmd":"play","video":"/home/data/videos/wave1.mp4","frame_id":123}
 ```
 
-### 停止命令
-```json
-{"cmd": "stop"}
+也支持：
+
+- `{"cmd":"stop"}`
+- `{"cmd":"pause"}`
+- `{"cmd":"resume"}`
+
+## 运行时日志关注项
+
+### 推理链路
+
+关注日志：
+
+- `frame_id=... action_flag=... action_conf=... infer_us=...`
+
+用于确认推理闭环是否稳定。
+
+### 旁路链路
+
+每 5000 包打印统计：
+
+- `bypass_total`
+- `ok`
+- `send_drop`
+- `queue_drop`
+- `loss_pct`
+
+判读建议：
+
+- `queue_drop` 高：接收速率高于旁路发送速率，优先调队列和发送线程策略。
+- `send_drop` 高：链路拥塞或对端接收瓶颈，优先看网络与 PC 接收程序。
+
+## 系统链路
+
+```text
+PYNQ 视频流 -> 310B 收包/重组 -> NPU 推理 -> 结果(5566) -> PC
+                               |
+                               +-> 视频旁路(5555) -------> PC
+                               |
+                               +-> 视频控制(5567) -------> PC 播放器
 ```
 
-### 暂停命令
-```json
-{"cmd": "pause"}
-```
+## 已知事项
 
-### 恢复命令
-```json
-{"cmd": "resume"}
-```
-
-## 里程碑状态
-
-| 里程碑 | 任务 | 状态 |
-|--------|------|------|
-| M1 | FPGA 视频预处理 | ✅ 完成 |
-| M2 | 310B 姿态推理 | ✅ 完成 |
-| M3 | 三端 UDP 通信 | ✅ 完成 |
-| M4 | 表情捕捉模块 | 🔴 待开发 |
-| M5 | IP 视频联动 | ✅ 完成 |
-| M6 | 端到端联调 | 🔴 待测试 |
-
-## 已知问题
-
-- 表情捕捉链路尚未集成，当前仅支持姿态识别
-- 端到端性能指标待验证
-
-## 下一步计划
-
-1. 实现人脸检测和表情分类网络
-2. ~~创建 `ip_player/` 模块，集成视频播放控制~~ (已完成)
-3. ~~完成推理结果到视频触发的闭环逻辑~~ (已完成)
-4. ~~将推理计算移至 310B NPU，PC 仅负责渲染~~ (已完成)
-5. 进行端到端性能测试和优化
+- 代码中的 `--model` 默认值仍为 `yolo26/yolo26s-pose.om`，而当前仓内模型在 `models/yolo26/`。
+- 现场运行建议始终显式传 `--model models/yolo26/yolo26s-pose.om`。
+- 目前优先级是推理闭环与旁路丢包收敛，表情链路暂未接入。

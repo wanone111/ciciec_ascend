@@ -131,8 +131,8 @@ inline bool parse_video_header(const std::vector<uint8_t>& packet, VideoPacketHe
     if (packet.size() != sizeof(VideoPacketHeader) + hdr.payload_bytes) { // 校验包总长度
         return false;                                // 长度不一致
     }
-    if (hdr.pixel_format != PIX_FMT_RGB24 && hdr.pixel_format != PIX_FMT_MJPEG) { // 校验像素格式
-        return false;                                // 当前仅支持 RGB24 和 MJPEG
+    if (hdr.pixel_format != PIX_FMT_RGB24 && hdr.pixel_format != PIX_FMT_MJPEG && hdr.pixel_format != PIX_FMT_NV12) { // 校验像素格式
+        return false;                                // 当前支持 RGB24/MJPEG/NV12
     }
 
     *out = hdr;                                      // 输出解析结果
