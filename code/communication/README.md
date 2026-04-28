@@ -38,7 +38,7 @@
 - [src/video_stream_interface_pybind.cpp](src/video_stream_interface_pybind.cpp) 是 pybind11 Python 绑定实现
 - [src/pc_udp.cpp](src/pc_udp.cpp) 是 PC 端分片重组和 MP4 落盘程序
 - [CMakeLists.txt](CMakeLists.txt) 提供 CMake 构建入口
-- [example_python_inference.py](example_python_inference.py) Python 使用示例脚本
+- [python/example_python_inference.py](example_python_inference.py) Python 使用示例脚本
 
 ## 协议与共通接口
 
