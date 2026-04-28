@@ -13,12 +13,22 @@
 #include <arpa/inet.h>                              // inet_pton/htons
 #include <unistd.h>                                 // close
 
+
+// ============ IP 地址和端口定义 ============
 #define PC_IP "192.168.137.1"                       // PC 的 IP（与 310B eth1 通信）
 #define PYNQ_IP "192.168.2.99"                     // PYNQ 的 IP（与 310B eth0 通信）
 #define ASCEND_310B_IP "192.168.2.2"               // 310B 的 eth0 IP（用于 PYNQ -> 310B）
 #define ASCEND_310B_PC_IP "192.168.137.100"        // 310B 的 eth1 IP（用于 310B <-> PC）
-#define PC_PORT 5555                                 // PC 监听端口
-#define PYNQ_PORT 9090                               // PYNQ/310B 监听端口
+
+// 视频流端口
+#define PC_PORT 5555                                 // PC 监听端口（视频流接收）
+#define PYNQ_PORT 9090                               // PYNQ/310B 监听端口（视频流接收）
+
+// 控制端口
+#define PC_CTRL_PORT 5566                            // PC 控制端口（推理结果发送）
+#define PC_VIDEO_CTRL_PORT 5567                      // PC 视频控制端口（播放指令发送）
+
+// 视频参数
 #define VIDEO_WIDTH 640                              // 默认视频宽度（可按现场修改）
 #define VIDEO_HEIGHT 480                             // 默认视频高度（可按现场修改）
 #define VIDEO_FPS 15                                 // 默认视频帧率（可按现场修改）
@@ -33,13 +43,15 @@ constexpr uint32_t VIDEO_MAGIC = 0x56494430;         // 协议魔数 "VID0"
 constexpr uint8_t VIDEO_VERSION = 1;                 // 协议版本号
 constexpr uint8_t PIX_FMT_RGB24 = 1;                 // 像素格式枚举：RGB24
 constexpr uint8_t PIX_FMT_MJPEG = 2;                 // 像素格式枚举：MJPEG
+constexpr uint8_t PIX_FMT_NV12 = 3;                  // 像素格式枚举：NV12 (YUV420SP)
 constexpr int FRAME_TIMEOUT_MS = 800;                // 帧重组超时时间，超时丢帧
 constexpr int DEFAULT_UDP_RCVBUF_BYTES = 8 * 1024 * 1024; // 默认 UDP 接收缓冲区大小
 constexpr int DEFAULT_UDP_SNDBUF_BYTES = 8 * 1024 * 1024; // 默认 UDP 发送缓冲区大小
 
 enum class MsgType : uint8_t {                       // 协议消息类型
     VIDEO_FRAGMENT = 1,                              // 视频分片消息
-    CONTROL_TEXT = 2                                 // 文本控制消息
+    CONTROL_TEXT = 2,                                // 文本控制消息
+    VIDEO_CTRL_CMD = 3                               // 视频播放控制命令
 };
 
 #pragma pack(push, 1)                                // 强制 1 字节对齐，避免不同平台填充差异
@@ -119,8 +131,8 @@ inline bool parse_video_header(const std::vector<uint8_t>& packet, VideoPacketHe
     if (packet.size() != sizeof(VideoPacketHeader) + hdr.payload_bytes) { // 校验包总长度
         return false;                                // 长度不一致
     }
-    if (hdr.pixel_format != PIX_FMT_RGB24 && hdr.pixel_format != PIX_FMT_MJPEG) { // 校验像素格式
-        return false;                                // 当前仅支持 RGB24 和 MJPEG
+    if (hdr.pixel_format != PIX_FMT_RGB24 && hdr.pixel_format != PIX_FMT_MJPEG && hdr.pixel_format != PIX_FMT_NV12) { // 校验像素格式
+        return false;                                // 当前支持 RGB24/MJPEG/NV12
     }
 
     *out = hdr;                                      // 输出解析结果
@@ -228,6 +240,15 @@ inline int recv_bytes(int fd, std::vector<uint8_t>* out, sockaddr_in* src = null
     out->assign(buf.begin(), buf.begin() + n);       // 拷贝有效字节到输出向量
     return n;                                        // 返回接收长度
 }
+
+inline int send_video_ctrl_cmd(int fd, const std::string& json_cmd, const sockaddr_in& dst) { // 发送视频控制命令（JSON 格式）
+    int sent = sendto(fd, json_cmd.data(), json_cmd.size(), 0, reinterpret_cast<const sockaddr*>(&dst), sizeof(dst)); // 调用 sendto
+    if (sent < 0) {                                  // 判断发送是否失败
+        std::cerr << "[UDP] send video ctrl cmd failed: " << strerror(errno) << std::endl; // 打印错误
+    }
+    return sent;                                     // 返回发送结果
+}
+
 inline std::string recv_msg(int fd, sockaddr_in* src = nullptr, socklen_t* srclen = nullptr) { // 接收文本消息
     char buf[BUF_SIZE]{};                            // 定义接收缓冲区
     sockaddr_in tmp_src{};                           // 定义临时源地址

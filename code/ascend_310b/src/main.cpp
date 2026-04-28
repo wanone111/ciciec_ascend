@@ -1,5 +1,7 @@
 
 #include "pose_protocol.h"
+#include "ip_video_player.h"
+#include "udp_common.h"
 
 #include <acl/acl.h>
 
@@ -18,6 +20,7 @@
 #include <mutex>
 #include <netinet/in.h>
 #include <optional>
+#include <fcntl.h>
 #include <sstream>
 #include <string>
 #include <sys/socket.h>
@@ -47,6 +50,7 @@ constexpr int kActionCheer = 2;
 constexpr int kDefaultDeviceId = 0;
 constexpr int kDefaultBindPort = 9090;
 constexpr int kDefaultResultPort = 5566;
+constexpr int kDefaultVideoBypassPort = 5555;
 
 std::atomic<bool> g_stop{false};
 
@@ -62,15 +66,20 @@ uint64_t now_ms() {
 template <typename T>
 class BlockingQueue {
 public:
+	explicit BlockingQueue(std::size_t capacity = 64)
+		: capacity_(capacity == 0 ? 1 : capacity) {}
+
 	bool push(T value) {
 		std::unique_lock<std::mutex> lock(mutex_);
+		bool dropped_oldest = false;
 		if (queue_.size() >= capacity_) {
 			queue_.pop_front();
+			dropped_oldest = true;
 		}
 		queue_.push_back(std::move(value));
 		lock.unlock();
 		cv_.notify_one();
-		return true;
+		return !dropped_oldest;
 	}
 
 	bool pop(T* out) {
@@ -89,7 +98,7 @@ public:
 	}
 
 private:
-	static constexpr std::size_t capacity_ = 64;
+	const std::size_t capacity_;
 	std::mutex mutex_;
 	std::condition_variable cv_;
 	std::deque<T> queue_;
@@ -146,6 +155,22 @@ public:
 		return ::setsockopt(fd_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) == 0;
 	}
 
+	bool set_nonblocking(bool enable) {
+		if (fd_ < 0) {
+			return false;
+		}
+		int flags = ::fcntl(fd_, F_GETFL, 0);
+		if (flags < 0) {
+			return false;
+		}
+		if (enable) {
+			flags |= O_NONBLOCK;
+		} else {
+			flags &= ~O_NONBLOCK;
+		}
+		return ::fcntl(fd_, F_SETFL, flags) == 0;
+	}
+
 	bool recv_packet(std::vector<uint8_t>* out, sockaddr_in* src = nullptr) {
 		if (!out) {
 			return false;
@@ -169,6 +194,20 @@ public:
 		return sent == static_cast<int>(text.size());
 	}
 
+	bool send_bytes(const uint8_t* data, std::size_t bytes, const sockaddr_in& dst) {
+		if (!data || bytes == 0) {
+			return false;
+		}
+		int sent = ::sendto(fd_, data, bytes, 0, reinterpret_cast<const sockaddr*>(&dst), sizeof(dst));
+		if (sent < 0) {
+			if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+				std::cerr << "[310B] send_bytes failed: " << std::strerror(errno) << std::endl;
+			}
+			return false;
+		}
+		return sent == static_cast<int>(bytes);
+	}
+
 	int fd() const {
 		return fd_;
 	}
@@ -182,7 +221,7 @@ public:
 
 private:
 	void set_buffers() {
-		int buf_size = 8 * 1024 * 1024;
+		int buf_size = 32 * 1024 * 1024;
 		(void)::setsockopt(fd_, SOL_SOCKET, SO_RCVBUF, &buf_size, sizeof(buf_size));
 		(void)::setsockopt(fd_, SOL_SOCKET, SO_SNDBUF, &buf_size, sizeof(buf_size));
 	}
@@ -305,6 +344,168 @@ private:
 	}
 
 	std::unordered_map<FrameKey, InflightRoi, FrameKeyHash> inflight_;
+};
+
+struct InflightCommFrame {
+	udp_net::VideoPacketHeader hdr{};
+	std::vector<uint8_t> frame_bytes;
+	std::vector<uint8_t> received;
+	std::vector<uint16_t> frag_sizes;
+	uint16_t recv_cnt = 0;
+	uint64_t start_ms = 0;
+};
+
+class CommAssembler {
+public:
+	bool push_packet(const std::vector<uint8_t>& packet, PoseFrame* completed) {
+		if (!completed) {
+			return false;
+		}
+
+		udp_net::VideoPacketHeader hdr{};
+		if (!udp_net::parse_video_header(packet, &hdr)) {
+			return false;
+		}
+
+		if (hdr.pixel_format != udp_net::PIX_FMT_NV12) {
+			if (hdr.frag_idx == 0 && (hdr.frame_id % 60 == 0)) {
+				std::cerr << "[310B] skip non-NV12 frame, frame_id=" << hdr.frame_id
+						  << " fmt=" << static_cast<int>(hdr.pixel_format) << std::endl;
+			}
+			return false;
+		}
+
+		auto it = inflight_.find(hdr.frame_id);
+		if (it == inflight_.end()) {
+			cleanup_old();
+			if (inflight_.size() >= kMaxInflightFrames) {
+				return false;
+			}
+			InflightCommFrame fresh;
+			if (!init_inflight(hdr, &fresh)) {
+				return false;
+			}
+			it = inflight_.emplace(hdr.frame_id, std::move(fresh)).first;
+		}
+
+		InflightCommFrame& frame = it->second;
+		if (!same_frame_meta(hdr, frame.hdr)) {
+			inflight_.erase(it);
+			return false;
+		}
+		if (hdr.frag_idx >= frame.hdr.frag_cnt) {
+			return false;
+		}
+		if (hdr.payload_bytes > udp_net::UDP_SAFE_PAYLOAD) {
+			inflight_.erase(it);
+			return false;
+		}
+
+		const std::size_t payload_offset = sizeof(udp_net::VideoPacketHeader);
+		const std::size_t write_offset = static_cast<std::size_t>(hdr.frag_idx) * udp_net::UDP_SAFE_PAYLOAD;
+		if (write_offset + hdr.payload_bytes > frame.frame_bytes.size()) {
+			inflight_.erase(it);
+			return false;
+		}
+
+		if (!frame.received[hdr.frag_idx]) {
+			std::memcpy(frame.frame_bytes.data() + write_offset, packet.data() + payload_offset, hdr.payload_bytes);
+			frame.received[hdr.frag_idx] = 1;
+			frame.frag_sizes[hdr.frag_idx] = hdr.payload_bytes;
+			++frame.recv_cnt;
+		}
+
+		if (frame.recv_cnt == frame.hdr.frag_cnt) {
+			std::size_t valid_bytes = 0;
+			for (uint16_t i = 0; i < frame.hdr.frag_cnt; ++i) {
+				valid_bytes += frame.frag_sizes[i];
+			}
+			const std::size_t expected = expected_bytes(frame.hdr);
+			if (valid_bytes != expected) {
+				inflight_.erase(it);
+				return false;
+			}
+
+			completed->hdr = to_pose_header(frame.hdr);
+			completed->payload = std::move(frame.frame_bytes);
+			inflight_.erase(it);
+			return true;
+		}
+
+		return false;
+	}
+
+private:
+	static constexpr std::size_t kMaxInflightFrames = 16;
+	static constexpr uint64_t kFrameTimeoutMs = 800;
+
+	static bool same_frame_meta(const udp_net::VideoPacketHeader& a, const udp_net::VideoPacketHeader& b) {
+		return a.frame_id == b.frame_id && a.frag_cnt == b.frag_cnt && a.width == b.width &&
+				a.height == b.height && a.pixel_format == b.pixel_format;
+	}
+
+	static std::size_t expected_bytes(const udp_net::VideoPacketHeader& hdr) {
+		if (hdr.pixel_format != udp_net::PIX_FMT_NV12) {
+			return 0;
+		}
+		return static_cast<std::size_t>(hdr.width) * static_cast<std::size_t>(hdr.height) * 3 / 2;
+	}
+
+	static PoseRoiPacketHeader to_pose_header(const udp_net::VideoPacketHeader& hdr) {
+		PoseRoiPacketHeader pose_hdr{};
+		pose_hdr.magic = pose310b::POSE_MAGIC;
+		pose_hdr.version = pose310b::POSE_VERSION;
+		pose_hdr.msg_type = pose310b::POSE_MSG_ROI_FRAME;
+		pose_hdr.header_bytes = pose310b::POSE_HEADER_BYTES;
+		pose_hdr.frame_id = hdr.frame_id;
+		pose_hdr.roi_id = hdr.frame_id;
+		pose_hdr.roi_index = 0;
+		pose_hdr.roi_count = 1;
+		pose_hdr.frag_idx = 0;
+		pose_hdr.frag_cnt = 1;
+		pose_hdr.payload_bytes = 0;
+		pose_hdr.pixel_format = pose310b::POSE_PIXEL_FORMAT_NV12;
+		pose_hdr.width = hdr.width;
+		pose_hdr.height = hdr.height;
+		pose_hdr.src_width = hdr.width;
+		pose_hdr.src_height = hdr.height;
+		pose_hdr.roi_x = 0;
+		pose_hdr.roi_y = 0;
+		pose_hdr.roi_w = hdr.width;
+		pose_hdr.roi_h = hdr.height;
+		pose_hdr.weight = 100;
+		pose_hdr.timestamp_ms = hdr.timestamp_us / 1000;
+		return pose_hdr;
+	}
+
+	static bool init_inflight(const udp_net::VideoPacketHeader& hdr, InflightCommFrame* frame) {
+		const std::size_t bytes = expected_bytes(hdr);
+		if (bytes == 0 || hdr.frag_cnt == 0) {
+			return false;
+		}
+		frame->hdr = hdr;
+		frame->frame_bytes.assign(bytes, 0);
+		frame->received.assign(hdr.frag_cnt, 0);
+		frame->frag_sizes.assign(hdr.frag_cnt, 0);
+		frame->start_ms = now_ms();
+		return true;
+	}
+
+	void cleanup_old() {
+		const uint64_t now = now_ms();
+		std::vector<uint32_t> expired;
+		expired.reserve(inflight_.size());
+		for (const auto& kv : inflight_) {
+			if (now > kv.second.start_ms && now - kv.second.start_ms > kFrameTimeoutMs) {
+				expired.push_back(kv.first);
+			}
+		}
+		for (const auto& key : expired) {
+			inflight_.erase(key);
+		}
+	}
+
+	std::unordered_map<uint32_t, InflightCommFrame> inflight_;
 };
 
 struct PoseKeypoint {
@@ -754,7 +955,14 @@ struct AppConfig {
 	int bind_port = kDefaultBindPort;
 	std::string peer_ip = "192.168.137.1";
 	int peer_port = kDefaultResultPort;
+	std::string video_forward_ip = "192.168.137.1";
+	int video_forward_port = kDefaultVideoBypassPort;
 	int device_id = kDefaultDeviceId;
+	
+	// IP 视频联动配置
+	std::string video_pc_ip = "192.168.137.1";
+	int video_port = ascend310b::IpVideoPlayer::kDefaultVideoPort;
+	std::string videos_dir = "/home/data/videos";  // 预生成视频目录
 };
 
 AppConfig parse_args(int argc, char** argv) {
@@ -781,8 +989,18 @@ AppConfig parse_args(int argc, char** argv) {
 			next(&cfg.peer_ip);
 		} else if (arg == "--peer-port") {
 			next_int(&cfg.peer_port);
+		} else if (arg == "--video-forward-ip") {
+			next(&cfg.video_forward_ip);
+		} else if (arg == "--video-forward-port") {
+			next_int(&cfg.video_forward_port);
 		} else if (arg == "--device") {
 			next_int(&cfg.device_id);
+		} else if (arg == "--video-pc-ip") {
+			next(&cfg.video_pc_ip);
+		} else if (arg == "--video-port") {
+			next_int(&cfg.video_port);
+		} else if (arg == "--videos-dir") {
+			next(&cfg.videos_dir);
 		}
 	}
 	return cfg;
@@ -797,6 +1015,9 @@ int main(int argc, char** argv) {
 	AppConfig cfg = parse_args(argc, argv);
 	std::cout << "[310B] model=" << cfg.model_path << " bind=" << cfg.bind_ip << ':' << cfg.bind_port
 			  << " peer=" << cfg.peer_ip << ':' << cfg.peer_port << std::endl;
+	std::cout << "[310B] video_bypass=" << cfg.video_forward_ip << ':' << cfg.video_forward_port << std::endl;
+	std::cout << "[310B] video_pc=" << cfg.video_pc_ip << ":" << cfg.video_port 
+			  << " videos_dir=" << cfg.videos_dir << std::endl;
 
 	UdpSocket rx;
 	if (!rx.open_and_bind(cfg.bind_ip, cfg.bind_port)) {
@@ -808,11 +1029,22 @@ int main(int argc, char** argv) {
 	if (!tx.open_unbound()) {
 		return 1;
 	}
+	UdpSocket tx_video;
+	if (!tx_video.open_unbound()) {
+		return 1;
+	}
 	sockaddr_in peer{};
 	peer.sin_family = AF_INET;
 	peer.sin_port = htons(static_cast<uint16_t>(cfg.peer_port));
 	if (::inet_pton(AF_INET, cfg.peer_ip.c_str(), &peer.sin_addr) <= 0) {
 		std::cerr << "[310B] invalid peer ip: " << cfg.peer_ip << std::endl;
+		return 1;
+	}
+	sockaddr_in video_peer{};
+	video_peer.sin_family = AF_INET;
+	video_peer.sin_port = htons(static_cast<uint16_t>(cfg.video_forward_port));
+	if (::inet_pton(AF_INET, cfg.video_forward_ip.c_str(), &video_peer.sin_addr) <= 0) {
+		std::cerr << "[310B] invalid video forward ip: " << cfg.video_forward_ip << std::endl;
 		return 1;
 	}
 
@@ -822,22 +1054,74 @@ int main(int argc, char** argv) {
 	}
 	engine.start_report_loop();
 
-	BlockingQueue<PoseFrame> frame_queue;
+	// 初始化 IP 视频播放器
+	ascend310b::IpVideoPlayer video_player(cfg.video_pc_ip, cfg.video_port);
+	if (!video_player.init()) {
+		std::cerr << "[310B] failed to init video player" << std::endl;
+		return 1;
+	}
+	
+	// 注册预生成的视频资产
+	// 挥手动作视频 (action_flag=1)
+	video_player.registerVideo(ascend310b::IpVideoPlayer::kActionWave, cfg.videos_dir + "/wave1.mp4", 0);
+	video_player.registerVideo(ascend310b::IpVideoPlayer::kActionWave, cfg.videos_dir + "/wave2.mp4", 1);
+	// 欢呼动作视频 (action_flag=2)
+	video_player.registerVideo(ascend310b::IpVideoPlayer::kActionCheer, cfg.videos_dir + "/heart1.mp4", 0);
+
+	BlockingQueue<PoseFrame> frame_queue(64);
+	BlockingQueue<std::vector<uint8_t>> bypass_queue(4096);
+	std::atomic<uint64_t> bypass_ok{0};
+	std::atomic<uint64_t> bypass_send_drop{0};
+	std::atomic<uint64_t> bypass_queue_drop{0};
 
 	std::thread recv_thread([&] {
-		RoiAssembler assembler;
+		RoiAssembler roi_assembler;
+		CommAssembler comm_assembler;
 		while (!g_stop.load(std::memory_order_relaxed)) {
 			std::vector<uint8_t> packet;
 			sockaddr_in src{};
 			if (!rx.recv_packet(&packet, &src)) {
 				continue;
 			}
+
 			PoseFrame frame;
-			if (assembler.push_packet(packet, &frame)) {
+			if (roi_assembler.push_packet(packet, &frame) || comm_assembler.push_packet(packet, &frame)) {
 				frame_queue.push(std::move(frame));
+			}
+
+			if (!bypass_queue.push(std::move(packet))) {
+				bypass_queue_drop.fetch_add(1, std::memory_order_relaxed);
 			}
 		}
 		frame_queue.notify_all();
+		bypass_queue.notify_all();
+	});
+
+	std::thread bypass_thread([&] {
+		while (!g_stop.load(std::memory_order_relaxed)) {
+			std::vector<uint8_t> packet;
+			if (!bypass_queue.pop(&packet)) {
+				break;
+			}
+			if (tx_video.send_bytes(packet.data(), packet.size(), video_peer)) {
+				bypass_ok.fetch_add(1, std::memory_order_relaxed);
+			} else {
+				bypass_send_drop.fetch_add(1, std::memory_order_relaxed);
+			}
+
+			const uint64_t ok = bypass_ok.load(std::memory_order_relaxed);
+			const uint64_t send_drop = bypass_send_drop.load(std::memory_order_relaxed);
+			const uint64_t queue_drop = bypass_queue_drop.load(std::memory_order_relaxed);
+			const uint64_t total = ok + send_drop + queue_drop;
+			if (total != 0 && (total % 5000 == 0)) {
+				const double loss = static_cast<double>(send_drop + queue_drop) * 100.0 / static_cast<double>(total);
+				std::cout << "[310B] bypass_total=" << total
+						  << " ok=" << ok
+						  << " send_drop=" << send_drop
+						  << " queue_drop=" << queue_drop
+						  << " loss_pct=" << std::fixed << std::setprecision(2) << loss << std::endl;
+			}
+		}
 	});
 
 	std::thread infer_thread([&] {
@@ -865,6 +1149,11 @@ int main(int argc, char** argv) {
 						  << " action_flag=" << result.action_flag
 						  << " action_conf=" << result.action_conf
 						  << " infer_us=" << infer_us << std::endl;
+				
+				// 触发动作对应的视频播放（仅当检测到有效动作时）
+				if (result.action_flag != kActionUnknown && result.action_conf >= kActionScoreThreshold) {
+					video_player.triggerAction(result.action_flag, result.action_conf, result.frame_id);
+				}
 			}
 		}
 	});
@@ -874,8 +1163,12 @@ int main(int argc, char** argv) {
 	}
 
 	frame_queue.notify_all();
+	bypass_queue.notify_all();
 	if (recv_thread.joinable()) {
 		recv_thread.join();
+	}
+	if (bypass_thread.joinable()) {
+		bypass_thread.join();
 	}
 	if (infer_thread.joinable()) {
 		infer_thread.join();
