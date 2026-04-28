@@ -13,15 +13,11 @@ dist/
 venv/
 .venv/
 __pycache__/
-*.egg-info/
-node_modules/
+*.pyc
 
-# IDE and editor files
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
-*.tmp
 
 # Logs
 *.log
@@ -30,13 +26,4 @@ node_modules/
 .env
 .env.local
 *.env.*
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# OS generated files
-.DS_Store
-Thumbs.db
 ```

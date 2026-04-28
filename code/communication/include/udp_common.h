@@ -12,6 +12,13 @@
 #include <netinet/in.h>                             // sockaddr_in
 #include <arpa/inet.h>                              // inet_pton/htons
 #include <unistd.h>                                 // close
+#include <sys/epoll.h>                              // epoll 相关接口
+#include <thread>                                   // std::this_thread
+#include <functional>                               // std::function
+#include <atomic>                                   // std::atomic
+#include <unordered_map>                            // std::unordered_map
+#include <fcntl.h>                                  // fcntl, F_GETFL, F_SETFL, O_NONBLOCK
+#include <algorithm>                                // std::remove
 
 
 // ============ IP 地址和端口定义 ============
@@ -280,6 +287,146 @@ inline std::string recv_msg(int fd, sockaddr_in* src = nullptr, socklen_t* srcle
     return std::string(buf, n);                      // 返回接收到的字符串
 }                                                    // 接收消息结束
 
-}                                                    // 结束命名空间
+// ============ EpollManager 类：统一管理多个 UDP socket 的 I/O ============
+class EpollManager {
+public:
+    explicit EpollManager(int max_events = 64) 
+        : epoll_fd_(-1), max_events_(max_events), running_(false) {
+        epoll_fd_ = epoll_create1(0);
+        if (epoll_fd_ < 0) {
+            std::cerr << "[Epoll] epoll_create1 failed: " << strerror(errno) << std::endl;
+        }
+        events_.resize(max_events_);
+    }
+
+    ~EpollManager() {
+        stop();
+        for (auto& kv : socket_callbacks_) {
+            if (kv.first >= 0) {
+                close(kv.first);
+            }
+        }
+        if (epoll_fd_ >= 0) {
+            close(epoll_fd_);
+        }
+    }
+
+    // 添加 socket 到 epoll 监听
+    bool add_socket(int fd, const std::function<void(int fd)>& callback) {
+        if (epoll_fd_ < 0 || fd < 0) {
+            return false;
+        }
+
+        // 设置非阻塞
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (flags < 0) {
+            std::cerr << "[Epoll] fcntl F_GETFL failed: " << strerror(errno) << std::endl;
+            return false;
+        }
+        if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+            std::cerr << "[Epoll] fcntl F_SETFL failed: " << strerror(errno) << std::endl;
+            return false;
+        }
+
+        epoll_event ev{};
+        ev.events = EPOLLIN | EPOLLET;  // 边沿触发
+        ev.data.fd = fd;
+
+        if (epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &ev) < 0) {
+            std::cerr << "[Epoll] epoll_ctl ADD failed: " << strerror(errno) << std::endl;
+            return false;
+        }
+
+        socket_callbacks_[fd] = callback;
+        socket_fds_.push_back(fd);
+        return true;
+    }
+
+    // 移除 socket
+    void remove_socket(int fd) {
+        if (epoll_fd_ < 0 || fd < 0) {
+            return;
+        }
+
+        epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, nullptr);
+        socket_callbacks_.erase(fd);
+        socket_fds_.erase(std::remove(socket_fds_.begin(), socket_fds_.end(), fd), socket_fds_.end());
+    }
+
+    // 启动 epoll 循环（阻塞）
+    void start() {
+        if (epoll_fd_ < 0) {
+            return;
+        }
+
+        running_ = true;
+        std::vector<uint8_t> buffer;
+        sockaddr_in src{};
+        socklen_t srclen = sizeof(src);
+
+        while (running_) {
+            int nfds = epoll_wait(epoll_fd_, events_.data(), max_events_, 100);  // 100ms 超时
+            if (nfds < 0) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                std::cerr << "[Epoll] epoll_wait failed: " << strerror(errno) << std::endl;
+                break;
+            }
+
+            for (int i = 0; i < nfds; ++i) {
+                int fd = events_[i].data.fd;
+                auto it = socket_callbacks_.find(fd);
+                if (it == socket_callbacks_.end()) {
+                    continue;
+                }
+
+                // 处理可读事件
+                if (events_[i].events & EPOLLIN) {
+                    try {
+                        it->second(fd);
+                    } catch (const std::exception& e) {
+                        std::cerr << "[Epoll] callback error on fd " << fd << ": " << e.what() << std::endl;
+                    }
+                }
+
+                // 处理错误/挂起
+                if (events_[i].events & (EPOLLERR | EPOLLHUP)) {
+                    std::cerr << "[Epoll] socket error/hup on fd " << fd << std::endl;
+                    remove_socket(fd);
+                }
+            }
+        }
+    }
+
+    // 后台启动
+    void start_background() {
+        thread_ = std::thread(&EpollManager::start, this);
+    }
+
+    // 停止
+    void stop() {
+        running_ = false;
+        if (thread_.joinable()) {
+            thread_.join();
+        }
+    }
+
+    // 获取 socket 数量
+    size_t socket_count() const {
+        return socket_fds_.size();
+    }
+
+private:
+    int epoll_fd_;
+    int max_events_;
+    std::atomic<bool> running_;
+    std::vector<epoll_event> events_;
+    std::unordered_map<int, std::function<void(int fd)>> socket_callbacks_;
+    std::vector<int> socket_fds_;
+    std::thread thread_;
+};
+
+}  // 结束命名空间
 
 #endif                                               // 结束头文件保护
