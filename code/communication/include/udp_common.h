@@ -39,6 +39,9 @@ namespace udp_net {                                  // UDP 辅助命名空间
 constexpr int BUF_SIZE = 1024;                       // ACK 消息缓冲区大小
 constexpr int ACK_TIMEOUT_SEC = 1;                   // ACK 接收超时时间
 constexpr std::size_t UDP_SAFE_PAYLOAD = 1200;       // 单包安全载荷，避免链路层分片
+constexpr std::size_t MAX_VIDEO_FRAME_BYTES = 16 * 1024 * 1024; // 单帧最大字节数，避免异常包占满内存
+constexpr uint16_t MAX_VIDEO_FRAG_CNT = static_cast<uint16_t>(
+    (MAX_VIDEO_FRAME_BYTES + UDP_SAFE_PAYLOAD - 1) / UDP_SAFE_PAYLOAD); // 单帧最大分片数
 constexpr uint32_t VIDEO_MAGIC = 0x56494430;         // 协议魔数 "VID0"
 constexpr uint8_t VIDEO_VERSION = 1;                 // 协议版本号
 constexpr uint8_t PIX_FMT_RGB24 = 1;                 // 像素格式枚举：RGB24
@@ -66,7 +69,7 @@ struct VideoPacketHeader {                           // 视频 UDP 分片包头
     uint16_t payload_bytes;                          // 当前分片载荷字节数
     uint16_t width;                                  // 视频宽度
     uint16_t height;                                 // 视频高度
-    uint8_t pixel_format;                            // 像素格式，当前固定 RGB24
+    uint8_t pixel_format;                            // 像素格式，当前支持 RGB24/MJPEG/NV12
     uint8_t reserved0;                               // 预留字段，后续扩展
     uint64_t timestamp_us;                           // 采集时间戳（微秒）
 };
@@ -124,6 +127,15 @@ inline bool parse_video_header(const std::vector<uint8_t>& packet, VideoPacketHe
     }
     if (hdr.header_bytes != sizeof(VideoPacketHeader)) { // 校验包头长度
         return false;                                // 长度不匹配
+    }
+    if (hdr.frag_cnt == 0 || hdr.frag_cnt > MAX_VIDEO_FRAG_CNT) { // 校验分片数量范围
+        return false;                                // 分片数量非法
+    }
+    if (hdr.frag_idx >= hdr.frag_cnt) {              // 校验分片序号范围
+        return false;                                // 分片序号非法
+    }
+    if (hdr.payload_bytes == 0 || hdr.payload_bytes > UDP_SAFE_PAYLOAD) { // 校验载荷长度范围
+        return false;                                // 载荷长度非法
     }
     if (hdr.msg_type != static_cast<uint8_t>(MsgType::VIDEO_FRAGMENT)) { // 校验消息类型
         return false;                                // 不是视频分片

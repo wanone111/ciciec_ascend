@@ -1,12 +1,13 @@
 # UDP 视频流通信说明
 
-本目录当前用于三端 UDP 视频流联调：`PYNQ -> 310B -> PC`，并保留 `PC -> 310B -> PYNQ` 控制透传通道。
+本目录当前用于三端 UDP 视频流联调：`PYNQ -> 310B -> PC`，并提供 **310B 纯视频流接口**供外部程序（如 Python）调用进行 NPU 推理。
 
 ## 当前状态
 
 - ✅ **视频分片协议**: 已完成三端编译和基础联调
 - ✅ **上行链路**: PYNQ 采集帧并分片发送到 310B，310B 中继转发到 PC
 - ✅ **下行链路**: PC 发送控制消息到 310B，310B 透传到 PYNQ
+- ✅ **视频流接口**: 310B 提供完整视频帧回调接口，支持外部程序接入推理
 - 🔴 **推理数据通道**: 待集成（310B 推理结果→PC）
 - 🔴 **IP 视频触发通道**: 待集成（PC 根据推理结果触发视频播放）
 
@@ -18,6 +19,7 @@
 - **中继转发**: 310B 原样转发视频分片到 PC，不做重组和推理
 - **落盘编码**: PC 重组完整帧后调用 ffmpeg 编码输出 MP4
 - **下行控制**: PC 发送控制消息到 310B，310B 透传到最近活跃的 PYNQ 源地址
+- **视频流接口**: 310B 提供 `VideoStreamInterface` 类，可接收完整视频帧并回调外部推理函数
 
 ### 待扩展
 
@@ -28,7 +30,7 @@
 
 - [include/udp_common.h](include/udp_common.h) 提供工程共通定义：IP/端口、视频分片协议头、字节序转换、UDP 收发和 socket 缓冲区调优函数
 - [src/pynq_udp.cpp](src/pynq_udp.cpp) 是 PYNQ 端采集与分片发送程序（V4L2 mmap）
-- [src/310B_udp.cpp](src/310B_udp.cpp) 是 310B 端纯转发与控制透传程序
+- [src/310B_udp.cpp](src/310B_udp.cpp) 是 310B 端纯转发与控制透传程序，**并提供 `VideoStreamInterface` 视频流接口**
 - [src/pc_udp.cpp](src/pc_udp.cpp) 是 PC 端分片重组和 MP4 落盘程序
 - [CMakeLists.txt](CMakeLists.txt) 提供 CMake 构建入口
 
@@ -73,7 +75,32 @@
   - 当且仅当 310B 已学习到 PYNQ 源地址后，控制消息才会下发
   - 日志关键字：`[310B] forward control to PYNQ size=...`
 
-### 3) 推理数据上行（待实现）
+### 3) 视频流接口（外部程序调用）
+
+- **接口类**: `VideoStreamInterface`（定义在 `src/310B_udp.cpp`）
+- **功能**: 接收完整视频帧并通过回调函数传递给外部推理程序
+- **使用方式**:
+  ```cpp
+  // 定义回调函数
+  void on_video_frame(const uint8_t* data, size_t size,
+                      uint32_t width, uint32_t height,
+                      PixelFormat fmt, uint32_t frame_id) {
+      // 在这里调用 NPU 推理
+  }
+
+  // 创建并启动接口
+  VideoStreamInterface interface(on_video_frame);
+  interface.start();  // 阻塞运行
+  // 或 interface.start_background();  // 后台线程
+  ```
+- **支持格式**: RGB24 / NV12 / MJPEG
+- **特性**:
+  - 自动 UDP 分片重组
+  - 8MB 缓冲区防丢包
+  - 2 秒超时自动清理
+  - 统计信息监控
+
+### 4) 推理数据上行（待实现）
 
 - 310B 主动发送：推理结果（JSON 格式）到 `PC_IP:INFERENCE_PORT`
 - 数据内容：姿态关键点、动作标志、表情分类结果
@@ -145,12 +172,12 @@ cmake --build build -j
 
 ## 下一步扩展计划
 
-1. **新增推理数据通道**
+1. **推理数据通道集成**
    - 在 310B 端添加推理结果发送逻辑
    - PC 端添加推理结果接收和解析模块
    - 定义推理结果 JSON 协议格式
 
-2. **新增 IP 视频触发通道**
+2. **IP 视频触发通道**
    - PC 端根据推理结果匹配预生成视频
    - 发送视频触发指令到 310B/PYNQ
    - 实现视频播放状态反馈
@@ -159,3 +186,7 @@ cmake --build build -j
    - 端到端时延测试（目标 < 100ms）
    - UDP 丢包率监测和重传机制
    - 多路并发压力测试
+
+4. **Python 绑定支持**
+   - 通过 pybind11 或 ctypes 暴露 `VideoStreamInterface` 给 Python
+   - 提供示例脚本展示如何在 Python 中调用 NPU 推理
