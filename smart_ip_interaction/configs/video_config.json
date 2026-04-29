@@ -1,0 +1,18 @@
+{
+  "_comment": "视频路径相对于 smart_ip_interaction/ 根目录。将熊二互动视频放入对应目录并按下列文件名命名即可生效。",
+
+  "idle": "datasets/interaction_videos/idle/idle.mp4",
+
+  "commands": {
+    "wave_response":    "datasets/interaction_videos/wave/wave.mp4",
+    "heart_response":   "datasets/interaction_videos/heart/heart.mp4",
+    "cheer_effect":     "datasets/interaction_videos/cheer/cheer.mp4",
+    "switch_scene":     "datasets/interaction_videos/cheer/cheer.mp4",
+
+    "smile_response":   "datasets/interaction_videos/expressions/happy/happy.mp4",
+    "wow_response":     "datasets/interaction_videos/expressions/surprised/surprised.mp4",
+    "angry_response":   "datasets/interaction_videos/expressions/angry/angry.mp4",
+    "fear_response":    "datasets/interaction_videos/expressions/fear/fear.mp4",
+    "sad_response":     "datasets/interaction_videos/expressions/sad/sad.mp4"
+  }
+}
