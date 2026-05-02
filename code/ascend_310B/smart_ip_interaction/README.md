@@ -78,6 +78,18 @@ pip install ultralytics opencv-python torch torchvision
 pip install fastapi uvicorn websockets
 ```
 
+如使用硬件 UDP 视频流（PYNQ -> 310B），还需要先编译通信模块，生成 Python 侧的
+`video_stream_interface` 动态库：
+
+```bash
+cd ../communication
+cmake -S . -B build
+cmake --build build -j
+
+# 让 smart_ip_interaction 可以导入 video_stream_interface
+export PYTHONPATH=$(pwd)/build:$PYTHONPATH
+```
+
 ---
 
 ## 快速开始
@@ -100,17 +112,43 @@ pip install fastapi uvicorn websockets
 
 > 视频路径也可在 `configs/video_config.json` 中自由修改，无需改代码。
 
-### 第二步：一键启动
+### 第二步：启动 PC 端（后端 + 播放器）
+
+```bash
+cd smart_ip_interaction
+python backend/server.py
+# 新开终端
+python scripts/video_player.py
+```
+
+可用以下命令确认后端正常：
+
+```bash
+curl http://127.0.0.1:8000/status
+```
+
+### 第三步：启动 310B 推理端
+
+```bash
+cd smart_ip_interaction
+python run_pipeline.py
+```
+
+### 第四步：启动 PYNQ 发送端
+
+PYNQ 端启动采集/预处理与 UDP 发送程序，目标地址应发送到 310B 的 `PYNQ_PORT`（默认 `9090`）。
+
+### 可选：一键启动（同机联调）
 
 ```bash
 cd smart_ip_interaction
 python scripts/launch_pipeline.py
 ```
 
-启动后弹出三个窗口：
-- **推理窗口**：显示姿态骨骼 + 表情标签 + FPS
-- **视频窗口**：熊二互动视频（默认循环待机）
-- **后端窗口**：事件日志
+该脚本会启动：
+- backend/server.py
+- scripts/video_player.py
+- run_pipeline.py
 
 识别到动作后自动切换互动视频，播完回待机。
 
@@ -121,19 +159,52 @@ python scripts/launch_pipeline.py
 编辑 `run_pipeline.py` 顶部配置：
 
 ```python
-# 使用本地摄像头（默认）
-USE_UDP_STREAM = False
-VIDEO_SOURCE = 0
+# 默认：使用硬件 UDP 视频流（PYNQ -> 310B）
+USE_UDP_STREAM = True
+UDP_LISTEN_PORT = 9090
+UDP_MODULE_PATH = None  # 用 PYTHONPATH 查找 video_stream_interface
+
+# 推理事件发送到 PC 后端（TCP 9000）
+BACKEND_HOST = "192.168.137.1"
+BACKEND_PORT = 9000
+
+# 如果改为本地摄像头/视频文件联调：
+# USE_UDP_STREAM = False
+# VIDEO_SOURCE = 0
 
 # 使用视频文件
 USE_UDP_STREAM = False
 VIDEO_SOURCE = r"path/to/video.mp4"
-
-# 使用硬件 UDP 视频流（PYNQ → 310B → PC）
-USE_UDP_STREAM = True
-UDP_LISTEN_PORT = 5555
-UDP_MODULE_PATH = "/path/to/build"   # video_stream_interface.so 所在目录
 ```
+
+注意：如果不设置 `PYTHONPATH`，可手动指定模块路径：
+
+```python
+UDP_MODULE_PATH = "/absolute/path/to/ciciec_ascend/code/communication/build"
+```
+
+---
+
+## 三端网络参数（默认）
+
+来源：`code/communication/include/udp_common.h`
+
+| 设备 | IP | 说明 |
+|---|---|---|
+| PC | 192.168.137.1 | 后端与播放端 |
+| 310B (eth0) | 192.168.2.2 | 接收 PYNQ 视频流 |
+| 310B (eth1) | 192.168.137.100 | 与 PC 通信 |
+| PYNQ | 192.168.2.99 | 视频采集与预处理 |
+
+| 端口 | 说明 |
+|---|---|
+| 9090 | PYNQ -> 310B 视频流接收端口 (`PYNQ_PORT`) |
+| 9000 | 310B -> PC 后端 TCP 推理事件端口 |
+| 8000 | 后端 -> 播放器 WebSocket 端口 |
+
+如现场 IP 不同，请同时修改：
+- `code/communication/include/udp_common.h`
+- `smart_ip_interaction/run_pipeline.py` 中 `BACKEND_HOST`
 
 ---
 

@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
+#include <Python.h> 
 #include "udp_common.h"
 #include <iostream>
 #include <vector>
@@ -126,7 +127,7 @@ private:
 // ============ 视频流接口类（供 Python 调用）============
 class PyVideoStreamInterface {
 public:
-    using PyFrameCallback = std::function<py::dict(const PyCompleteVideoFrame&)>;
+    using PyFrameCallback = py::object;
 
     PyVideoStreamInterface(int listen_port = PYNQ_PORT)
         : listen_port_(listen_port) {
@@ -247,25 +248,35 @@ public:
             stats_.total_bytes.fetch_add(frame.data.size(), std::memory_order_relaxed);
 
             // 调用 Python 回调
-            if (frame_callback_) {
-                try {
-                    py::gil_scoped_acquire acquire;
-                    py::dict result = frame_callback_(frame);
-                    
-                    // 如果回调返回了推理结果，发送到 PC
-                    if (result.contains("inference_result")) {
-                        std::string json_result = result["inference_result"].cast<std::string>();
-                        if (!json_result.empty() && udp_sender_) {
-                            udp_sender_->send_inference_result(json_result);
-                            LOG_DEBUG("Sent inference result for frame " << frame.frame_id);
-                        }
-                    }
-                } catch (const py::error_already_set& e) {
-                    LOG_ERROR("Python callback error: " << e.what());
-                } catch (const std::exception& e) {
-                    LOG_ERROR("Callback error: " << e.what());
-                }
+
+if (frame_callback_ && !frame_callback_.is_none()) {
+    // ✅ 正确范式：Ensure 返回 token → 执行 Python → Release(token)
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    
+    try {
+        // 调用 Python 回调（frame 会自动通过 pybind11 转换为 py::dict）
+        py::object result = frame_callback_(frame);
+        
+        // 如果回调返回了推理结果，发送到 PC
+        if (py::isinstance<py::dict>(result) && 
+            result.attr("contains")("inference_result").cast<bool>()) {
+            std::string json_result = result["inference_result"].cast<std::string>();
+            if (!json_result.empty() && udp_sender_) {
+                udp_sender_->send_inference_result(json_result);
+                LOG_DEBUG("Sent inference result for frame " << frame.frame_id);
             }
+        }
+    } catch (const py::error_already_set& e) {
+        // ⚠️ py::error_already_set 析构时会自动清理 Python 异常状态
+        // 此时 GIL 仍持有，不要调用任何 Release/GetState
+        LOG_ERROR("Python callback error: " << e.what());
+    } catch (const std::exception& e) {
+        LOG_ERROR("Callback error: " << e.what());
+    }
+    
+    // ✅ 统一在末尾 Release，确保所有路径（含异常）都释放 GIL
+    PyGILState_Release(gstate);
+}
 
             // 移除已完成的帧
             assemblers_.erase(it);
@@ -281,7 +292,7 @@ public:
 
     // 设置帧回调函数（Python 函数）
     void set_frame_callback(PyFrameCallback callback) {
-        frame_callback_ = callback;
+    frame_callback_ = py::reinterpret_steal<py::object>(callback.release());
     }
 
     // 启动接收线程（阻塞）- 使用 epoll

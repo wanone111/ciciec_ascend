@@ -24,7 +24,7 @@ import sys
 import time
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-PYTHON = r"G:\Anaconda\envs\torch_env\python.exe"
+PYTHON = sys.executable
 
 PROCS = [
     {
@@ -51,12 +51,13 @@ def main():
     print("=" * 50)
 
     procs = []
+    creationflags = subprocess.CREATE_NEW_CONSOLE if os.name == "nt" else 0
     for cfg in PROCS:
         print(f"\n[{cfg['name']}] 启动中...")
         p = subprocess.Popen(
             cfg["cmd"],
             cwd=PROJECT_ROOT,
-            creationflags=subprocess.CREATE_NEW_CONSOLE,
+            creationflags=creationflags,
         )
         procs.append((cfg["name"], p))
         print(f"[{cfg['name']}] PID={p.pid}")

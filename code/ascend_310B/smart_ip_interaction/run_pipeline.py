@@ -19,44 +19,50 @@ import sys
 import os
 import time
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+SRC_ROOT = os.path.join(PROJECT_ROOT, "src")
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+if SRC_ROOT not in sys.path:
+    sys.path.insert(0, SRC_ROOT)
 
 import cv2
 from ultralytics import YOLO
 
-from ciciec_ascend.smart_ip_interaction.src.behavior.action_rules import (
+from behavior.action_rules import (
     is_wave_frame, is_cheer_frame, is_heart_frame, valid_keypoints
 )
-from ciciec_ascend.smart_ip_interaction.src.behavior.action_state_machine import ActionStateMachine
-from ciciec_ascend.smart_ip_interaction.src.behavior.event_builder import build_action_event, build_expression_event
-from ciciec_ascend.smart_ip_interaction.src.inference.expression_infer import ExpressionInfer
-from ciciec_ascend.smart_ip_interaction.src.inference.face_detector import FaceDetector
-from ciciec_ascend.smart_ip_interaction.src.interaction.action_mapper import map_event_to_command
-from ciciec_ascend.smart_ip_interaction.src.communication.tcp_sender import TCPSender
-from ciciec_ascend.smart_ip_interaction.src.inference.ar_overlay import AROverlay
+from behavior.action_state_machine import ActionStateMachine
+from behavior.event_builder import build_action_event, build_expression_event
+from inference.expression_infer import ExpressionInfer
+from inference.face_detector import FaceDetector
+from interaction.action_mapper import map_event_to_command
+from communication.tcp_sender import TCPSender
+from inference.ar_overlay import AROverlay
 
 # ─────────────────────────── 配置 ───────────────────────────
-POSE_MODEL_PATH    = "yolo26n-pose.pt"
-FACE_MODEL_PATH    = os.path.join("models", "pretrained", "face_detection_yunet_2023mar.onnx")
-EMOTION_MODEL_PATH = os.path.join("models", "checkpoints", "emotion_mobilenetv3_6cls_best.pth")
+# ✅ 统一指向 models/om 目录，使用 PROJECT_ROOT 构建绝对路径，彻底解决路径解析问题
+POSE_MODEL_PATH    = os.path.join(PROJECT_ROOT, "models", "om", "yolo26s-pose.om")
+FACE_MODEL_PATH    = os.path.join(PROJECT_ROOT, "models", "pretrained", "face_detection_yunet_2023mar.onnx")
+EMOTION_MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "checkpoints", "emotion_mobilenetv3_6cls_best.pth")
 NUM_EMOTION_CLASSES = 6
 
 # ── 视频源选择 ────────────────────────────────────────────────
 # USE_UDP_STREAM = False 时使用本地源（摄像头或视频文件）
 # USE_UDP_STREAM = True  时使用硬件 UDP 视频流（PYNQ→310B→PC）
-USE_UDP_STREAM = False
+USE_UDP_STREAM = True
 
 # 本地源：0 = 摄像头；填路径 = 视频文件（USE_UDP_STREAM=False 时生效）
-# VIDEO_SOURCE = 0
-VIDEO_SOURCE = r"G:\yolo_8\smart_ip_interaction\datasets\action_videos\heart\test1.mp4"
+VIDEO_SOURCE = 0
 
 # UDP 流配置（USE_UDP_STREAM=True 时生效）
-UDP_LISTEN_PORT = 5555          # PC 监听端口，与 310B 转发目标端口一致
-UDP_MODULE_PATH = None          # video_stream_interface.so 所在目录；None 时用 PYTHONPATH
+UDP_LISTEN_PORT = 9090          
+UDP_MODULE_PATH = "/root/userdata/ciciec/communication/build" 
 # ─────────────────────────────────────────────────────────────
 
 # 后端地址
-BACKEND_HOST = "127.0.0.1"
+BACKEND_HOST = "192.168.137.1"
 BACKEND_PORT = 9000
 
 # 表情事件最短推送间隔（秒）
@@ -66,7 +72,7 @@ EXPR_SEND_INTERVAL = 1.5
 EXPR_SKIP = 3
 
 # AR 道具
-AR_PROP_PATH = os.path.join("assets", "bear_ears.png")
+AR_PROP_PATH = os.path.join(PROJECT_ROOT,"assets", "bear_ears.png")
 # ─────────────────────────────────────────────────────────────
 
 
@@ -124,13 +130,35 @@ def draw_overlay(frame, action_label, expr_label, expr_conf, fps, tcp_ok):
 def open_video_source():
     """根据配置打开本地视频源或硬件 UDP 流，返回 cap 对象。"""
     if USE_UDP_STREAM:
-        from ciciec_ascend.smart_ip_interaction.src.communication.udp_video_source import UDPVideoSource
-        print(f"[INFO] 使用硬件 UDP 视频流，监听端口 {UDP_LISTEN_PORT}")
-        cap = UDPVideoSource(port=UDP_LISTEN_PORT, module_path=UDP_MODULE_PATH)
-        if not cap.isOpened():
-            print("[ERROR] UDP 视频源启动失败")
-            return None
-        return cap
+        try:
+            from communication.udp_video_source import UDPVideoSource
+            print(f"[INFO] 使用硬件 UDP 视频流，监听端口 {UDP_LISTEN_PORT}")
+            cap = UDPVideoSource(port=UDP_LISTEN_PORT, module_path=UDP_MODULE_PATH)
+            if not cap.isOpened():
+                print("[WARN] UDP 视频源启动失败，尝试回退到本地摄像头")
+                cap = cv2.VideoCapture(0)
+                if not cap.isOpened():
+                    print("[ERROR] 本地摄像头也无法打开")
+                    return None
+                return cap
+            return cap
+        except ImportError as e:
+            print(f"[ERROR] 无法导入 UDPVideoSource: {e}")
+            print("[INFO] 确保已设置 PYTHONPATH 指向 communication/build 目录")
+            print("[INFO] 回退到本地摄像头")
+            cap = cv2.VideoCapture(0)
+            if not cap.isOpened():
+                print("[ERROR] 本地摄像头也无法打开")
+                return None
+            return cap
+        except Exception as e:
+            print(f"[ERROR] UDP 启动异常: {e}")
+            print("[INFO] 回退到本地摄像头")
+            cap = cv2.VideoCapture(0)
+            if not cap.isOpened():
+                print("[ERROR] 本地摄像头也无法打开")
+                return None
+            return cap
     else:
         print(f"[INFO] 使用本地视频源: {VIDEO_SOURCE}")
         cap = cv2.VideoCapture(VIDEO_SOURCE)

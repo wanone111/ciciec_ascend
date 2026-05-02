@@ -36,9 +36,9 @@ class UDPVideoSource:
     """cv2.VideoCapture 兼容的 UDP 视频流适配器。"""
 
     # 与 C++ udp_common.h 保持一致
-    PIX_FMT_RGB24 = 0
-    PIX_FMT_MJPEG = 1
-    PIX_FMT_NV12  = 2
+    PIX_FMT_RGB24 = 1
+    PIX_FMT_MJPEG = 2
+    PIX_FMT_NV12  = 3
 
     def __init__(
         self,
@@ -85,19 +85,21 @@ class UDPVideoSource:
 
     # ── 回调：在 C++ 线程中调用，把帧放入队列 ─────────────────────
     def _on_frame(self, frame) -> None:
-        bgr = self._to_bgr(frame)
-        if bgr is None:
-            return
-        # 队列满时丢弃最旧帧，保证实时性
-        if self._frame_queue.full():
-            try:
-                self._frame_queue.get_nowait()
-            except queue.Empty:
-                pass
+        # 注意：此回调在 C++ epoll 线程中执行，避免复杂 Python 操作
+        # 只做数据拷贝，转换推迟到主线程
         try:
-            self._frame_queue.put_nowait(bgr)
+            # 队列满时丢弃最旧帧，保证实时性
+            if self._frame_queue.full():
+                try:
+                    self._frame_queue.get_nowait()
+                except queue.Empty:
+                    pass
+            # 直接放入 pybind11 frame 对象，在主线程中转换
+            self._frame_queue.put_nowait(frame)
         except queue.Full:
             pass
+        except Exception as e:
+            print(f"[UDPVideoSource] 回调异常: {e}")
 
     # ── 像素格式转换 ──────────────────────────────────────────────
     def _to_bgr(self, frame) -> Optional[np.ndarray]:
@@ -135,7 +137,12 @@ class UDPVideoSource:
         """阻塞等待下一帧，超时返回 (False, None)。"""
         try:
             frame = self._frame_queue.get(timeout=self._read_timeout)
-            return True, frame
+            # 在主线程中进行 pybind11 对象转换（避免 GIL 冲突）
+            bgr = self._to_bgr(frame)
+            if bgr is not None:
+                return True, bgr
+            else:
+                return False, None
         except queue.Empty:
             return False, None
 
