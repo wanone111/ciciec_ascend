@@ -90,6 +90,11 @@ cmake --build build -j
 export PYTHONPATH=$(pwd)/build:$PYTHONPATH
 ```
 
+NPU 运行说明：
+- 姿态推理优先使用 `models/onnx/yolo26s-pose.onnx`，如果板端 OpenCV 编译了 CANN 后端，会自动切到 NPU。
+- 表情推理优先使用 `models/onnx/emotion_mobilenetv3_6cls.onnx`。
+- 如果当前环境没有 CANN 后端，代码会自动回退到 CPU，便于先把整条链路跑通。
+
 ---
 
 ## 快速开始

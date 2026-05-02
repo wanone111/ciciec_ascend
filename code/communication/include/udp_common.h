@@ -19,6 +19,8 @@
 #include <unordered_map>                            // std::unordered_map
 #include <fcntl.h>                                  // fcntl, F_GETFL, F_SETFL, O_NONBLOCK
 #include <algorithm>                                // std::remove
+// Python.h 只在 video_stream_interface_pybind.cpp 中通过 pybind11 间接包含
+// 不在这里直接包含，避免其他不需要 Python 的 target 编译失败
 
 
 // ============ IP 地址和端口定义 ============
@@ -290,7 +292,7 @@ inline std::string recv_msg(int fd, sockaddr_in* src = nullptr, socklen_t* srcle
 // ============ EpollManager 类：统一管理多个 UDP socket 的 I/O ============
 class EpollManager {
 public:
-    explicit EpollManager(int max_events = 64) 
+    explicit EpollManager(int max_events = 64)
         : epoll_fd_(-1), max_events_(max_events), running_(false) {
         epoll_fd_ = epoll_create1(0);
         if (epoll_fd_ < 0) {
@@ -360,6 +362,7 @@ public:
         }
 
         running_ = true;
+
         std::vector<uint8_t> buffer;
         sockaddr_in src{};
         socklen_t srclen = sizeof(src);
@@ -399,17 +402,15 @@ public:
         }
     }
 
-    // 后台启动
+    // 后台启动 - 使用 detach 避免 join 时 GIL 问题
     void start_background() {
-        thread_ = std::thread(&EpollManager::start, this);
+        std::thread(&EpollManager::start, this).detach();
     }
 
     // 停止
     void stop() {
         running_ = false;
-        if (thread_.joinable()) {
-            thread_.join();
-        }
+        // 注意：使用 detach 后不需要 join，线程会在后台自然结束
     }
 
     // 获取 socket 数量
@@ -424,7 +425,7 @@ private:
     std::vector<epoll_event> events_;
     std::unordered_map<int, std::function<void(int fd)>> socket_callbacks_;
     std::vector<int> socket_fds_;
-    std::thread thread_;
+    // 注意：使用 detach 后不再需要 thread_ 成员变量
 };
 
 }  // 结束命名空间

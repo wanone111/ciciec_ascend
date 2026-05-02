@@ -26,6 +26,9 @@ import time
 import cv2
 import numpy as np
 import websockets
+import socket
+import threading
+import json as _json
 
 # ─────────────────────────── 路径 ────────────────────────────
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -33,6 +36,7 @@ CONFIG_PATH  = os.path.join(PROJECT_ROOT, "configs", "video_config.json")
 
 WS_URL       = "ws://127.0.0.1:8000/ws"
 WS_RETRY_SEC = 3.0
+PC_VIDEO_CTRL_PORT = 5567  # 从 communication/include/udp_common.h 对应
 
 WINDOW_NAME  = "IP Interaction Display"
 # ─────────────────────────────────────────────────────────────
@@ -77,6 +81,39 @@ def _ws_thread(url: str, retry_sec: float):
     asyncio.run(_listen())
 
 
+def _udp_ctrl_thread(listen_ip: str = "0.0.0.0", listen_port: int = PC_VIDEO_CTRL_PORT):
+    """后台线程：监听 UDP 控制指令（JSON），收到后放入队列。
+    作为 WebSocket 的回退通道，兼容通信模块中定义的控制端口。
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind((listen_ip, listen_port))
+        s.settimeout(1.0)
+        print(f"[UDPCTRL] listening on {listen_ip}:{listen_port}")
+        while True:
+            try:
+                data, addr = s.recvfrom(4096)
+            except socket.timeout:
+                continue
+            except Exception as e:
+                print(f"[UDPCTRL] socket error: {e}")
+                break
+
+            try:
+                msg = _json.loads(data.decode("utf-8"))
+            except Exception:
+                # 非 JSON 文本忽略
+                continue
+
+            key = msg.get("dialogue_id") or msg.get("scene")
+            if key:
+                _cmd_queue.put(key)
+                print(f"[UDPCTRL] 收到指令 {key} from {addr} 原始: {msg}")
+    finally:
+        s.close()
+
+
 # ──────────────────────── 视频播放主循环 ─────────────────────
 def _blank_frame(w=1280, h=720):
     """idle 视频缺失时的黑色占位帧。"""
@@ -95,6 +132,10 @@ def main():
     # 启动 WS 监听线程
     t = threading.Thread(target=_ws_thread, args=(WS_URL, WS_RETRY_SEC), daemon=True)
     t.start()
+
+    # 启动 UDP 控制监听（作为 WS 回退/兼容通信模块）
+    t2 = threading.Thread(target=_udp_ctrl_thread, args=("0.0.0.0", PC_VIDEO_CTRL_PORT), daemon=True)
+    t2.start()
 
     cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
 

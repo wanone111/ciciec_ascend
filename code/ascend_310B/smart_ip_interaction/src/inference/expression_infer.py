@@ -1,10 +1,12 @@
-import torch
-import torch.nn as nn
-from torchvision import transforms, models
-from PIL import Image
 from collections import deque
+import os
+
 import cv2
 import numpy as np
+import torch
+import torch.nn as nn
+from PIL import Image
+from torchvision import models, transforms
 
 # ImageFolder 按字母序加载：angry=0, fear=1, happy=2, neutral=3, sad=4, surprised=5
 CLASS_NAMES_6 = ["angry", "fear", "happy", "neutral", "sad", "surprised"]
@@ -20,21 +22,47 @@ _RIGHT_EAR = 4
 
 class ExpressionInfer:
     def __init__(self, model_path, device=None, img_size=112, num_classes=6,
-                 smooth_window=7):
+                 smooth_window=7, use_npu=True):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.img_size = img_size
         self.num_classes = num_classes
         self.class_names = CLASS_NAMES_6 if num_classes == 6 else CLASS_NAMES_3
+        self.use_npu = use_npu
 
-        self.model = models.mobilenet_v3_small(weights=None)
-        self.model.classifier[3] = nn.Linear(
-            self.model.classifier[3].in_features, num_classes
-        )
-        self.model.load_state_dict(
-            torch.load(model_path, map_location=self.device)
-        )
-        self.model.to(self.device)
-        self.model.eval()
+        self._net = None
+        self._torch_backend = False
+
+        if model_path.lower().endswith(".onnx") and os.path.exists(model_path):
+            self._net = cv2.dnn.readNetFromONNX(model_path)
+            backend_ready = False
+            if self.use_npu and hasattr(cv2.dnn, "DNN_BACKEND_CANN") and hasattr(cv2.dnn, "DNN_TARGET_NPU"):
+                try:
+                    self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CANN)
+                    self._net.setPreferableTarget(cv2.dnn.DNN_TARGET_NPU)
+                    print(f"[EXPR] using ONNX + CANN/NPU: {model_path}")
+                    backend_ready = True
+                except cv2.error:
+                    backend_ready = False
+
+            if not backend_ready:
+                self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+                self._net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+                print(f"[EXPR] using ONNX + CPU: {model_path}")
+        else:
+            self._torch_backend = True
+
+        if self._torch_backend:
+            self.model = models.mobilenet_v3_small(weights=None)
+            self.model.classifier[3] = nn.Linear(
+                self.model.classifier[3].in_features, num_classes
+            )
+            self.model.load_state_dict(
+                torch.load(model_path, map_location=self.device)
+            )
+            self.model.to(self.device)
+            self.model.eval()
+        else:
+            self.model = None
 
         self.transform = transforms.Compose([
             transforms.Resize((self.img_size, self.img_size)),
@@ -50,19 +78,35 @@ class ExpressionInfer:
     # ------------------------------------------------------------------
     def predict_bgr(self, bgr_img):
         """输入 BGR numpy 图像，返回原始单帧结果（不含平滑）。"""
-        rgb = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
-        pil_img = Image.fromarray(rgb)
-        x = self.transform(pil_img).unsqueeze(0).to(self.device)
+        if self._net is not None:
+            rgb = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+            blob = cv2.dnn.blobFromImage(
+                rgb,
+                scalefactor=1.0 / 255.0,
+                size=(self.img_size, self.img_size),
+                swapRB=False,
+                crop=False,
+            )
+            self._net.setInput(blob)
+            logits = np.asarray(self._net.forward()).reshape(-1)
+            logits = logits.astype(np.float32)
+            exp = np.exp(logits - np.max(logits))
+            probs = exp / np.sum(exp)
+            pred_idx = int(np.argmax(probs))
+        else:
+            rgb = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(rgb)
+            x = self.transform(pil_img).unsqueeze(0).to(self.device)
 
-        with torch.no_grad():
-            logits = self.model(x)
-            probs = torch.softmax(logits, dim=1)[0]
-            pred_idx = probs.argmax().item()
+            with torch.no_grad():
+                logits = self.model(x)
+                probs = torch.softmax(logits, dim=1)[0].cpu().numpy()
+                pred_idx = int(probs.argmax())
 
         return {
             "expression": self.class_names[pred_idx],
             "confidence": float(probs[pred_idx]),
-            "probs": probs.cpu().numpy()
+            "probs": np.asarray(probs)
         }
 
     def predict_smooth(self, bgr_img):

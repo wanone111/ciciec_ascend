@@ -2,7 +2,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
-#include <Python.h> 
 #include "udp_common.h"
 #include <iostream>
 #include <vector>
@@ -39,7 +38,7 @@ struct PyCompleteVideoFrame {
     uint16_t width = 0;                              // 视频宽度
     uint16_t height = 0;                             // 视频高度
     uint8_t pixel_format = 0;                        // 像素格式
-    py::array_t<uint8_t> data;                       // NumPy 数组格式的帧数据
+    std::vector<uint8_t> data;                       // 完整帧数据
 
     // 转换为字典，方便 Python 使用
     py::dict to_dict() const {
@@ -61,7 +60,7 @@ struct PyCompleteVideoFrame {
         frame.width = d["width"].cast<uint16_t>();
         frame.height = d["height"].cast<uint16_t>();
         frame.pixel_format = d["pixel_format"].cast<uint8_t>();
-        frame.data = d["data"].cast<py::array_t<uint8_t>>();
+        frame.data = d["data"].cast<std::vector<uint8_t>>();
         return frame;
     }
 };
@@ -83,21 +82,21 @@ public:
     }
 
     // 发送推理结果到 PC
-    int send_inference_result(const std::string& json_result, 
-                               const std::string& dst_ip = PC_IP, 
+    int send_inference_result(const std::string& json_result,
+                               const std::string& dst_ip = PC_IP,
                                int dst_port = PC_CTRL_PORT) {
         if (fd_ < 0) {
             LOG_ERROR("socket not initialized");
             return -1;
         }
         sockaddr_in addr = make_addr(dst_ip, dst_port);
-        return send_bytes(fd_, reinterpret_cast<const uint8_t*>(json_result.c_str()), 
+        return send_bytes(fd_, reinterpret_cast<const uint8_t*>(json_result.c_str()),
                          json_result.size(), addr);
     }
 
     // 发送二进制数据到 PC
-    int send_binary_data(const py::array_t<uint8_t>& data, 
-                         const std::string& dst_ip = PC_IP, 
+    int send_binary_data(const py::array_t<uint8_t>& data,
+                         const std::string& dst_ip = PC_IP,
                          int dst_port = PC_CTRL_PORT) {
         if (fd_ < 0) {
             LOG_ERROR("socket not initialized");
@@ -109,8 +108,8 @@ public:
     }
 
     // 发送文本消息到 PYNQ
-    int send_control_to_pynq(const std::string& msg, 
-                             const std::string& dst_ip = PYNQ_IP, 
+    int send_control_to_pynq(const std::string& msg,
+                             const std::string& dst_ip = PYNQ_IP,
                              int dst_port = PYNQ_PORT) {
         if (fd_ < 0) {
             LOG_ERROR("socket not initialized");
@@ -142,24 +141,32 @@ public:
         } else {
             throw std::runtime_error("Failed to create socket");
         }
-        
+
         // 创建 epoll 管理器并添加 socket
         epoll_mgr_ = std::make_unique<EpollManager>(64);
         auto callback = [this](int fd) { this->handleSocketEvent(fd); };
         if (!epoll_mgr_->add_socket(fd_, callback)) {
             throw std::runtime_error("Failed to add socket to epoll");
         }
-        
+
         LOG_INFO("VideoStreamInterface created on port " << listen_port_);
     }
 
     ~PyVideoStreamInterface() {
+        // 先停止 epoll 线程，确保不再调用 Python 回调
         stop();
+
+        // 在持有 GIL 的情况下清空回调函数，避免访问已销毁的 Python 对象
+        {
+            py::gil_scoped_acquire acquire_gil;
+            frame_callback_ = py::object();
+        }
+
         if (fd_ >= 0) {
             close(fd_);
         }
     }
-    
+
     // 处理 socket 事件（由 epoll 回调）
     void handleSocketEvent(int fd) {
         std::vector<uint8_t> buffer;
@@ -234,54 +241,39 @@ public:
             frame.height = hdr.height;
             frame.pixel_format = hdr.pixel_format;
 
-            // 创建 NumPy 数组（零拷贝）
-            py::capsule capsule(assembler.data.data(), [](void* p) {
-                // 不需要释放，数据属于 assembler
-            });
-            frame.data = py::array_t<uint8_t>(
-                assembler.data.size(),
-                assembler.data.data(),
-                capsule
-            );
+            // 复制到纯 C++ 缓冲区，避免在后台线程中创建/销毁 NumPy 对象
+            frame.data = assembler.data;
 
             stats_.frame_cnt.fetch_add(1, std::memory_order_relaxed);
             stats_.total_bytes.fetch_add(frame.data.size(), std::memory_order_relaxed);
 
             // 调用 Python 回调
+            if (frame_callback_ && !frame_callback_.is_none()) {
+                // ✅ 使用 pybind11 RAII 方式获取 GIL
+                py::gil_scoped_acquire acquire_gil;
 
-if (frame_callback_ && !frame_callback_.is_none()) {
-    // ✅ 正确范式：Ensure 返回 token → 执行 Python → Release(token)
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    
-    try {
-        // 调用 Python 回调（frame 会自动通过 pybind11 转换为 py::dict）
-        py::object result = frame_callback_(frame);
-        
-        // 如果回调返回了推理结果，发送到 PC
-        if (py::isinstance<py::dict>(result) && 
-            result.attr("contains")("inference_result").cast<bool>()) {
-            std::string json_result = result["inference_result"].cast<std::string>();
-            if (!json_result.empty() && udp_sender_) {
-                udp_sender_->send_inference_result(json_result);
-                LOG_DEBUG("Sent inference result for frame " << frame.frame_id);
+                try {
+                    // 调用 Python 回调（frame 会自动通过 pybind11 转换为 py::dict）
+                    py::object result = frame_callback_(frame);
+
+                    // 如果回调返回了推理结果，发送到 PC
+                    if (py::isinstance<py::dict>(result) &&
+                        result.attr("contains")("inference_result").cast<bool>()) {
+                        std::string json_result = result["inference_result"].cast<std::string>();
+                        if (!json_result.empty() && udp_sender_) {
+                            udp_sender_->send_inference_result(json_result);
+                            LOG_DEBUG("Sent inference result for frame " << frame.frame_id);
+                        }
+                    }
+                } catch (const py::error_already_set& e) {
+                    LOG_ERROR("Python callback error: " << e.what());
+                } catch (const std::exception& e) {
+                    LOG_ERROR("Callback error: " << e.what());
+                }
             }
-        }
-    } catch (const py::error_already_set& e) {
-        // ⚠️ py::error_already_set 析构时会自动清理 Python 异常状态
-        // 此时 GIL 仍持有，不要调用任何 Release/GetState
-        LOG_ERROR("Python callback error: " << e.what());
-    } catch (const std::exception& e) {
-        LOG_ERROR("Callback error: " << e.what());
-    }
-    
-    // ✅ 统一在末尾 Release，确保所有路径（含异常）都释放 GIL
-    PyGILState_Release(gstate);
-}
 
             // 移除已完成的帧
             assemblers_.erase(it);
-        }
-
         stats_.pkt_cnt.fetch_add(1, std::memory_order_relaxed);
 
         // 定期打印统计
@@ -289,10 +281,12 @@ if (frame_callback_ && !frame_callback_.is_none()) {
             printStats();
         }
     }
+        }
 
     // 设置帧回调函数（Python 函数）
     void set_frame_callback(PyFrameCallback callback) {
-    frame_callback_ = py::reinterpret_steal<py::object>(callback.release());
+        py::gil_scoped_acquire acquire_gil;
+        frame_callback_ = std::move(callback);
     }
 
     // 启动接收线程（阻塞）- 使用 epoll
@@ -321,9 +315,7 @@ if (frame_callback_ && !frame_callback_.is_none()) {
             epoll_mgr_->stop();
         }
         g_running.store(false);
-        if (thread_.joinable()) {
-            thread_.join();
-        }
+        // 注意：epoll 线程已 detach，不需要 join
     }
 
     // 打印统计信息
@@ -347,7 +339,7 @@ private:
     // 类成员变量移到 private
     static constexpr std::size_t MAX_FRAMES_ = 60;  // 最大并发帧数
     static constexpr uint64_t timeout_ms_ = 2000;   // 超时 2 秒
-    
+
     struct FrameAssembler {
         std::vector<uint8_t> data;
         std::vector<uint8_t> frag_recv;
@@ -419,7 +411,6 @@ public:
     int fd_ = -1;
     int listen_port_;
     PyFrameCallback frame_callback_;
-    std::thread thread_;
     std::unique_ptr<UdpSender> udp_sender_;
     std::unique_ptr<EpollManager> epoll_mgr_;  // epoll 管理器
 
@@ -448,7 +439,7 @@ PYBIND11_MODULE(video_stream_interface, m) {
     m.attr("PC_CTRL_PORT") = py::int_(PC_CTRL_PORT);
     m.attr("VIDEO_WIDTH") = py::int_(VIDEO_WIDTH);
     m.attr("VIDEO_HEIGHT") = py::int_(VIDEO_HEIGHT);
-    
+
     // 像素格式常量
     m.attr("PIX_FMT_RGB24") = py::int_(PIX_FMT_RGB24);
     m.attr("PIX_FMT_MJPEG") = py::int_(PIX_FMT_MJPEG);

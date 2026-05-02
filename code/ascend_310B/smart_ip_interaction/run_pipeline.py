@@ -19,6 +19,8 @@ import sys
 import os
 import time
 
+import numpy as np
+
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC_ROOT = os.path.join(PROJECT_ROOT, "src")
 
@@ -28,13 +30,13 @@ if SRC_ROOT not in sys.path:
     sys.path.insert(0, SRC_ROOT)
 
 import cv2
-from ultralytics import YOLO
 
 from behavior.action_rules import (
     is_wave_frame, is_cheer_frame, is_heart_frame, valid_keypoints
 )
 from behavior.action_state_machine import ActionStateMachine
 from behavior.event_builder import build_action_event, build_expression_event
+from inference.pose_infer import PoseInfer
 from inference.expression_infer import ExpressionInfer
 from inference.face_detector import FaceDetector
 from interaction.action_mapper import map_event_to_command
@@ -42,10 +44,10 @@ from communication.tcp_sender import TCPSender
 from inference.ar_overlay import AROverlay
 
 # ─────────────────────────── 配置 ───────────────────────────
-# ✅ 统一指向 models/om 目录，使用 PROJECT_ROOT 构建绝对路径，彻底解决路径解析问题
-POSE_MODEL_PATH    = os.path.join(PROJECT_ROOT, "models", "om", "yolo26s-pose.om")
+# NPU 优先：优先使用 ONNX + CANN；找不到则回退到 PT
+POSE_MODEL_PATH    = os.path.join(PROJECT_ROOT, "models", "onnx", "yolo26s-pose.onnx")
 FACE_MODEL_PATH    = os.path.join(PROJECT_ROOT, "models", "pretrained", "face_detection_yunet_2023mar.onnx")
-EMOTION_MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "checkpoints", "emotion_mobilenetv3_6cls_best.pth")
+EMOTION_MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "onnx", "emotion_mobilenetv3_6cls.onnx")
 NUM_EMOTION_CLASSES = 6
 
 # ── 视频源选择 ────────────────────────────────────────────────
@@ -74,6 +76,22 @@ EXPR_SKIP = 3
 # AR 道具
 AR_PROP_PATH = os.path.join(PROJECT_ROOT,"assets", "bear_ears.png")
 # ─────────────────────────────────────────────────────────────
+
+
+def can_use_gui() -> bool:
+    """Return True if a GUI display is likely available."""
+    if not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return False
+
+    try:
+        probe_name = "__opencv_gui_probe__"
+        cv2.namedWindow(probe_name, cv2.WINDOW_NORMAL)
+        cv2.imshow(probe_name, np.zeros((1, 1, 3), dtype=np.uint8))
+        cv2.waitKey(1)
+        cv2.destroyWindow(probe_name)
+        return True
+    except cv2.error:
+        return False
 
 
 def find_main_person(results):
@@ -171,7 +189,7 @@ def open_video_source():
 def main():
     # ── 加载模型 ──
     print("[INFO] 加载姿态模型:", POSE_MODEL_PATH)
-    pose_model = YOLO(POSE_MODEL_PATH)
+    pose_model = PoseInfer(model_path=POSE_MODEL_PATH, imgsz=640, conf=0.25, iou=0.45, use_npu=True)
 
     print("[INFO] 加载人脸检测模型:", FACE_MODEL_PATH)
     face_detector = FaceDetector(model_path=FACE_MODEL_PATH)
@@ -180,7 +198,8 @@ def main():
     expr_infer = ExpressionInfer(
         model_path=EMOTION_MODEL_PATH,
         num_classes=NUM_EMOTION_CLASSES,
-        smooth_window=7
+        smooth_window=7,
+        use_npu=True,
     )
 
     # ── AR 道具 ──
@@ -202,6 +221,11 @@ def main():
     frame_idx    = 0
 
     prev_time = time.time()
+    gui_enabled = can_use_gui()
+    if not gui_enabled:
+        print("[WARN] 未检测到可用 GUI 环境，已禁用 cv2.imshow；推理将继续在无界面模式运行")
+    stats_last_print = time.time()
+    STATS_PRINT_INTERVAL = 10.0  # seconds
     print("[INFO] 开始运行，按 ESC 退出")
 
     while True:
@@ -284,13 +308,35 @@ def main():
         annotated = draw_overlay(
             annotated, action_label, expr_label, expr_conf, fps, sender.connected
         )
-        cv2.imshow("IP Interaction Pipeline", annotated)
 
-        if cv2.waitKey(1) & 0xFF == 27:
-            break
+        # 周期性打印底层 pybind 接收统计（仅当使用 UDPVideoSource 并且底层 interface 可用）
+        try:
+            now = time.time()
+            if now - stats_last_print > STATS_PRINT_INTERVAL:
+                stats_last_print = now
+                if USE_UDP_STREAM and hasattr(cap, "_interface") and cap._interface is not None:
+                    try:
+                        cap._interface.print_stats()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        if gui_enabled:
+            try:
+                cv2.imshow("IP Interaction Pipeline", annotated)
+                if cv2.waitKey(1) & 0xFF == 27:
+                    break
+            except cv2.error as e:
+                print(f"[WARN] cv2.imshow 不可用，切换为无界面模式: {e}")
+                gui_enabled = False
 
     cap.release()
-    cv2.destroyAllWindows()
+    if gui_enabled:
+        try:
+            cv2.destroyAllWindows()
+        except cv2.error:
+            pass
     sender.close()
     print("[INFO] 退出")
 

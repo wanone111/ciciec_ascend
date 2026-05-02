@@ -103,11 +103,12 @@ class UDPVideoSource:
 
     # ── 像素格式转换 ──────────────────────────────────────────────
     def _to_bgr(self, frame) -> Optional[np.ndarray]:
-        data: np.ndarray = frame.data  # pybind11 暴露的 NumPy 数组
+        data = frame.data
         h, w = frame.height, frame.width
         fmt = frame.pixel_format
 
         try:
+            data = np.asarray(data, dtype=np.uint8)
             if fmt == self.PIX_FMT_RGB24:
                 rgb = data.reshape((h, w, 3))
                 return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
