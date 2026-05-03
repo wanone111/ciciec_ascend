@@ -1,5 +1,7 @@
 # 集创赛 华强 x 昇腾赛题
 
+![C++](https://img.shields.io/badge/C++-68.7%25-blue) ![VHDL](https://img.shields.io/badge/VHDL-15.1%25-orange) ![Verilog](https://img.shields.io/badge/Verilog-9.7%25-green) ![Python](https://img.shields.io/badge/Python-2.3%25-yellow)
+
 ## 项目目标
 
 基于 PYNQ-Z2 (FPGA) + Ascend 310B (NPU) 构建异构视觉交互终端，面向园区/展演场景实现：
@@ -192,34 +194,13 @@ cmake --build build -j
 
 生成目标：pc_udp、310B_udp、pynq_udp。
 
-### 2) 智能 IP 互动系统（已验证）
+### 2) 310B 端构建与运行（已验证）
 
-在仓库根目录执行：
-
-```bash
-cd code/ascend_310B/smart_ip_interaction
-python scripts/launch_pipeline.py
-```
-
-启动后弹出三个窗口：
-- **推理窗口**：显示姿态骨骼 + 表情标签 + FPS
-- **视频窗口**：熊二互动视频（默认循环待机）
-- **后端窗口**：事件日志
-
-识别到动作后自动切换互动视频，播完回待机。
-
-联调测试（模拟数据）：
-
-```bash
-python scripts/launch_local_test.py
-```
-
-### 3) 310B 构建（已验证）
-
-在仓库根目录执行：
+在仓库根目录执行，需先激活专属虚拟环境：
 
 ```bash
 cd code/ascend_310b
+conda activate 310B
 bash scripts/build.sh
 ```
 
@@ -236,6 +217,31 @@ bash scripts/build.sh
   --peer-port 5566
 ```
 
+### 3) 启动 PC 端（后端 + 播放器）
+
+如果你需要分步启动智能互动系统的后端和本地播放器：
+
+```bash
+cd code/ascend_310B/smart_ip_interaction
+python backend/server.py
+
+# 【重要】清空代理环境变量（当前终端生效）
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
+
+python scripts/video_player.py
+```
+
+如果你希望**一键同时启动**推理、后端和播放器，也可以直接使用：
+```bash
+cd code/ascend_310B/smart_ip_interaction
+python scripts/launch_pipeline.py
+```
+
+> 联调测试（模拟数据，无需真实推流）：
+> ```bash
+> python scripts/launch_local_test.py
+> ```
+
 ### 4) PYNQ HLS 综合（可选）
 
 ```bash
@@ -248,11 +254,7 @@ vitis-run --mode hls --tcl hls/HLS_Proj/ROI_Test/scripts/run_hls.tcl
 **注意：智能 IP 互动系统 (smart_ip_interaction) 是独立的 Python 实现，与 pc_udp 互斥。**
 
 - **使用智能 IP 互动系统时** ✅（推荐）：
-  ```bash
-  cd code/ascend_310B/smart_ip_interaction
-  python scripts/launch_pipeline.py
-  ```
-  此时**不需要**启动 `pc_udp`、`310B_udp` 或 `pynq_udp`。
+  使用前述的 PC 端服务和 310B 运行即可，**不需要**启动 `pc_udp`、`310B_udp` 或 `pynq_udp`。
 
 - **测试完整 UDP 链路时**（PYNQ → 310B → PC）：
   1. 启动 PC 端：`code/communication/build/pc_udp`
@@ -319,19 +321,4 @@ vitis-run --mode hls --tcl hls/HLS_Proj/ROI_Test/scripts/run_hls.tcl
 
 - 根架构说明：`docs/报告.md`
 - 智能 IP 互动：`code/ascend_310B/smart_ip_interaction/README.md`
-- 角色语音对话：`code/ascend_310B/character_voice_chat/`
-- 通信链路：`code/communication/README.md`
-- PYNQ 子模块：`code/pynq_z2/README.md`
-- 脚本目录：`Scripts/README.md`
 
-## 贡献指南
-
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交变更 (`git commit -m 'Add amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 提交 Pull Request
-
-## 许可证
-
-本项目遵循 MIT 许可证。
