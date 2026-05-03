@@ -11,6 +11,56 @@
 - 三端通信：PYNQ -> 310B -> PC 的 UDP 视频分片链路和 C++/pybind11 视频流接口。
 - 角色语音对话：ASR + LLM + TTS 模块已拆分实现，仍处于联调和集成阶段。
 
+## 当前进度快照（2026-05-04）
+
+本轮已完成 PYNQ、Ascend 310B、PC 三端时钟对齐和一次真实硬件端到端压测。日志目录如下：
+
+| 端侧 | 日志目录 | 主要文件 |
+|---|---|---|
+| PYNQ-Z2 | `/home/xilinx/jupyter_notebooks/ciciec/log` | `pynq.jsonl` |
+| Ascend 310B | `/root/userdata/ciciec/ascend_310B/log/` | `pipeline.jsonl` |
+| PC | `/home/bb/competition_ws/ciciec_ascend/log` | `backend.jsonl`、`player.jsonl` |
+
+已归档的本次 run 位于：
+
+```text
+/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_004009
+```
+
+压测结论：
+
+| 指标 | 当前结果 |
+|---|---|
+| PYNQ 发送帧数 | 494 帧 |
+| PYNQ 实际发送帧率 | 约 15.05 FPS |
+| PYNQ 发送失败包 | 0 |
+| UDP 重组帧数 | 259 帧 |
+| UDP 丢包率 | 0.00% |
+| UDP 组帧平均延迟 | 107.43 ms |
+| 310B 姿态推理耗时 | 平均约 1.45 s/帧，P95 约 1.62 s |
+| 表情分支耗时 | 平均约 132 ms，P95 约 152 ms |
+| 310B 有效处理帧率 | 约 0.64 FPS |
+| PC 后端到播放器切换 | 平均约 30 ms |
+| 播放器实际切换 | 10 次，`heart_response` 6 次，`wave_response` 4 次 |
+
+当前判断：
+
+- 三端互通已经跑通，PYNQ 采集发送、UDP 分片重组、310B 推理事件、PC 后端和播放器联动均有日志闭环。
+- 通信链路表现稳定，本轮 PYNQ 发送失败包为 0，UDP 丢包率为 0。
+- 主要性能瓶颈在 310B 姿态推理侧，当前 YOLO-Pose 单帧约 1.45 s，导致端到端响应达到秒级。
+- 本轮只出现 `HEART` 和 `WAVE` 事件，未触发 `CHEER`。
+- 表情识别输出以 `angry` 为主，说明现场样本、光照或表情模型阈值仍需复核。
+- 播放器有 14 次 missing，其中 `angry_response` 8 次、`ar_overlay` 6 次；需要补齐表情视频资源或调整映射策略。
+- 本轮没有人工 trial 标注 CSV，因此动作识别准确率和表情识别准确率暂不能作为最终量化指标。
+
+下一步优先事项：
+
+1. 固定一个新的 run 目录，避免多次启动日志追加到同一目录。
+2. 补齐 `angry_response` 等表情视频资源，或暂时关闭缺失素材的表情映射。
+3. 优化 310B 姿态推理路径，优先确认是否真正使用 CANN/NPU/OM 推理，避免回退到 CPU/PT 路径。
+4. 采集带人工标注的 `action_trials.csv` 和 `expression_trials.csv`，再生成最终准确率表。
+5. 复测 `WAVE/HEART/CHEER` 各 10 次，6 类表情各 10 次，再做 30 到 60 分钟稳定性测试。
+
 ---
 
 ## 系统架构
