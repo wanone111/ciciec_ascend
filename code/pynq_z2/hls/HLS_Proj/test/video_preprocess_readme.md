@@ -1,202 +1,75 @@
-# video_preprocess 代码说明与当前运行效果
+# HLS_Proj/test 历史 video_preprocess 工程
 
-## 1. 模块定位
-`video_preprocess` 是一个基于 **AXI4-Stream 视频流输入/输出** 和 **AXI-Lite 参数控制** 的轻量级图像前处理 IP。
+本目录是早期 `video_preprocess` 实验工程，保留用于追溯 ROI、轻量 ISP、灰度/阈值模式和 ROI 外区域策略等设计探索。当前推荐维护的主线工程位于：
 
-它面向 PYNQ-Z2 / Zynq-7020 场景，主要用于在视频流进入后级算法或显示链路之前，完成 **ROI 区域控制 + 轻量 ISP 处理 + 可选灰度/阈值化**。
+```text
+code/pynq_z2/hls/video_preprocess/
+```
 
-当前版本的设计目标不是复杂视觉算法，而是：
+## 当前工程定位
 
-- 保持流式处理结构简单稳定
-- 满足 100 MHz 时序目标
-- 方便后续接入 Vivado 视频链路
-- 便于继续扩展官方滤波算子
+该历史版本的顶层接口仍为单路 24-bit RGB 输入和单路 24-bit RGB 输出：
 
----
+```cpp
+void video_preprocess(
+    hls::stream<axis_rgb_t> &src,
+    hls::stream<axis_rgb_t> &dst,
+    ap_uint<16> rows,
+    ap_uint<16> cols,
+    ap_uint<16> roi_x,
+    ap_uint<16> roi_y,
+    ap_uint<16> roi_w,
+    ap_uint<16> roi_h,
+    ap_uint<2>  proc_mode,
+    ap_uint<8>  threshold_val,
+    ap_uint<16> wb_r_gain,
+    ap_uint<16> wb_g_gain,
+    ap_uint<16> wb_b_gain,
+    ap_uint<2>  gamma_mode,
+    ap_uint<8>  denoise_strength,
+    ap_uint<2>  roi_bg_mode
+);
+```
 
-## 2. 顶层接口说明
+与主线 `hls/video_preprocess` 的区别：
 
-### 2.1 视频接口
-- `src`：AXI4-Stream 视频输入，24-bit RGB
-- `dst`：AXI4-Stream 视频输出，24-bit RGB
+- 历史版本输出仍是 RGB 单流。
+- 主线版本输出是 Y/UV 双 8-bit AXI4-Stream，面向 NV12。
+- 历史版本包含 `proc_mode`、`threshold_val`、`roi_bg_mode` 等调试参数。
+- 主线版本聚焦 ISP + ROI + RGB2YUV/NV12。
 
-### 2.2 控制接口（AXI-Lite）
-- `rows, cols`：当前帧分辨率
-- `roi_x, roi_y, roi_w, roi_h`：ROI 起点与尺寸
-- `proc_mode`：处理模式
-  - `0`：RGB 输出
-  - `1`：GRAY 输出
-  - `2`：THRESH 输出
-- `roi_bg_mode`：ROI 外区域模式
-  - `0`：清零
-  - `1`：透传
-  - `2`：预留给 crop 模式
-- `threshold_val`：阈值化门限
-- `wb_r_gain / wb_g_gain / wb_b_gain`：白平衡增益（Q8，256=1.0x）
-- `gamma_mode`：Gamma 模式
-  - `0`：旁路
-  - `1`：提亮
-  - `2`：轻压暗
-  - `3`：强压暗
-- `denoise_strength`：轻量降噪强度开关/控制量
+## 目录结构
 
----
+```text
+test/
+├── include/
+│   ├── isp.h
+│   ├── roi.h
+│   ├── top.h
+│   └── video_params.h
+├── scripts/
+│   └── run_hls.tcl
+├── src/
+│   ├── isp.cpp
+│   ├── roi.cpp
+│   └── top.cpp
+├── tb/
+│   └── tb_top.cpp
+└── video_preprocess_readme.md
+```
 
-## 3. 当前代码结构
-工程核心分为 3 层：
+## 运行方式
 
-### 3.1 ROI 层
-文件：`roi.h / roi.cpp`
+```bash
+source /opt/Xilinx/2025.2.1/Vitis/settings64.sh
+cd /home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/HLS_Proj/test
+vitis-run --mode hls --tcl scripts/run_hls.tcl
+```
 
-作用：
-- 对输入 ROI 参数进行整理
-- 判断当前像素是否落在 ROI 内
-- 为后续像素处理提供空间范围控制
+如果脚本依赖 OpenCV，请根据本机环境设置 `OPENCV_ROOT` 或 `CONDA_PREFIX`。
 
-### 3.2 ISP 层
-文件：`isp.h / isp.cpp`
+## 保留价值
 
-作用：
-- LUT 化白平衡 + Gamma
-- 灰度转换
-- 简化版降噪
-- 阈值化所需亮度基础
-
-其中当前版本最关键的优化是：
-
-**把原来逐像素执行的 WB + Gamma 乘法/分支逻辑，改成了每帧先生成 3 张 256 项 LUT，再在像素处理阶段直接查表。**
-
-这样做的主要目的是缩短关键路径、提高时序余量。
-
-### 3.3 顶层调度层
-文件：`top.h / top.cpp`
-
-作用：
-- 接收 AXI4-Stream 输入
-- 串联 ROI 与 ISP
-- 组织 dataflow 分段流水
-- 根据 `proc_mode` 和 `roi_bg_mode` 输出结果
-
----
-
-## 4. 当前处理流程
-当前版本的流式处理链可概括为：
-
-`输入视频流`  
-→ `读取并打 ROI 标签`  
-→ `WB + Gamma LUT 查表`  
-→ `轻量 simple denoise`  
-→ `按 proc_mode 做 RGB / 灰度 / 阈值输出`  
-→ `按 roi_bg_mode 处理 ROI 外区域`  
-→ `输出视频流`
-
-如果像素位于 ROI 内：
-- 先做白平衡
-- 再做 Gamma
-- 再做轻量降噪
-- 最后根据模式输出 RGB / GRAY / THRESH
-
-如果像素位于 ROI 外：
-- 根据 `roi_bg_mode` 决定清零或透传
-
----
-
-## 5. 这版代码相比前面版本的主要变化
-
-### 已完成的关键改进
-1. **WB + Gamma LUT 化**
-   - 降低逐像素乘法与分支逻辑压力
-   - 明显改善时序
-
-2. **降噪简化**
-   - 去掉原先更复杂的差分/边缘保护混合逻辑
-   - 改为简单轻量版本
-   - 直接解决了前期关键路径过长的问题
-
-3. **控制接口整理**
-   - 由 `gray_en + threshold_en` 改为 `proc_mode`
-   - 逻辑更清晰，后续更容易扩展
-
-4. **ROI 外行为可配置**
-   - 不再固定只能清零
-   - 增加透传模式
-
-5. **主循环边界统一**
-   - `rows/cols` 先 clamp，再进入处理流程
-   - 提高边界一致性与稳定性
-
----
-
-## 6. 当前综合结果
-根据本次 Vitis HLS 2025.2 综合报告：
-
-### 6.1 时序结果
-- Target Clock：`10.00 ns`
-- Estimated Clock：`7.268 ns`
-
-说明：
-- 当前版本已经明显满足 100 MHz 目标
-- 时序余量较充足，可作为稳定 baseline 使用
-
-### 6.2 结构结果
-- 顶层 Pipeline Type：`dataflow`
-- 总体 Interval(min)：`256`
-
-说明：
-- 当前已经形成分段流式结构
-- 不再是早期那种单大循环串行实现
-
-### 6.3 资源结果
-- DSP：`9`
-- LUT：`5504`
-- FF：`4695`
-- BRAM_18K：`0`
-
-在 xc7z020 上占用比例约为：
-- DSP：`4%`
-- LUT：`10%`
-- FF：`4%`
-- BRAM：`0%`
-
-说明：
-- 当前资源占用较轻
-- 还有较大余量支持后续适度升级
-
----
-
-## 7. 当前运行效果结论
-可以把这版总结为：
-
-**这是一版已经完成“结构整理 + 时序达标 + 接口清晰化”的稳定基线版本。**
-
-它的实际效果不是追求最复杂功能，而是实现了：
-
-- ROI 运行时可配
-- ROI 内轻量图像增强可用
-- 灰度/阈值模式切换清晰
-- ROI 外区域行为可控
-- 时序满足 100 MHz
-- 资源占用较低
-- 适合作为后续上板联调和继续扩展的基础版本
-
----
-
-## 8. 后续推荐路线
-当前版本不建议再继续为了综合报告去“硬压时序”，后续更适合做这两类工作：
-
-### 8.1 工程联调方向
-- 导出 IP
-- 接入 Vivado 视频链路
-- 验证 AXI4-Stream sideband 行为
-- 验证 AXI-Lite 动态参数切换效果
-
-### 8.2 功能升级方向
-在保持当前 ROI 框架不变的前提下，优先考虑：
-- 在 denoise 位置接入官方 `GaussianBlur`
-- 后续增加标准颜色空间转换
-- 最后再评估是否需要真正的 ROI 裁剪输出
-
----
-
-## 9. 一句话概括
-**当前这版 `video_preprocess` 已经不是“功能验证草稿版”，而是一版可以作为后续 IP 集成和功能扩展基础的稳定 baseline。**
+- 作为 ROI 和 ISP 参数接口的历史参考。
+- 用于对比单 RGB 输出版本与当前 NV12 双流版本的设计取舍。
+- 不建议直接作为当前上板主线使用。

@@ -147,6 +147,30 @@ class UDPVideoSource:
         except queue.Empty:
             return False, None
 
+    def get_detailed_stats(self) -> dict:
+        """返回 310B 接收端统计信息。
+
+        如果底层 pybind 模块支持详细统计，则返回结构化字典；否则返回空字典。
+        """
+        if self._interface is None:
+            return {}
+        try:
+            if hasattr(self._interface, "get_detailed_stats"):
+                return dict(self._interface.get_detailed_stats())
+        except Exception as e:
+            print(f"[UDPVideoSource] 获取统计信息失败: {e}")
+        return {}
+
+    def print_stats(self) -> None:
+        """打印底层统计信息。"""
+        if self._interface is None:
+            return
+        try:
+            if hasattr(self._interface, "print_stats"):
+                self._interface.print_stats()
+        except Exception as e:
+            print(f"[UDPVideoSource] 打印统计信息失败: {e}")
+
     def release(self) -> None:
         if self._interface is not None:
             try:

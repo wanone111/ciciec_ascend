@@ -11,6 +11,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <limits>
 #include <cstring>
 #include <unordered_map>
 #include <functional>
@@ -177,6 +178,7 @@ public:
         if (n <= 0) {
             return;
         }
+        stats_.recv_pkt_cnt.fetch_add(1, std::memory_order_relaxed);
 
         // 解析包头
         VideoPacketHeader hdr{};
@@ -193,6 +195,9 @@ public:
             uint64_t now_ms = get_time_ms();
             for (auto fit = assemblers_.begin(); fit != assemblers_.end();) {
                 if (now_ms - fit->second.last_update_ms > timeout_ms_) {
+                    stats_.dropped_frag_cnt.fetch_add(
+                        static_cast<uint64_t>(fit->second.frag_cnt - fit->second.recv_cnt),
+                        std::memory_order_relaxed);
                     stats_.dropped_frame_cnt.fetch_add(1, std::memory_order_relaxed);
                     fit = assemblers_.erase(fit);
                 } else {
@@ -208,6 +213,9 @@ public:
                         oldest = it_old;
                     }
                 }
+                stats_.dropped_frag_cnt.fetch_add(
+                    static_cast<uint64_t>(oldest->second.frag_cnt - oldest->second.recv_cnt),
+                    std::memory_order_relaxed);
                 stats_.dropped_frame_cnt.fetch_add(1, std::memory_order_relaxed);
                 assemblers_.erase(oldest);
             }
@@ -219,11 +227,17 @@ public:
         FrameAssembler& assembler = it->second;
 
         if (hdr.frag_cnt != assembler.frag_cnt) {
+            stats_.dropped_frag_cnt.fetch_add(
+                static_cast<uint64_t>(assembler.frag_cnt - assembler.recv_cnt),
+                std::memory_order_relaxed);
             stats_.dropped_frame_cnt.fetch_add(1, std::memory_order_relaxed);
             assemblers_.erase(it);
             return;
         }
         if (hdr.frag_idx + 1 < hdr.frag_cnt && hdr.payload_bytes != UDP_SAFE_PAYLOAD) {
+            stats_.dropped_frag_cnt.fetch_add(
+                static_cast<uint64_t>(assembler.frag_cnt - assembler.recv_cnt),
+                std::memory_order_relaxed);
             stats_.dropped_frame_cnt.fetch_add(1, std::memory_order_relaxed);
             assemblers_.erase(it);
             return;
@@ -246,6 +260,15 @@ public:
 
             stats_.frame_cnt.fetch_add(1, std::memory_order_relaxed);
             stats_.total_bytes.fetch_add(frame.data.size(), std::memory_order_relaxed);
+
+            const uint64_t now_us = get_time_us();
+            const uint64_t assembly_latency_us = now_us >= assembler.first_update_us
+                ? (now_us - assembler.first_update_us)
+                : 0;
+            const uint64_t sender_latency_us = now_us >= hdr.timestamp_us
+                ? (now_us - hdr.timestamp_us)
+                : 0;
+            stats_.record_latency(assembly_latency_us, sender_latency_us);
 
             // 调用 Python 回调
             if (frame_callback_ && !frame_callback_.is_none()) {
@@ -320,11 +343,61 @@ public:
 
     // 打印统计信息
     void printStats() const {
-        std::cout << "[310B-PyBind] [STATS] frames=" << stats_.frame_cnt.load()
-                  << " pkts=" << stats_.pkt_cnt.load()
-                  << " drop_pkt=" << stats_.dropped_pkt_cnt.load()
-                  << " drop_frame=" << stats_.dropped_frame_cnt.load()
-                  << " bytes=" << stats_.total_bytes.load() << std::endl;
+        auto d = get_detailed_stats();
+        const double loss_rate = d["packet_loss_rate_per_mille"] / 10.0;
+        std::cout << "[310B-PyBind] [STATS] "
+                  << "recv_pkt=" << d["recv_pkt_cnt"]
+                  << " valid_pkt=" << d["pkt_cnt"]
+                  << " drop_pkt=" << d["dropped_pkt_cnt"]
+                  << " drop_frag=" << d["dropped_frag_cnt"]
+                  << " drop_frame=" << d["dropped_frame_cnt"]
+                  << " frames=" << d["frame_cnt"]
+                  << " bytes=" << d["total_bytes"]
+                  << " loss=" << loss_rate << "%"
+                  << " latency_asm(us,min/max/avg)="
+                  << d["assembly_latency_min_us"] << "/"
+                  << d["assembly_latency_max_us"] << "/"
+                  << d["assembly_latency_avg_us"]
+                  << " latency_e2e(us,min/max/avg)="
+                  << d["sender_latency_min_us"] << "/"
+                  << d["sender_latency_max_us"] << "/"
+                  << d["sender_latency_avg_us"]
+                  << std::endl;
+    }
+
+    std::unordered_map<std::string, uint64_t> get_detailed_stats() const {
+        std::unordered_map<std::string, uint64_t> stats;
+        const uint64_t recv_pkt_cnt = stats_.recv_pkt_cnt.load();
+        const uint64_t valid_pkt_cnt = stats_.pkt_cnt.load();
+        const uint64_t dropped_pkt_cnt = stats_.dropped_pkt_cnt.load();
+        const uint64_t dropped_frame_cnt = stats_.dropped_frame_cnt.load();
+        const uint64_t dropped_frag_cnt = stats_.dropped_frag_cnt.load();
+        const uint64_t frame_cnt = stats_.frame_cnt.load();
+        const uint64_t total_bytes = stats_.total_bytes.load();
+        const uint64_t packet_loss_den = recv_pkt_cnt + dropped_frag_cnt;
+        const uint64_t packet_loss_num = dropped_pkt_cnt + dropped_frag_cnt;
+        const uint64_t frame_loss_den = frame_cnt + dropped_frame_cnt;
+
+        stats["recv_pkt_cnt"] = recv_pkt_cnt;
+        stats["pkt_cnt"] = valid_pkt_cnt;
+        stats["dropped_pkt_cnt"] = dropped_pkt_cnt;
+        stats["dropped_frame_cnt"] = dropped_frame_cnt;
+        stats["dropped_frag_cnt"] = dropped_frag_cnt;
+        stats["frame_cnt"] = frame_cnt;
+        stats["total_bytes"] = total_bytes;
+        stats["packet_loss_rate_per_mille"] = packet_loss_den > 0 ? (packet_loss_num * 1000 / packet_loss_den) : 0;
+        stats["frame_loss_rate_per_mille"] = frame_loss_den > 0 ? (dropped_frame_cnt * 1000 / frame_loss_den) : 0;
+        stats["assembly_latency_min_us"] = stats_.assembly_latency_min_us.load();
+        stats["assembly_latency_max_us"] = stats_.assembly_latency_max_us.load();
+        stats["assembly_latency_avg_us"] = stats_.latency_cnt.load() > 0
+            ? stats_.total_assembly_latency_us.load() / stats_.latency_cnt.load()
+            : 0;
+        stats["sender_latency_min_us"] = stats_.sender_latency_min_us.load();
+        stats["sender_latency_max_us"] = stats_.sender_latency_max_us.load();
+        stats["sender_latency_avg_us"] = stats_.latency_cnt.load() > 0
+            ? stats_.total_sender_latency_us.load() / stats_.latency_cnt.load()
+            : 0;
+        return stats;
     }
 
     // 获取 UDP 发送器
@@ -348,11 +421,12 @@ private:
         uint16_t recv_cnt = 0;
         std::size_t total_bytes = 0;
         uint64_t last_update_ms = 0;
+        uint64_t first_update_us = 0;
         bool complete = false;
 
-        FrameAssembler() : last_update_ms(get_time_ms()) {}
+        FrameAssembler() : last_update_ms(get_time_ms()), first_update_us(get_time_us()) {}
         explicit FrameAssembler(const VideoPacketHeader& hdr)
-            : frag_cnt(hdr.frag_cnt), recv_cnt(0), total_bytes(0), last_update_ms(get_time_ms()) {
+            : frag_cnt(hdr.frag_cnt), recv_cnt(0), total_bytes(0), last_update_ms(get_time_ms()), first_update_us(get_time_us()) {
             const std::size_t max_bytes = static_cast<std::size_t>(hdr.frag_cnt) * UDP_SAFE_PAYLOAD;
             data.reserve(max_bytes);  // 预分配，但不初始化
             frag_recv.assign(hdr.frag_cnt, 0);
@@ -408,6 +482,12 @@ public:
                 std::chrono::system_clock::now().time_since_epoch()).count());
     }
 
+    static uint64_t get_time_us() {
+        return static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count());
+    }
+
     int fd_ = -1;
     int listen_port_;
     PyFrameCallback frame_callback_;
@@ -415,11 +495,45 @@ public:
     std::unique_ptr<EpollManager> epoll_mgr_;  // epoll 管理器
 
     struct Stats {
+        std::atomic<uint64_t> recv_pkt_cnt{0};
         std::atomic<uint64_t> pkt_cnt{0};
         std::atomic<uint64_t> frame_cnt{0};
         std::atomic<uint64_t> dropped_pkt_cnt{0};
         std::atomic<uint64_t> dropped_frame_cnt{0};
+        std::atomic<uint64_t> dropped_frag_cnt{0};
         std::atomic<uint64_t> total_bytes{0};
+        std::atomic<uint64_t> latency_cnt{0};
+        std::atomic<uint64_t> total_assembly_latency_us{0};
+        std::atomic<uint64_t> total_sender_latency_us{0};
+        std::atomic<uint64_t> assembly_latency_min_us{std::numeric_limits<uint64_t>::max()};
+        std::atomic<uint64_t> assembly_latency_max_us{0};
+        std::atomic<uint64_t> sender_latency_min_us{std::numeric_limits<uint64_t>::max()};
+        std::atomic<uint64_t> sender_latency_max_us{0};
+
+        void record_latency(uint64_t assembly_latency_us, uint64_t sender_latency_us) {
+            latency_cnt.fetch_add(1, std::memory_order_relaxed);
+            total_assembly_latency_us.fetch_add(assembly_latency_us, std::memory_order_relaxed);
+            total_sender_latency_us.fetch_add(sender_latency_us, std::memory_order_relaxed);
+            update_min(assembly_latency_min_us, assembly_latency_us);
+            update_max(assembly_latency_max_us, assembly_latency_us);
+            update_min(sender_latency_min_us, sender_latency_us);
+            update_max(sender_latency_max_us, sender_latency_us);
+        }
+
+    private:
+        static void update_min(std::atomic<uint64_t>& target, uint64_t value) {
+            uint64_t cur = target.load(std::memory_order_relaxed);
+            while (value < cur && !target.compare_exchange_weak(
+                       cur, value, std::memory_order_relaxed, std::memory_order_relaxed)) {
+            }
+        }
+
+        static void update_max(std::atomic<uint64_t>& target, uint64_t value) {
+            uint64_t cur = target.load(std::memory_order_relaxed);
+            while (value > cur && !target.compare_exchange_weak(
+                       cur, value, std::memory_order_relaxed, std::memory_order_relaxed)) {
+            }
+        }
     } stats_;
 
     std::atomic<bool> g_running{true};
@@ -496,6 +610,8 @@ PYBIND11_MODULE(video_stream_interface, m) {
              "Stop receiving")
         .def("print_stats", &PyVideoStreamInterface::printStats,
              "Print statistics")
+           .def("get_detailed_stats", &PyVideoStreamInterface::get_detailed_stats,
+               "Get detailed statistics as a dict")
         .def("get_udp_sender", &PyVideoStreamInterface::get_udp_sender,
              "Get UDP sender instance",
              py::return_value_policy::reference_internal);

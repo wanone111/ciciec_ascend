@@ -1,268 +1,252 @@
-# Smart IP Interaction — 智能 IP 互动系统
+# Smart IP Interaction 智能 IP 互动系统
 
-实时识别观众的**肢体动作**和**面部表情**，驱动熊二 IP 形象播放对应互动视频。
+本目录是 Ascend 310B 侧的智能视觉交互主链路。它接收本地摄像头、视频文件或 PYNQ 发来的 UDP 视频流，完成姿态识别、动作规则判断、人脸检测和 6 类表情识别，然后通过 TCP 将互动事件发送到 PC 后端，由后端驱动熊二 IP 视频播放器。
 
-## 系统架构
+## 运行链路
 
+```text
+PYNQ UDP 视频流 / 本地摄像头 / 视频文件
+        |
+        v
+run_pipeline.py
+  - PoseInfer: YOLO-Pose 姿态关键点
+  - ActionStateMachine: WAVE / HEART / CHEER
+  - FaceDetector: YuNet 人脸检测
+  - ExpressionInfer: MobileNetV3 6 类表情
+        |
+        | TCP JSON :9000
+        v
+backend/server.py
+  - 剧情状态机
+  - WebSocket /ws :8000
+        |
+        v
+scripts/video_player.py
+  - 根据 configs/video_config.json 切换互动视频
 ```
-摄像头 / UDP硬件流
-       │
-       ▼
- run_pipeline.py          ← 姿态 + 表情推理（YOLO-Pose + MobileNetV3）
-       │ TCP :9000
-       ▼
- backend/server.py         ← 事件分发、剧情状态机
-       │ WebSocket :8000
-       ▼
- video_player.py           ← 熊二互动视频播放（播完自动回待机）
-```
 
-识别动作 → 后端映射 → 切换播放对应熊二视频，播完自动回待机循环。
+## 目录说明
 
----
-
-## 目录结构
-
-```
+```text
 smart_ip_interaction/
-├── run_pipeline.py                  # 主推理入口
+├── run_pipeline.py
 ├── backend/
-│   └── server.py                    # 后端事件分发服务
+│   └── server.py
 ├── configs/
-│   ├── video_config.json            # 动作→视频路径映射（改这里换视频）
-│   └── algorithm_interface_v1.0.md  # 算法接口文档
+│   ├── algorithm_interface_v1.0.md
+│   └── video_config.json
 ├── datasets/
-│   ├── action_videos/               # 动作识别测试视频
-│   ├── emotion_dataset_6cls/        # 表情分类训练数据集
-│   └── interaction_videos/          # ★ 熊二互动视频（放在这里）
-│       ├── idle/                    # 待机循环视频
-│       ├── wave/                    # 挥手回应
-│       ├── heart/                   # 比心回应
-│       ├── cheer/                   # 欢呼回应
-│       └── expressions/
-│           ├── happy/
-│           ├── surprised/
-│           ├── angry/
-│           ├── fear/
-│           └── sad/
+│   ├── README.md
+│   └── interaction_videos/
 ├── models/
 │   ├── checkpoints/
-│   │   └── emotion_mobilenetv3_6cls_best.pth
+│   ├── om/
+│   ├── onnx/
 │   └── pretrained/
-│       └── face_detection_yunet_2023mar.onnx
 ├── scripts/
-│   ├── launch_pipeline.py           # ★ 一键启动全流程
-│   ├── launch_local_test.py         # 联调测试（用模拟数据）
-│   ├── simulate_310b.py             # 模拟边缘端发送事件
-│   ├── video_player.py              # 视频播放程序
-│   └── fake_frontend_client.py      # WebSocket 调试客户端
+│   ├── fake_frontend_client.py
+│   ├── launch_local_test.py
+│   ├── launch_pipeline.py
+│   ├── simulate_310b.py
+│   └── video_player.py
 ├── src/
-│   ├── behavior/                    # 动作判断规则 + 状态机
-│   ├── inference/                   # 表情推理 + 人脸检测 + AR 道具
-│   ├── interaction/                 # 事件→指令映射
-│   └── communication/              # TCP 发送 + UDP 视频流适配器
+│   ├── behavior/
+│   ├── communication/
+│   ├── inference/
+│   └── interaction/
 ├── training/
-│   ├── emotion/                     # 表情模型训练 / 导出脚本
-│   └── pose/                        # 动作规则调试脚本
-└── yolo26n-pose.pt                  # YOLO-Pose 姿态模型
+│   ├── emotion/
+│   └── pose/
+└── yolo26n-pose.pt
 ```
 
----
+## 环境准备
 
-## 环境依赖
-
-```bash
-conda activate torch_env
-
-pip install ultralytics opencv-python torch torchvision
-pip install fastapi uvicorn websockets
-```
-
-如使用硬件 UDP 视频流（PYNQ -> 310B），还需要先编译通信模块，生成 Python 侧的
-`video_stream_interface` 动态库：
+建议在仓库根目录先编译通信模块，让 UDP 视频流适配器可以导入 `video_stream_interface`：
 
 ```bash
-cd ../communication
+cd /home/bb/competition_ws/ciciec_ascend/code/communication
 cmake -S . -B build
 cmake --build build -j
-
-# 让 smart_ip_interaction 可以导入 video_stream_interface
-export PYTHONPATH=$(pwd)/build:$PYTHONPATH
+export PYTHONPATH="$(pwd)/build:${PYTHONPATH}"
 ```
 
-NPU 运行说明：
-- 姿态推理优先使用 `models/onnx/yolo26s-pose.onnx`，如果板端 OpenCV 编译了 CANN 后端，会自动切到 NPU。
-- 表情推理优先使用 `models/onnx/emotion_mobilenetv3_6cls.onnx`。
-- 如果当前环境没有 CANN 后端，代码会自动回退到 CPU，便于先把整条链路跑通。
-
----
-
-## 快速开始
-
-### 第一步：准备熊二互动视频
-
-将视频文件按以下命名放入对应目录：
-
-| 目录 | 文件名 | 触发条件 |
-|---|---|---|
-| `datasets/interaction_videos/idle/` | `idle.mp4` | 默认待机循环 |
-| `datasets/interaction_videos/wave/` | `wave.mp4` | 挥手 |
-| `datasets/interaction_videos/heart/` | `heart.mp4` | 比心 |
-| `datasets/interaction_videos/cheer/` | `cheer.mp4` | 欢呼 |
-| `datasets/interaction_videos/expressions/happy/` | `happy.mp4` | 表情：高兴 |
-| `datasets/interaction_videos/expressions/surprised/` | `surprised.mp4` | 表情：惊讶 |
-| `datasets/interaction_videos/expressions/angry/` | `angry.mp4` | 表情：生气 |
-| `datasets/interaction_videos/expressions/fear/` | `fear.mp4` | 表情：恐惧 |
-| `datasets/interaction_videos/expressions/sad/` | `sad.mp4` | 表情：悲伤 |
-
-> 视频路径也可在 `configs/video_config.json` 中自由修改，无需改代码。
-
-### 第二步：启动 PC 端（后端 + 播放器）
+Python 依赖按实际环境安装：
 
 ```bash
-cd smart_ip_interaction
-python backend/server.py
-# 新开终端
-python scripts/video_player.py
+pip install ultralytics opencv-python torch torchvision numpy pillow
+pip install fastapi uvicorn websockets requests
 ```
 
-可用以下命令确认后端正常：
+如果在 Ascend/CANN 环境运行，先加载现场环境脚本：
 
 ```bash
-curl http://127.0.0.1:8000/status
+source /home/bb/competition_ws/ciciec_ascend/Scripts/ascend_310b/set_env.sh
 ```
 
-### 第三步：启动 310B 推理端
+## 快速启动
+
+一键启动后端、播放器和推理进程：
 
 ```bash
-cd smart_ip_interaction
-python run_pipeline.py
-```
-
-### 第四步：启动 PYNQ 发送端
-
-PYNQ 端启动采集/预处理与 UDP 发送程序，目标地址应发送到 310B 的 `PYNQ_PORT`（默认 `9090`）。
-
-### 可选：一键启动（同机联调）
-
-```bash
-cd smart_ip_interaction
+cd /home/bb/competition_ws/ciciec_ascend/code/ascend_310B/smart_ip_interaction
 python scripts/launch_pipeline.py
 ```
 
-该脚本会启动：
-- backend/server.py
-- scripts/video_player.py
-- run_pipeline.py
-
-识别到动作后自动切换互动视频，播完回待机。
-
----
-
-## 视频源配置
-
-编辑 `run_pipeline.py` 顶部配置：
-
-```python
-# 默认：使用硬件 UDP 视频流（PYNQ -> 310B）
-USE_UDP_STREAM = True
-UDP_LISTEN_PORT = 9090
-UDP_MODULE_PATH = None  # 用 PYTHONPATH 查找 video_stream_interface
-
-# 推理事件发送到 PC 后端（TCP 9000）
-BACKEND_HOST = "192.168.137.1"
-BACKEND_PORT = 9000
-
-# 如果改为本地摄像头/视频文件联调：
-# USE_UDP_STREAM = False
-# VIDEO_SOURCE = 0
-
-# 使用视频文件
-USE_UDP_STREAM = False
-VIDEO_SOURCE = r"path/to/video.mp4"
-```
-
-注意：如果不设置 `PYTHONPATH`，可手动指定模块路径：
-
-```python
-UDP_MODULE_PATH = "/absolute/path/to/ciciec_ascend/code/communication/build"
-```
-
----
-
-## 三端网络参数（默认）
-
-来源：`code/communication/include/udp_common.h`
-
-| 设备 | IP | 说明 |
-|---|---|---|
-| PC | 192.168.137.1 | 后端与播放端 |
-| 310B (eth0) | 192.168.2.2 | 接收 PYNQ 视频流 |
-| 310B (eth1) | 192.168.137.100 | 与 PC 通信 |
-| PYNQ | 192.168.2.99 | 视频采集与预处理 |
-
-| 端口 | 说明 |
-|---|---|
-| 9090 | PYNQ -> 310B 视频流接收端口 (`PYNQ_PORT`) |
-| 9000 | 310B -> PC 后端 TCP 推理事件端口 |
-| 8000 | 后端 -> 播放器 WebSocket 端口 |
-
-如现场 IP 不同，请同时修改：
-- `code/communication/include/udp_common.h`
-- `smart_ip_interaction/run_pipeline.py` 中 `BACKEND_HOST`
-
----
-
-## 动作识别说明
-
-基于 COCO 17 点骨骼关键点，单帧规则判断：
-
-| 动作 | 触发条件 |
-|---|---|
-| 挥手 (WAVE) | 任一手腕高于同侧肩膀 |
-| 比心 (HEART) | 双腕靠拢且位于胸前区域 |
-| 欢呼 (CHEER) | 双手同时高于头部 |
-
-动作需连续 **2 帧**触发，同一动作冷却 **0.8 秒**，优先级 CHEER > HEART > WAVE。
-
-表情识别使用 **YuNet 人脸检测 + MobileNetV3-Small 6 分类**，7 帧滑动窗口多数投票平滑。
-
----
-
-## 调试工具
+分步启动时，使用三个终端：
 
 ```bash
-# 不启动摄像头，用模拟数据验证完整链路
-python scripts/launch_local_test.py
+cd /home/bb/competition_ws/ciciec_ascend/code/ascend_310B/smart_ip_interaction
+python backend/server.py
+```
 
-# 手动发送单条事件（测试视频切换）
-python scripts/simulate_310b.py --mode interactive
+```bash
+cd /home/bb/competition_ws/ciciec_ascend/code/ascend_310B/smart_ip_interaction
+python scripts/video_player.py
+```
 
-# 查看后端实时状态
+```bash
+cd /home/bb/competition_ws/ciciec_ascend/code/ascend_310B/smart_ip_interaction
+python run_pipeline.py
+```
+
+后端状态检查：
+
+```bash
 curl http://127.0.0.1:8000/status
 ```
 
----
+## 本地联调
 
-## 剧情状态机
-
-`backend/server.py` 内置简单剧情逻辑：
-- **CHEER 累计 3 次** → 触发剧情切换（`switch_scene`）
-- **HEART** → 同时触发 AR 合影特效（关键点实时推送）
-- 所有事件有 **2 秒冷却**，防止重复触发
-
-修改 `server.py` 中的 `CHEER_SCENE_THRESHOLD` 可调整切换阈值。
-
----
-
-## 模型训练
-
-如需重新训练表情模型：
+无 PYNQ/摄像头输入时，可以只验证后端和播放器：
 
 ```bash
-# 训练（数据集在 datasets/emotion_dataset_6cls/）
-python training/emotion/train_emotion_6cls.py
+python scripts/launch_local_test.py
+```
 
-# 导出 ONNX
+手动发送事件：
+
+```bash
+python scripts/simulate_310b.py --mode interactive
+```
+
+WebSocket 调试客户端：
+
+```bash
+python scripts/fake_frontend_client.py
+```
+
+## 关键配置
+
+`run_pipeline.py` 当前默认配置：
+
+```python
+USE_UDP_STREAM = True
+UDP_LISTEN_PORT = 9090
+UDP_MODULE_PATH = "/root/userdata/ciciec/communication/build"
+
+BACKEND_HOST = "192.168.137.1"
+BACKEND_PORT = 9000
+```
+
+- 使用 PYNQ 硬件视频流时，保持 `USE_UDP_STREAM = True`，并确认 `UDP_MODULE_PATH` 或 `PYTHONPATH` 指向 `code/communication/build`。
+- 使用本地摄像头时，将 `USE_UDP_STREAM = False`，`VIDEO_SOURCE = 0`。
+- 使用视频文件时，将 `VIDEO_SOURCE` 改成视频路径。
+- 如果 PC 后端不在 `192.168.137.1`，同步修改 `BACKEND_HOST`。
+
+`scripts/video_player.py` 当前监听：
+
+```python
+WS_URL = "ws://127.0.0.1:8000/ws"
+PC_VIDEO_CTRL_PORT = 5567
+```
+
+播放器优先使用 WebSocket 指令，同时兼容 UDP 控制通道。
+
+## 模型文件
+
+姿态识别：
+
+- 首选：`models/onnx/yolo26s-pose.onnx`
+- 当前仓库回退：`yolo26n-pose.pt`
+- OM 产物：`models/om/yolo26s-pose.om`
+
+`PoseInfer` 会优先尝试 ONNX + OpenCV DNN/CANN 后端；ONNX 不存在或加载失败时回退到 Ultralytics PT 模型。
+
+表情识别：
+
+- 人脸检测：`models/pretrained/face_detection_yunet_2023mar.onnx`
+- 表情 ONNX：`models/onnx/emotion_mobilenetv3_6cls.onnx`
+- 训练权重：`models/checkpoints/emotion_mobilenetv3_6cls_best.pth`
+- OM 产物：`models/om/emotion_mobilenetv3_6cls.om`
+- 类别顺序：`angry`、`fear`、`happy`、`neutral`、`sad`、`surprised`
+
+表情推理使用 7 帧概率均值做平滑。
+
+## 动作与事件
+
+动作规则基于 COCO 17 点关键点：
+
+| 动作 | 触发条件 |
+|---|---|
+| WAVE | 任一手腕高于肩膀一定比例 |
+| HEART | 双腕靠近并位于胸前区域 |
+| CHEER | 双手同时高于头部/鼻子附近 |
+
+动作状态机默认连续 2 帧确认，冷却 0.8 秒，优先级为 `CHEER > HEART > WAVE`。
+
+推理进程发送到后端的事件示例：
+
+```json
+{"type": "action", "value": "wave_hand", "keypoints": [[x, y]]}
+{"type": "action", "value": "heart_particles", "keypoints": [[x, y]]}
+{"type": "action", "value": "cheer_light_sound"}
+{"type": "expression", "value": "smile_feedback", "face_bbox": [x1, y1, x2, y2]}
+```
+
+后端 `backend/server.py` 内置逻辑：
+
+- `wave_hand` 触发 `wave_response`。
+- `heart_particles` 触发 `heart_response`，附带关键点时额外广播 `ar_overlay`。
+- `cheer_light_sound` 累计 3 次触发一次 `switch_scene`。
+- 表情事件映射到 `smile_response`、`wow_response`、`angry_response`、`fear_response`、`sad_response`。
+- 后端对同一事件有 2 秒冷却。
+
+## 视频素材
+
+视频映射由 `configs/video_config.json` 控制，路径相对本目录：
+
+```json
+{
+  "idle": "datasets/interaction_videos/idle/idle.mp4",
+  "commands": {
+    "wave_response": "datasets/interaction_videos/wave/wave.mp4",
+    "heart_response": "datasets/interaction_videos/heart/heart.mp4",
+    "cheer_effect": "datasets/interaction_videos/cheer/cheer.mp4"
+  }
+}
+```
+
+当前仓库已包含 `idle/idle.mp4`、`wave/wave.mp4`、`wave/wave2.mp4`、`heart/heart.mp4`。`cheer` 和表情回应目录可按配置补齐素材；缺失时播放器会打印告警并忽略对应指令。
+
+## 训练入口
+
+表情训练和导出：
+
+```bash
+python training/emotion/train_emotion_6cls.py
 python training/emotion/export_emotion_onnx.py
 ```
+
+动作规则调试：
+
+```bash
+python training/pose/test_action_rules.py
+```
+
+## 注意事项
+
+- `run_pipeline.py` 无可用 GUI 时会禁用 `cv2.imshow`，推理仍继续运行。
+- UDP 视频流依赖 `code/communication` 的 pybind11 模块；导入失败时会尝试回退到本地摄像头。
+- `models/onnx/yolo26s-pose.onnx` 当前不在仓库内，实际运行会使用根目录的 `yolo26n-pose.pt` 回退模型。
+- 本目录只负责视觉互动链路；角色语音对话模块在 `../character_voice_chat/`，当前尚未完整接入该链路。

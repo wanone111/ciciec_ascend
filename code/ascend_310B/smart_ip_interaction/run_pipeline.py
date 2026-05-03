@@ -314,11 +314,29 @@ def main():
             now = time.time()
             if now - stats_last_print > STATS_PRINT_INTERVAL:
                 stats_last_print = now
-                if USE_UDP_STREAM and hasattr(cap, "_interface") and cap._interface is not None:
-                    try:
-                        cap._interface.print_stats()
-                    except Exception:
-                        pass
+                if USE_UDP_STREAM and hasattr(cap, "get_detailed_stats"):
+                    stats = cap.get_detailed_stats()
+                    if stats:
+                        loss = stats.get("packet_loss_rate_per_mille", 0) / 10.0
+                        print(
+                            "[STATS] recv_pkt={recv_pkt} valid_pkt={valid_pkt} drop_pkt={drop_pkt} "
+                            "drop_frag={drop_frag} drop_frame={drop_frame} loss={loss:.1f}% "
+                            "latency_asm(avg/min/max)={asm_avg}/{asm_min}/{asm_max}us "
+                            "latency_e2e(avg/min/max)={e2e_avg}/{e2e_min}/{e2e_max}us".format(
+                                recv_pkt=stats.get("recv_pkt_cnt", 0),
+                                valid_pkt=stats.get("pkt_cnt", 0),
+                                drop_pkt=stats.get("dropped_pkt_cnt", 0),
+                                drop_frag=stats.get("dropped_frag_cnt", 0),
+                                drop_frame=stats.get("dropped_frame_cnt", 0),
+                                loss=loss,
+                                asm_avg=stats.get("assembly_latency_avg_us", 0),
+                                asm_min=stats.get("assembly_latency_min_us", 0),
+                                asm_max=stats.get("assembly_latency_max_us", 0),
+                                e2e_avg=stats.get("sender_latency_avg_us", 0),
+                                e2e_min=stats.get("sender_latency_min_us", 0),
+                                e2e_max=stats.get("sender_latency_max_us", 0),
+                            )
+                        )
         except Exception:
             pass
 

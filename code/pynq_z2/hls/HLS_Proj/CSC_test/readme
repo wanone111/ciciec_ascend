@@ -1,141 +1,76 @@
-# CSC Test Suite - 测试覆盖改进说明
+# CSC_test 历史颜色空间转换工程
 
-## 概述
+本目录是早期 RGB/BGR 到 YUV420SP/NV12 转换的独立 HLS 测试工程，主要用于验证色彩空间转换、奇偶分辨率边界和 AXI4-Stream 输出协议。当前主线已经合并到：
 
-本项目已实现扩展的测试覆盖，解决了原有测试覆盖不足的问题。
-
-## 测试覆盖改进
-
-### 1. 新增测试用例
-
-| 测试编号 | 分辨率 | 格式 | 测试目的 |
-|---------|--------|------|----------|
-| Basic_6x8 | 6x8 | RGB/BGR | 基础功能验证 |
-| Odd_7x9 | 7x9 | RGB/BGR | 奇数分辨率边界测试 |
-| Min_2x2 | 2x2 | RGB/BGR | 最小分辨率测试 |
-| VGA_640x480 | 640x480 | RGB | 标准VGA分辨率 |
-| HD_1280x720 | 1280x720 | RGB | 720p高清分辨率 |
-| Asym_5x7 | 5x7 | BGR | 非对称奇数分辨率 |
-| Edge_1x8 | 1x8 | RGB | 单行边缘情况 |
-
-### 2. 测试特性
-
-- **多分辨率支持**: 从2x2到1280x720
-- **奇偶边界测试**: 覆盖奇数行/列的边缘情况
-- **双格式验证**: 同时测试RGB和BGR输入格式
-- **AXI-Stream协议验证**: 检查user/last/keep/strb信号
-- **自动化回归**: 一键运行所有测试用例
-
-## 脚本可移植性改进
-
-### 1. run_hls.tcl 改进
-
-**原问题**:
-- 硬编码OpenCV路径 `/home/bb/miniconda3/envs/310B_env`
-- 硬编码绝对路径
-
-**改进方案**:
-```tcl
-# 优先级：环境变量 > 自动检测 > 报错
-if {[info exists ::env(OPENCV_ROOT)]} {
-    set opencv_path $::env(OPENCV_ROOT)
-} else {
-    # 自动检测常见路径
-    set possible_paths [list "$::env(CONDA_PREFIX)" "/usr/local" "/usr"]
-    # ...
-}
+```text
+code/pynq_z2/hls/video_preprocess/
 ```
 
-**使用方法**:
-```bash
-# 方式1: 设置环境变量（推荐）
-export OPENCV_ROOT=/path/to/conda/envs/your_env
-vitis_hls -f scripts/run_hls.tcl
+## 顶层接口
 
-# 方式2: 使用conda环境
-conda activate your_env
-vitis_hls -f scripts/run_hls.tcl
+定义位置：`include/top.h`
+
+```cpp
+void video_preprocess(
+    hls::stream<axi_rgb_t>& src,
+    hls::stream<axi_u8_t>& y_dst,
+    hls::stream<axi_u8_t>& uv_dst,
+    ap_uint<16> rows,
+    ap_uint<16> cols,
+    ap_uint<8> input_is_bgr
+);
 ```
 
-### 2. 新增自动化测试脚本
+与主线工程相比，本工程只关注 CSC：
 
-**run_tests.sh** - 回归测试 runner
-```bash
-# 完整流程（CSIM + CSYNTH + COSIM）
-./scripts/run_tests.sh
+- 输入：24-bit RGB/BGR。
+- 输出：8-bit Y 流和 8-bit UV 交错流。
+- 控制：分辨率和 `input_is_bgr`。
+- 不包含 ROI、白平衡、Gamma 或降噪。
 
-# 仅C仿真（快速验证）
-./scripts/run_tests.sh --csim-only
-```
+## 目录结构
 
-**特性**:
-- 自动环境检测
-- 日志记录到 `test_logs/` 目录
-- 彩色输出
-- 结果自动解析
-
-## 文件结构
-
-```
+```text
 CSC_test/
-├── src/              # 源代码
-├── tb/               # 测试平台（已扩展）
-│   └── tb_top.cpp    # 多测试用例测试平台
-├── scripts/          # 脚本
-│   ├── run_hls.tcl   # 可移植HLS脚本
-│   └── run_tests.sh  # 自动化测试runner
-├── include/          # 头文件
-├── build/            # 构建输出（.gitignore）
-├── test_logs/        # 测试日志（.gitignore）
-└── .gitignore        # 新增
+├── include/
+│   ├── rgb2yuv.h
+│   ├── top.h
+│   └── video_params.h
+├── scripts/
+│   └── run_hls.tcl
+├── src/
+│   ├── rgb2yuv.cpp
+│   └── top.cpp
+├── tb/
+│   └── tb_top.cpp
+├── logs/
+└── ipcore_file/
 ```
 
-## 快速开始
+## 运行方式
 
 ```bash
-# 1. 设置环境
-export OPENCV_ROOT=/path/to/opencv
+source /opt/Xilinx/2025.2.1/Vitis/settings64.sh
+cd /home/bb/competition_ws/ciciec_ascend/code/pynq_z2/hls/HLS_Proj/CSC_test
 
-# 2. 运行测试
-cd /workspace/hls/HLS_Proj/CSC_test
-./scripts/run_tests.sh
-
-# 3. 查看结果
-cat test_logs/hls_run_*.log | grep "\[TB\]"
+# OpenCV 路径可用环境变量指定
+export OPENCV_ROOT=/path/to/conda/env
+vitis-run --mode hls --tcl scripts/run_hls.tcl
 ```
 
-## 预期输出
+脚本会运行 C 仿真、C 综合、C/RTL 协同仿真，并导出 IP catalog 到 `ipcore_file/video_preprocess/`。
 
-```
-========================================
-CSC Test Suite - Extended Coverage
-========================================
+## 测试覆盖
 
-[TB] Basic_6x8 mode=RGB (6x8) errors=0
-[TB] Basic_6x8 mode=BGR (6x8) errors=0
-[TB] Odd_7x9 mode=RGB (7x9) errors=0
-...
-[TB] Edge_1x8 mode=RGB (1x8) errors=0
+`tb/tb_top.cpp` 覆盖：
 
-========================================
-Test Summary
-========================================
-Total tests: 10
-Total errors: 0
-[TB][PASS] All 10 tests passed!
-```
+- RGB 和 BGR 输入。
+- 小尺寸、VGA、720p 等分辨率。
+- 奇数行/列边界。
+- Y/UV 输出数量和 AXI sideband 信号。
 
-## 故障排除
+## 使用建议
 
-### OpenCV未找到
-```bash
-# 查找conda环境
-conda env list
-# 设置环境变量
-export OPENCV_ROOT=$(conda info --base)/envs/your_env
-```
-
-### 权限问题
-```bash
-chmod +x scripts/run_tests.sh
-```
+- 该目录适合单独调试 RGB2YUV/NV12 转换问题。
+- 新功能应优先合入 `hls/video_preprocess/` 主线工程。
+- `logs/` 和 `build/` 属于运行产物，不应作为设计源依赖。
