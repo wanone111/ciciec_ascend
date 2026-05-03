@@ -19,12 +19,21 @@ WebSocket 地址：ws://0.0.0.0:8000/ws
 
 import asyncio
 import json
+import os
 import threading
 import socket
+import sys
 import time
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SRC_ROOT = os.path.join(PROJECT_ROOT, "src")
+if SRC_ROOT not in sys.path:
+    sys.path.insert(0, SRC_ROOT)
+
+from benchmark.logger import JsonlLogger
 
 # ─────────────────────────── 配置 ───────────────────────────
 TCP_HOST = "0.0.0.0"
@@ -39,6 +48,7 @@ SCENE_COUNT = 3          # 总剧情线数量
 # ─────────────────────────────────────────────────────────────
 
 app = FastAPI()
+bench_logger = JsonlLogger.from_env("backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -57,12 +67,14 @@ class ConnectionManager:
         async with self._lock:
             self._clients.append(ws)
         print(f"[WS] 客户端接入，当前连接数: {len(self._clients)}")
+        bench_logger.log("ws_client_connect", client_count=len(self._clients))
 
     async def disconnect(self, ws: WebSocket):
         async with self._lock:
             if ws in self._clients:
                 self._clients.remove(ws)
         print(f"[WS] 客户端断开，当前连接数: {len(self._clients)}")
+        bench_logger.log("ws_client_disconnect", client_count=len(self._clients))
 
     async def broadcast(self, data: dict):
         msg = json.dumps(data, ensure_ascii=False)
@@ -71,6 +83,15 @@ class ConnectionManager:
             for ws in self._clients:
                 try:
                     await ws.send_text(msg)
+                    bench_logger.log(
+                        "ws_sent",
+                        event_id=data.get("event_id"),
+                        scene=data.get("scene"),
+                        dialogue_id=data.get("dialogue_id"),
+                        source_type=data.get("source_type"),
+                        source_value=data.get("source_value"),
+                        client_count=len(self._clients),
+                    )
                 except Exception:
                     dead.append(ws)
             for ws in dead:
@@ -175,13 +196,51 @@ scene_sm = SceneStateMachine()
 # ── 全局 asyncio loop（供 TCP 线程回调）────────────────────
 _loop: asyncio.AbstractEventLoop = None
 
-def _dispatch(cmd: dict):
+def _dispatch(cmd: dict, received_ts: float | None = None):
     """在 TCP 线程中调用，把事件投递到 asyncio loop。"""
     if _loop is None:
         return
+    if "event_id" not in cmd:
+        cmd["event_id"] = f"backend-{time.time_ns()}"
+    if received_ts is None:
+        received_ts = time.time()
+
     outputs = scene_sm.on_event(cmd)
+    if not outputs:
+        bench_logger.log(
+            "event_suppressed",
+            event_id=cmd.get("event_id"),
+            source_type=cmd.get("type"),
+            source_value=cmd.get("value"),
+            backend_receive_ts=received_ts,
+        )
+
     for out in outputs:
+        broadcast_ts = time.time()
+        out.update({
+            "event_id": cmd.get("event_id"),
+            "pipeline_ts": cmd.get("pipeline_ts"),
+            "model_event_ts": cmd.get("model_event_ts"),
+            "backend_receive_ts": received_ts,
+            "backend_broadcast_ts": broadcast_ts,
+            "frame_idx": cmd.get("frame_idx"),
+            "source_frame_id": cmd.get("source_frame_id"),
+            "source_timestamp_us": cmd.get("source_timestamp_us"),
+            "source_type": cmd.get("type"),
+            "source_value": cmd.get("value"),
+        })
         print(f"[BROADCAST] {out}")
+        bench_logger.log(
+            "broadcast_queued",
+            event_id=out.get("event_id"),
+            scene=out.get("scene"),
+            dialogue_id=out.get("dialogue_id"),
+            source_type=out.get("source_type"),
+            source_value=out.get("source_value"),
+            backend_receive_ts=received_ts,
+            backend_broadcast_ts=broadcast_ts,
+            ws_clients=manager.client_count,
+        )
         asyncio.run_coroutine_threadsafe(manager.broadcast(out), _loop)
 
 # ── TCP 服务（独立线程）──────────────────────────────────────
@@ -201,7 +260,18 @@ def _handle_client(conn: socket.socket, addr):
                     continue
                 try:
                     cmd = json.loads(line.decode("utf-8"))
-                    _dispatch(cmd)
+                    received_ts = time.time()
+                    bench_logger.log(
+                        "tcp_event_received",
+                        event_id=cmd.get("event_id"),
+                        source_type=cmd.get("type"),
+                        source_value=cmd.get("value"),
+                        pipeline_ts=cmd.get("pipeline_ts"),
+                        frame_idx=cmd.get("frame_idx"),
+                        source_frame_id=cmd.get("source_frame_id"),
+                        backend_receive_ts=received_ts,
+                    )
+                    _dispatch(cmd, received_ts)
                 except json.JSONDecodeError:
                     pass
     except Exception as e:
@@ -248,6 +318,13 @@ def status():
 async def startup():
     global _loop
     _loop = asyncio.get_event_loop()
+    bench_logger.log(
+        "backend_start",
+        tcp_host=TCP_HOST,
+        tcp_port=TCP_PORT,
+        ws_host=WS_HOST,
+        ws_port=WS_PORT,
+    )
     t = threading.Thread(target=_tcp_server, daemon=True)
     t.start()
 

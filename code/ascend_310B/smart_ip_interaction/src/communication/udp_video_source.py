@@ -62,6 +62,7 @@ class UDPVideoSource:
         self._opened = False
         self._interface = None
         self._vsi_mod = None
+        self.last_frame_info: dict = {}
 
         # 加载 pybind11 模块
         if module_path and module_path not in sys.path:
@@ -134,18 +135,35 @@ class UDPVideoSource:
     def isOpened(self) -> bool:
         return self._opened
 
-    def read(self) -> Tuple[bool, Optional[np.ndarray]]:
-        """阻塞等待下一帧，超时返回 (False, None)。"""
+    def _metadata(self, frame) -> dict:
+        """Return transport metadata attached to a pybind frame."""
+        return {
+            "frame_id": int(getattr(frame, "frame_id", -1)),
+            "timestamp_us": int(getattr(frame, "timestamp_us", 0)),
+            "width": int(getattr(frame, "width", 0)),
+            "height": int(getattr(frame, "height", 0)),
+            "pixel_format": int(getattr(frame, "pixel_format", 0)),
+            "recv_ts": time.time(),
+        }
+
+    def read_with_info(self) -> Tuple[bool, Optional[np.ndarray], dict]:
+        """阻塞等待下一帧，返回 OpenCV 帧和 UDP 帧元数据。"""
         try:
             frame = self._frame_queue.get(timeout=self._read_timeout)
             # 在主线程中进行 pybind11 对象转换（避免 GIL 冲突）
             bgr = self._to_bgr(frame)
             if bgr is not None:
-                return True, bgr
+                self.last_frame_info = self._metadata(frame)
+                return True, bgr, dict(self.last_frame_info)
             else:
-                return False, None
+                return False, None, {}
         except queue.Empty:
-            return False, None
+            return False, None, {}
+
+    def read(self) -> Tuple[bool, Optional[np.ndarray]]:
+        """阻塞等待下一帧，超时返回 (False, None)。"""
+        ok, frame, _info = self.read_with_info()
+        return ok, frame
 
     def get_detailed_stats(self) -> dict:
         """返回 310B 接收端统计信息。

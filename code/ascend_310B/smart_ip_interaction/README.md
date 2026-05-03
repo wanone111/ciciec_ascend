@@ -136,6 +136,36 @@ WebSocket 调试客户端：
 python scripts/fake_frontend_client.py
 ```
 
+## 真实硬件端到端压测
+
+默认按三端真实路径写出压测日志：PYNQ 写 `/home/xilinx/jupyter_notebooks/ciciec/log/pynq.jsonl`，310B 写 `/root/userdata/ciciec/ascend_310B/log/pipeline.jsonl`，PC 写 `/home/bb/competition_ws/ciciec_ascend/log/backend.jsonl` 和 `player.jsonl`。如需临时覆盖，可设置 `SMART_IP_PYNQ_BENCH_DIR`、`SMART_IP_310B_BENCH_DIR`、`SMART_IP_PC_BENCH_DIR` 或 `SMART_IP_BENCH_DIR`。
+
+```bash
+export SMART_IP_UDP_MODULE_PATH=/home/bb/competition_ws/ciciec_ascend/code/communication/build
+export SMART_IP_BACKEND_HOST=192.168.137.1
+export SMART_IP_USE_UDP=1
+```
+
+真实硬件运行顺序：
+
+1. PC：`python backend/server.py`
+2. PC：`python scripts/video_player.py`
+3. 310B：`python run_pipeline.py`
+4. PYNQ：`code/communication/build/pynq_udp`
+
+汇总：
+
+```bash
+python scripts/benchmark/summarize_hardware_e2e.py \
+  --pynq-log-dir /home/xilinx/jupyter_notebooks/ciciec/log \
+  --ascend-log-dir /root/userdata/ciciec/ascend_310B/log \
+  --pc-log-dir /home/bb/competition_ws/ciciec_ascend/log \
+  --action-trials scripts/benchmark/action_trials_template.csv \
+  --expression-trials scripts/benchmark/expression_trials_template.csv
+```
+
+输出的 `hardware_e2e_summary.md` 包含动作/表情准确率、端到端延迟、FPS、UDP 丢包率和稳定性统计。若未提供 trial CSV，脚本只汇总性能和稳定性，不计算准确率。
+
 ## 关键配置
 
 `run_pipeline.py` 当前默认配置：

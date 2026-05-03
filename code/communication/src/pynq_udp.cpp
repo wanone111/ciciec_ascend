@@ -1,7 +1,10 @@
 #include "udp_common.h"                             // 引入 UDP 公共工具头文件
 #include <chrono>                                    // 引入节拍控制
 #include <csignal>                                   // 引入信号处理
+#include <cstdlib>                                   // 引入 getenv
+#include <filesystem>                                // 引入日志目录创建
 #include <fcntl.h>                                   // 引入 open 文件标志
+#include <fstream>                                   // 引入 JSONL 日志文件
 #include <iostream>                                  // 引入标准输出流
 #include <linux/videodev2.h>                         // 引入 V4L2 摄像头接口
 #include <sstream>                                   // 引入字符串流
@@ -16,9 +19,93 @@ using namespace udp_net;                             // 使用 udp_net 命名空
 namespace {                                          // 匿名命名空间，限制内部符号可见范围
 volatile std::sig_atomic_t g_stop = 0;               // 停止标记，由信号处理函数置位
 
+constexpr const char* PYNQ_DEFAULT_LOG_DIR = "/home/xilinx/jupyter_notebooks/ciciec/log";
+
 void handle_signal(int) {                            // 信号处理函数
     g_stop = 1;                                      // 收到停止信号后请求退出主循环
 }
+
+uint64_t unix_time_us() {                             // 返回 Unix 微秒时间戳，便于三端对齐
+    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count());
+}
+
+std::string json_escape(const std::string& value) {   // 简单 JSON 字符串转义
+    std::ostringstream out;
+    for (char ch : value) {
+        switch (ch) {
+            case '\\': out << "\\\\"; break;
+            case '"': out << "\\\""; break;
+            case '\n': out << "\\n"; break;
+            case '\r': out << "\\r"; break;
+            case '\t': out << "\\t"; break;
+            default: out << ch; break;
+        }
+    }
+    return out.str();
+}
+
+std::string env_or_default_log_dir() {                // 支持现场通过环境变量覆盖 PYNQ 日志目录
+    if (const char* v = std::getenv("SMART_IP_PYNQ_BENCH_DIR")) {
+        return v;
+    }
+    if (const char* v = std::getenv("PYNQ_BENCH_DIR")) {
+        return v;
+    }
+    if (const char* v = std::getenv("SMART_IP_BENCH_DIR")) {
+        return v;
+    }
+    return PYNQ_DEFAULT_LOG_DIR;
+}
+
+class JsonlLogger {                                   // PYNQ 端轻量 JSONL 压测日志器
+public:
+    explicit JsonlLogger(const std::string& component)
+        : component_(component) {
+        const std::string dir = env_or_default_log_dir();
+        std::error_code ec;
+        std::filesystem::create_directories(dir, ec);
+        if (ec) {
+            std::cerr << "[PYNQ] create log dir failed: " << dir
+                      << " err=" << ec.message() << std::endl;
+            return;
+        }
+
+        path_ = (std::filesystem::path(dir) / (component + ".jsonl")).string();
+        file_.open(path_, std::ios::app);
+        if (!file_.is_open()) {
+            std::cerr << "[PYNQ] open log failed: " << path_ << std::endl;
+        } else {
+            std::cout << "[PYNQ] benchmark log: " << path_ << std::endl;
+        }
+    }
+
+    bool enabled() const {
+        return file_.is_open();
+    }
+
+    void log_raw(const std::string& kind, const std::string& payload = "") {
+        if (!file_.is_open()) {
+            return;
+        }
+
+        const uint64_t now_us = unix_time_us();
+        file_ << "{\"component\":\"" << json_escape(component_) << "\""
+              << ",\"kind\":\"" << json_escape(kind) << "\""
+              << ",\"ts\":" << (static_cast<double>(now_us) / 1000000.0)
+              << ",\"ts_us\":" << now_us;
+        if (!payload.empty()) {
+            file_ << "," << payload;
+        }
+        file_ << "}\n";
+        file_.flush();
+    }
+
+private:
+    std::string component_;
+    std::string path_;
+    std::ofstream file_;
+};
 
 class V4L2Rgb24Reader {                              // 简化版 V4L2 读帧器（read() 模式）
 public:
@@ -271,9 +358,20 @@ int main() {                                         // 主函数入口
         return 1;                                    // 返回错误码
     }
 
+    JsonlLogger bench_log("pynq");                   // 创建 PYNQ 端压测日志
+    bench_log.log_raw("pynq_start",
+        "\"width\":" + std::to_string(camera.width()) +
+        ",\"height\":" + std::to_string(camera.height()) +
+        ",\"pixel_format\":" + std::to_string(static_cast<int>(camera.pixel_format())) +
+        ",\"video_fps\":" + std::to_string(VIDEO_FPS) +
+        ",\"dst_ip\":\"" + json_escape(ASCEND_310B_IP) + "\"" +
+        ",\"dst_port\":" + std::to_string(PYNQ_PORT));
+
     std::cout << "[PYNQ] start RGB24 video send loop" << std::endl; // 打印启动信息
     uint32_t frame_id = 0;                           // 定义帧号计数器
     uint64_t sent_pkt_cnt = 0;                       // 统计累计发送分片数
+    uint64_t sent_frame_cnt = 0;                     // 统计累计发送帧数
+    uint64_t send_fail_cnt = 0;                      // 统计累计发送失败分片数
     const auto frame_period = std::chrono::microseconds(1000000 / VIDEO_FPS); // 计算目标帧间隔
     auto next_send_tp = std::chrono::steady_clock::now(); // 定义下一帧发送时刻
 
@@ -289,15 +387,19 @@ int main() {                                         // 主函数入口
             continue;                                // 继续下一轮读取
         }
 
-        uint64_t timestamp_us = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>( // 生成微秒时间戳
-            std::chrono::steady_clock::now().time_since_epoch()).count());
+        uint64_t timestamp_us = unix_time_us();       // 生成可跨端对齐的 Unix 微秒时间戳
 
         const std::size_t frag_cnt = (frame.size() + UDP_SAFE_PAYLOAD - 1) / UDP_SAFE_PAYLOAD; // 计算该帧分片总数
         if (frag_cnt == 0 || frag_cnt > 65535) {     // 分片数量边界检查
             std::cout << "[PYNQ] skip invalid frag count=" << frag_cnt << std::endl; // 打印异常日志
+            bench_log.log_raw("invalid_frame", "\"frame_id\":" + std::to_string(frame_id) +
+                ",\"frame_bytes\":" + std::to_string(frame.size()) +
+                ",\"frag_cnt\":" + std::to_string(frag_cnt));
             continue;                                // 跳过异常帧
         }
 
+        uint64_t frame_sent_pkt = 0;                  // 当前帧成功发送分片数
+        uint64_t frame_failed_pkt = 0;                // 当前帧发送失败分片数
         for (std::size_t frag_idx = 0; frag_idx < frag_cnt; ++frag_idx) { // 按分片顺序发送当前帧
             const std::size_t offset = frag_idx * UDP_SAFE_PAYLOAD; // 计算当前分片偏移
             const std::size_t payload = std::min<std::size_t>(UDP_SAFE_PAYLOAD, frame.size() - offset); // 计算当前分片长度
@@ -324,16 +426,38 @@ int main() {                                         // 主函数入口
 
             if (send_bytes(fd_pynq, packet.data(), packet.size(), to_310b) < 0) { // 发送分片到 310B
                 std::cout << "[PYNQ] send frag failed frame=" << frame_id << " frag=" << frag_idx << std::endl; // 打印失败日志
+                ++frame_failed_pkt;                  // 当前帧失败分片递增
+                ++send_fail_cnt;                     // 总失败分片递增
             } else {                                 // 发送成功分支
                 ++sent_pkt_cnt;                      // 发送分片计数递增
+                ++frame_sent_pkt;                    // 当前帧成功分片递增
             }
         }
+        ++sent_frame_cnt;                            // 当前帧处理完成，累计发送帧递增
+
+        bench_log.log_raw("frame_sent",
+            "\"frame_id\":" + std::to_string(frame_id) +
+            ",\"source_timestamp_us\":" + std::to_string(timestamp_us) +
+            ",\"frame_bytes\":" + std::to_string(frame.size()) +
+            ",\"width\":" + std::to_string(camera.width()) +
+            ",\"height\":" + std::to_string(camera.height()) +
+            ",\"pixel_format\":" + std::to_string(static_cast<int>(camera.pixel_format())) +
+            ",\"frag_cnt\":" + std::to_string(frag_cnt) +
+            ",\"sent_frag_cnt\":" + std::to_string(frame_sent_pkt) +
+            ",\"failed_frag_cnt\":" + std::to_string(frame_failed_pkt) +
+            ",\"total_sent_pkt\":" + std::to_string(sent_pkt_cnt) +
+            ",\"total_send_fail_pkt\":" + std::to_string(send_fail_cnt));
 
         if (frame_id % 30 == 0) {                   // 每 30 帧打印一次发送状态
             std::cout << "[PYNQ] send frame=" << frame_id << " bytes=" << frame.size()
                       << " fmt=" << static_cast<int>(camera.pixel_format())
                       << " frag_cnt=" << frag_cnt
                       << " total_pkt=" << sent_pkt_cnt << std::endl; // 打印发送统计
+            bench_log.log_raw("pynq_stats",
+                "\"frame_id\":" + std::to_string(frame_id) +
+                ",\"sent_frame_cnt\":" + std::to_string(sent_frame_cnt) +
+                ",\"total_sent_pkt\":" + std::to_string(sent_pkt_cnt) +
+                ",\"total_send_fail_pkt\":" + std::to_string(send_fail_cnt));
         }
 
         std::vector<uint8_t> control_packet;         // 定义控制消息缓冲区
@@ -343,6 +467,10 @@ int main() {                                         // 主函数入口
         if (ctrl_n > 0) {                            // 收到控制消息分支
             std::string ctrl_text(control_packet.begin(), control_packet.end()); // 将控制包按文本展示
             std::cout << "[PYNQ] recv control: " << ctrl_text << std::endl; // 打印控制日志
+            bench_log.log_raw("control_received",
+                "\"frame_id\":" + std::to_string(frame_id) +
+                ",\"bytes\":" + std::to_string(ctrl_n) +
+                ",\"text\":\"" + json_escape(ctrl_text) + "\"");
         }
 
         ++frame_id;                                  // 帧号自增
@@ -354,6 +482,10 @@ int main() {                                         // 主函数入口
     }                                                // 结束循环
 
     std::cout << "[PYNQ] stop send loop" << std::endl; // 打印退出信息
+    bench_log.log_raw("pynq_stop",
+        "\"sent_frame_cnt\":" + std::to_string(sent_frame_cnt) +
+        ",\"total_sent_pkt\":" + std::to_string(sent_pkt_cnt) +
+        ",\"total_send_fail_pkt\":" + std::to_string(send_fail_cnt));
 
     close(fd_pynq);                                  // 关闭 socket
     return 0;                                        // 返回成功码

@@ -42,6 +42,7 @@ from inference.face_detector import FaceDetector
 from interaction.action_mapper import map_event_to_command
 from communication.tcp_sender import TCPSender
 from inference.ar_overlay import AROverlay
+from benchmark.logger import JsonlLogger, time_ms
 
 # ─────────────────────────── 配置 ───────────────────────────
 # NPU 优先：优先使用 ONNX + CANN；找不到则回退到 PT
@@ -53,19 +54,36 @@ NUM_EMOTION_CLASSES = 6
 # ── 视频源选择 ────────────────────────────────────────────────
 # USE_UDP_STREAM = False 时使用本地源（摄像头或视频文件）
 # USE_UDP_STREAM = True  时使用硬件 UDP 视频流（PYNQ→310B→PC）
-USE_UDP_STREAM = True
+def _env_bool(name, default):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in ("0", "false", "no", "off")
+
+
+def _env_video_source(name, default):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return raw
+
+
+USE_UDP_STREAM = _env_bool("SMART_IP_USE_UDP", True)
 
 # 本地源：0 = 摄像头；填路径 = 视频文件（USE_UDP_STREAM=False 时生效）
-VIDEO_SOURCE = 0
+VIDEO_SOURCE = _env_video_source("SMART_IP_VIDEO_SOURCE", 0)
 
 # UDP 流配置（USE_UDP_STREAM=True 时生效）
-UDP_LISTEN_PORT = 9090          
-UDP_MODULE_PATH = "/root/userdata/ciciec/communication/build" 
+UDP_LISTEN_PORT = int(os.environ.get("SMART_IP_UDP_PORT", "9090"))
+UDP_MODULE_PATH = os.environ.get("SMART_IP_UDP_MODULE_PATH", "/root/userdata/ciciec/communication/build")
 # ─────────────────────────────────────────────────────────────
 
 # 后端地址
-BACKEND_HOST = "192.168.137.1"
-BACKEND_PORT = 9000
+BACKEND_HOST = os.environ.get("SMART_IP_BACKEND_HOST", "192.168.137.1")
+BACKEND_PORT = int(os.environ.get("SMART_IP_BACKEND_PORT", "9000"))
 
 # 表情事件最短推送间隔（秒）
 EXPR_SEND_INTERVAL = 1.5
@@ -186,7 +204,41 @@ def open_video_source():
         return cap
 
 
+def read_frame_with_info(cap):
+    """Read a frame and keep transport metadata when the source supports it."""
+    if hasattr(cap, "read_with_info"):
+        return cap.read_with_info()
+    ret, frame = cap.read()
+    return ret, frame, {}
+
+
+def _event_trace(prefix, frame_idx, frame_info, model_event):
+    now_ts = time.time()
+    return {
+        "event_id": f"{prefix}-{frame_idx}-{time.time_ns()}",
+        "pipeline_ts": now_ts,
+        "model_event_ts": model_event.get("timestamp", now_ts) if isinstance(model_event, dict) else now_ts,
+        "frame_idx": frame_idx,
+        "source_frame_id": frame_info.get("frame_id"),
+        "source_timestamp_us": frame_info.get("timestamp_us"),
+    }
+
+
 def main():
+    bench_logger = JsonlLogger.from_env("pipeline")
+    bench_frame_stride = int(os.environ.get("SMART_IP_BENCH_FRAME_STRIDE", "1"))
+    bench_logger.log(
+        "pipeline_start",
+        use_udp_stream=USE_UDP_STREAM,
+        video_source=str(VIDEO_SOURCE),
+        udp_listen_port=UDP_LISTEN_PORT,
+        udp_module_path=UDP_MODULE_PATH,
+        backend_host=BACKEND_HOST,
+        backend_port=BACKEND_PORT,
+        expr_skip=EXPR_SKIP,
+        expr_send_interval=EXPR_SEND_INTERVAL,
+    )
+
     # ── 加载模型 ──
     print("[INFO] 加载姿态模型:", POSE_MODEL_PATH)
     pose_model = PoseInfer(model_path=POSE_MODEL_PATH, imgsz=640, conf=0.25, iou=0.45, use_npu=True)
@@ -229,7 +281,9 @@ def main():
     print("[INFO] 开始运行，按 ESC 退出")
 
     while True:
-        ret, frame = cap.read()
+        read_start = time.perf_counter()
+        ret, frame, frame_info = read_frame_with_info(cap)
+        read_ms = time_ms(read_start)
         if not ret:
             # 本地视频文件循环播放；UDP 流超时则重试
             if not USE_UDP_STREAM and isinstance(VIDEO_SOURCE, str):
@@ -242,9 +296,12 @@ def main():
             break
 
         frame_idx += 1
+        frame_start = time.perf_counter()
 
         # ── Stage 1a：YOLO 姿态推理 → 动作识别 ──
+        pose_start = time.perf_counter()
         results = pose_model(frame, verbose=False)
+        pose_ms = time_ms(pose_start)
         annotated = results[0].plot() if (
             results[0].boxes is not None and len(results[0].boxes) > 0
         ) else frame.copy()
@@ -270,16 +327,31 @@ def main():
                 if cmd:
                     # 附带关键点供 AR 特效使用
                     cmd["keypoints"] = kp_list
+                    trace = _event_trace("action", frame_idx, frame_info, event)
+                    cmd.update(trace)
                     print(f"[ACTION] {cmd}")
+                    bench_logger.log(
+                        "action_event_sent",
+                        event_id=trace["event_id"],
+                        frame_idx=frame_idx,
+                        source_frame_id=trace["source_frame_id"],
+                        source_timestamp_us=trace["source_timestamp_us"],
+                        action_label=action_label,
+                        command_value=cmd.get("value"),
+                        tcp_connected=sender.connected,
+                    )
                     sender.send(cmd)
 
         # ── Stage 1b + 2：每 EXPR_SKIP 帧做人脸检测 + 表情推理 ──
+        expr_ms = None
         if frame_idx % EXPR_SKIP == 0:
+            expr_start = time.perf_counter()
             face_roi, face_bbox = face_detector.detect_best(frame)
             if face_roi is not None:
                 result = expr_infer.predict_smooth(face_roi)
                 expr_label = result["expression"]
                 expr_conf  = result["confidence"]
+            expr_ms = time_ms(expr_start)
 
         if face_bbox is not None and expr_label is not None:
             x1, y1, x2, y2 = face_bbox
@@ -296,7 +368,20 @@ def main():
                     cmd["face_bbox"] = list(face_bbox)
                     if kp_list:
                         cmd["keypoints"] = kp_list
+                    trace = _event_trace("expression", frame_idx, frame_info, event)
+                    cmd.update(trace)
                     print(f"[EXPR ] {cmd}")
+                    bench_logger.log(
+                        "expression_event_sent",
+                        event_id=trace["event_id"],
+                        frame_idx=frame_idx,
+                        source_frame_id=trace["source_frame_id"],
+                        source_timestamp_us=trace["source_timestamp_us"],
+                        expression_label=expr_label,
+                        expression_confidence=expr_conf,
+                        command_value=cmd.get("value"),
+                        tcp_connected=sender.connected,
+                    )
                     sender.send(cmd)
                     last_expr_time = now
 
@@ -304,6 +389,23 @@ def main():
         cur_time = time.time()
         fps = 1.0 / max(cur_time - prev_time, 1e-6)
         prev_time = cur_time
+        frame_total_ms = time_ms(frame_start)
+
+        if bench_frame_stride > 0 and frame_idx % bench_frame_stride == 0:
+            bench_logger.log(
+                "frame",
+                frame_idx=frame_idx,
+                frame_info=frame_info,
+                read_ms=read_ms,
+                pose_ms=pose_ms,
+                expression_ms=expr_ms,
+                frame_total_ms=frame_total_ms,
+                fps=fps,
+                action_label=action_label,
+                expression_label=expr_label,
+                expression_confidence=expr_conf,
+                tcp_connected=sender.connected,
+            )
 
         annotated = draw_overlay(
             annotated, action_label, expr_label, expr_conf, fps, sender.connected
@@ -317,6 +419,7 @@ def main():
                 if USE_UDP_STREAM and hasattr(cap, "get_detailed_stats"):
                     stats = cap.get_detailed_stats()
                     if stats:
+                        bench_logger.log("udp_stats", **stats)
                         loss = stats.get("packet_loss_rate_per_mille", 0) / 10.0
                         print(
                             "[STATS] recv_pkt={recv_pkt} valid_pkt={valid_pkt} drop_pkt={drop_pkt} "
@@ -356,6 +459,8 @@ def main():
         except cv2.error:
             pass
     sender.close()
+    bench_logger.log("pipeline_stop", frame_idx=frame_idx)
+    bench_logger.close()
     print("[INFO] 退出")
 
 

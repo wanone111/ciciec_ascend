@@ -253,9 +253,24 @@ python training/emotion/export_emotion_onnx.py
 python training/pose/test_action_rules.py
 ```
 
+## 真实硬件压测入口
+
+视觉互动主链路已按真实部署路径输出三端 JSONL 日志，并用汇总脚本生成可写入报告的量化指标：
+
+```bash
+cd /home/bb/competition_ws/ciciec_ascend/code/ascend_310B/smart_ip_interaction
+python scripts/benchmark/summarize_hardware_e2e.py \
+  --pynq-log-dir /home/xilinx/jupyter_notebooks/ciciec/log \
+  --ascend-log-dir /root/userdata/ciciec/ascend_310B/log \
+  --pc-log-dir /home/bb/competition_ws/ciciec_ascend/log
+```
+
+动作和表情准确率需要配合 `scripts/benchmark/action_trials_template.csv`、`scripts/benchmark/expression_trials_template.csv` 的真实 trial 标注计算。
+
 ## 注意事项
 
 - `smart_ip_interaction` 是当前比赛演示主线，优先维护这里的 README 和启动方式。
 - `character_voice_chat` 当前仍有包路径、依赖和密钥配置整理工作，直接运行前需要先处理导入路径和环境变量。
 - 语音相关脚本不应把真实 API Key、Token 或 App ID 固化在源码中，建议统一改为环境变量读取。
 - 真实硬件联调时，需要同时确认 PYNQ/310B/PC 三端 IP、端口和 `code/communication/include/udp_common.h` 一致。
+- PYNQ 采集到 PC 播放器切换的绝对端到端延迟依赖三端时钟同步；未同步时只使用 310B→后端、后端→播放器等同机/相邻分段延迟。

@@ -88,7 +88,7 @@ export PYTHONPATH="/home/bb/competition_ws/ciciec_ascend/code/communication/buil
 - `payload_bytes`：当前分片有效载荷字节数。
 - `width` / `height`：帧分辨率。
 - `pixel_format`：`RGB24`、`MJPEG` 或 `NV12`。
-- `timestamp_us`：采集时间戳。
+- `timestamp_us`：采集时间戳，当前使用 Unix 微秒时间戳，便于和 310B/PC 端日志对齐。
 
 重要限制：
 
@@ -112,6 +112,8 @@ PYNQ 端采集程序，使用 V4L2 mmap 从摄像头读取帧，按协议分片�
 [PYNQ] camera ready
 [PYNQ] send frame=... bytes=... fmt=...
 ```
+
+压测 JSONL 默认写入 `/home/xilinx/jupyter_notebooks/ciciec/log/pynq.jsonl`，可用 `SMART_IP_PYNQ_BENCH_DIR`、`PYNQ_BENCH_DIR` 或 `SMART_IP_BENCH_DIR` 覆盖目录。
 
 ### `310B_udp`
 
@@ -186,7 +188,7 @@ USE_UDP_STREAM = True
 UDP_LISTEN_PORT = 9090
 ```
 
-因此真实硬件链路中需要先保证 PYNQ 正在向 310B 的 `9090` 端口发送视频分片，并保证 Python 能导入本目录编译出的 `video_stream_interface*.so`。
+因此真实硬件链路中需要先保证 PYNQ 正在向 310B 的 `9090` 端口发送视频分片，并保证 Python 能导入本目录编译出的 `video_stream_interface*.so`。如果要统计 PYNQ 采集到 PC 播放器切换的跨端绝对延迟，PYNQ、310B 和 PC 需要先完成 NTP/chrony 时钟同步。
 
 ## 运行顺序
 

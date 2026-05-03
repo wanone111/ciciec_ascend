@@ -32,6 +32,12 @@ import json as _json
 
 # ─────────────────────────── 路径 ────────────────────────────
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SRC_ROOT = os.path.join(PROJECT_ROOT, "src")
+if SRC_ROOT not in sys.path:
+    sys.path.insert(0, SRC_ROOT)
+
+from benchmark.logger import JsonlLogger
+
 CONFIG_PATH  = os.path.join(PROJECT_ROOT, "configs", "video_config.json")
 
 WS_URL       = "ws://127.0.0.1:8000/ws"
@@ -40,6 +46,8 @@ PC_VIDEO_CTRL_PORT = 5567  # 从 communication/include/udp_common.h 对应
 
 WINDOW_NAME  = "IP Interaction Display"
 # ─────────────────────────────────────────────────────────────
+
+bench_logger = JsonlLogger.from_env("player")
 
 
 def load_config():
@@ -70,7 +78,22 @@ def _ws_thread(url: str, retry_sec: float):
                             # 提取触发键：优先 dialogue_id，其次 scene
                             key = msg.get("dialogue_id") or msg.get("scene")
                             if key:
-                                _cmd_queue.put(key)
+                                received_ts = time.time()
+                                _cmd_queue.put({
+                                    "key": key,
+                                    "raw": msg,
+                                    "transport": "websocket",
+                                    "received_ts": received_ts,
+                                })
+                                bench_logger.log(
+                                    "player_command_received",
+                                    event_id=msg.get("event_id"),
+                                    key=key,
+                                    transport="websocket",
+                                    pipeline_ts=msg.get("pipeline_ts"),
+                                    backend_broadcast_ts=msg.get("backend_broadcast_ts"),
+                                    player_receive_ts=received_ts,
+                                )
                                 print(f"[WS] 收到指令: {key}  原始: {msg}")
                         except json.JSONDecodeError:
                             pass
@@ -108,7 +131,22 @@ def _udp_ctrl_thread(listen_ip: str = "0.0.0.0", listen_port: int = PC_VIDEO_CTR
 
             key = msg.get("dialogue_id") or msg.get("scene")
             if key:
-                _cmd_queue.put(key)
+                received_ts = time.time()
+                _cmd_queue.put({
+                    "key": key,
+                    "raw": msg,
+                    "transport": "udp",
+                    "received_ts": received_ts,
+                })
+                bench_logger.log(
+                    "player_command_received",
+                    event_id=msg.get("event_id"),
+                    key=key,
+                    transport="udp",
+                    pipeline_ts=msg.get("pipeline_ts"),
+                    backend_broadcast_ts=msg.get("backend_broadcast_ts"),
+                    player_receive_ts=received_ts,
+                )
                 print(f"[UDPCTRL] 收到指令 {key} from {addr} 原始: {msg}")
     finally:
         s.close()
@@ -128,6 +166,12 @@ def main():
     cfg = load_config()
     idle_path = abs_video(cfg, cfg.get("idle", ""))
     cmd_map   = {k: abs_video(cfg, v) for k, v in cfg.get("commands", {}).items()}
+    bench_logger.log(
+        "player_start",
+        ws_url=WS_URL,
+        udp_ctrl_port=PC_VIDEO_CTRL_PORT,
+        idle_path=idle_path,
+    )
 
     # 启动 WS 监听线程
     t = threading.Thread(target=_ws_thread, args=(WS_URL, WS_RETRY_SEC), daemon=True)
@@ -165,7 +209,9 @@ def main():
     while True:
         # ── 从队列取指令（非阻塞）──
         try:
-            key = _cmd_queue.get_nowait()
+            item = _cmd_queue.get_nowait()
+            key = item["key"]
+            raw = item.get("raw", {})
             video_path = cmd_map.get(key)
             if video_path and os.path.exists(video_path):
                 print(f"[SWITCH] {key} → {os.path.basename(video_path)}")
@@ -173,9 +219,34 @@ def main():
                     cap.release()
                 cap, frame_delay = open_cap(video_path)
                 is_idle  = False
+                switch_ts = time.time()
+                bench_logger.log(
+                    "video_switch",
+                    event_id=raw.get("event_id"),
+                    key=key,
+                    video_path=video_path,
+                    transport=item.get("transport"),
+                    pipeline_ts=raw.get("pipeline_ts"),
+                    model_event_ts=raw.get("model_event_ts"),
+                    backend_receive_ts=raw.get("backend_receive_ts"),
+                    backend_broadcast_ts=raw.get("backend_broadcast_ts"),
+                    player_receive_ts=item.get("received_ts"),
+                    player_switch_ts=switch_ts,
+                    frame_idx=raw.get("frame_idx"),
+                    source_frame_id=raw.get("source_frame_id"),
+                    source_timestamp_us=raw.get("source_timestamp_us"),
+                    source_type=raw.get("source_type"),
+                    source_value=raw.get("source_value"),
+                )
             else:
                 if video_path:
                     print(f"[WARN] 视频文件不存在: {video_path}，指令 {key} 被忽略")
+                bench_logger.log(
+                    "video_missing",
+                    event_id=raw.get("event_id"),
+                    key=key,
+                    video_path=video_path,
+                )
         except queue.Empty:
             pass
 
@@ -211,6 +282,8 @@ def main():
     if cap:
         cap.release()
     cv2.destroyAllWindows()
+    bench_logger.log("player_stop")
+    bench_logger.close()
     print("[INFO] 退出")
 
 

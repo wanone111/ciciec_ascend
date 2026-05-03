@@ -394,6 +394,12 @@ python scripts/simulate_310b.py --mode interactive
 # WebSocket 调试客户端
 python scripts/fake_frontend_client.py
 
+# 真实硬件端到端压测汇总
+python scripts/benchmark/summarize_hardware_e2e.py \
+  --pynq-log-dir /home/xilinx/jupyter_notebooks/ciciec/log \
+  --ascend-log-dir /root/userdata/ciciec/ascend_310B/log \
+  --pc-log-dir /home/bb/competition_ws/ciciec_ascend/log
+
 # 通信模块 Python 示例
 cd code/communication
 python python/example_python_inference.py
@@ -405,6 +411,7 @@ python python/example_python_inference.py
 
 - 姿态识别、表情识别、后端分发和视频播放器主链路已具备可演示代码。
 - PYNQ-Z2 HLS 预处理工程和通信模块已在仓库中保留，硬件端到端部署需结合现场网络、Vitis/CANN 环境和板端路径调整。
+- `smart_ip_interaction/scripts/benchmark/` 已补充真实硬件压测日志汇总脚本和 trial 标注模板；最终准确率、端到端延迟和稳定性数据需要由比赛设备实测日志生成。
 - `run_pipeline.py` 默认使用 UDP 视频流；无硬件输入时会尝试回退到本地摄像头。
 - `video_config.json` 中部分表情/欢呼视频路径可能需要按素材补齐。
 - 语音对话模块仍是联调中能力，不应视为已和 IP 视频系统完整闭环。
