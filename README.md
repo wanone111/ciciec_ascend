@@ -1,324 +1,379 @@
-# 集创赛 华强 x 昇腾赛题
+# 集创赛 华强 x 昇腾赛题 — 智能 IP 交互系统
 
-![C++](https://img.shields.io/badge/C++-68.7%25-blue) ![VHDL](https://img.shields.io/badge/VHDL-15.1%25-orange) ![Verilog](https://img.shields.io/badge/Verilog-9.7%25-green) ![Python](https://img.shields.io/badge/Python-2.3%25-yellow)
+![C++](https://img.shields.io/badge/C++-68.7%25-blue) ![Python](https://img.shields.io/badge/Python-31.3%25-yellow) 
 
-## 项目目标
+## 项目概述
 
-基于 PYNQ-Z2 (FPGA) + Ascend 310B (NPU) 构建异构视觉交互终端，面向园区/展演场景实现：
+基于 **PYNQ-Z2 (FPGA)** + **Ascend 310B (NPU)** 构建异构视觉交互终端，面向园区/展演场景实现实时动作识别、表情捕捉与 IP 形象联动演艺。
 
-- **动作识别**（挥手/比心/欢呼）✅
-- **表情捕捉与识别**（高兴/惊讶/生气/恐惧/悲伤/中性）✅
-- **多目标管理与交互决策** ✅
-- **IP 联动演艺**（熊二卡通形象视频触发）✅
-- **前后端联动控制**（UDP 视频流 + WebSocket 事件）✅
-- **角色语音对话**（ASR + LLM + TTS 全流程）🔄
+### 核心功能
 
-当前阶段目标：**已完成姿态识别、表情识别、IP 视频联动闭环，正在推进角色语音对话功能**。
+- ✅ **姿态识别**：挥手/比心/欢呼动作检测（YOLOv26s-Pose）
+- ✅ **表情识别**：高兴/惊讶/生气/恐惧/悲伤/中性六分类（YuNet + MobileNetV3）
+- ✅ **IP 视频联动**：熊二卡通形象互动视频播放
+- ✅ **前后端通信**：UDP 视频流 + TCP 事件推送 + WebSocket 控制
+- 🔄 **角色语音对话**：ASR + LLM + TTS 全流程（开发中）
 
-## 系统分层
+---
 
-### PYNQ-Z2 侧
+## 系统架构
 
-- 视频采集与基础预处理（ISP/ROI/缩放）
-- 产出 ROI 流并通过 UDP 发送至 310B
+```
+┌─────────────┐     UDP      ┌─────────────┐    TCP     ┌─────────────┐
+│  PYNQ-Z2    │  视频流 9090  │ Ascend 310B │   :9000    │    PC 端    │
+│  视频采集   │ ────────────> │  推理引擎   │ ────────>  │  后端服务   │
+│  ISP 预处理 │               │ 姿态 + 表情  │            │ WebSocket   │
+└─────────────┘               └─────────────┘            │    :8000    │
+                                                         └──────┬──────┘
+                                                                │
+                                                                ▼
+                                                         ┌─────────────┐
+                                                         │  视频播放器 │
+                                                         │  熊二互动   │
+                                                         └─────────────┘
+```
 
-### Ascend 310B 侧
+### 数据流向
 
-- 接收 ROI 包并进行推理调度
-- 使用 AscendCL 完成模型加载/执行
-- **姿态识别**：YOLOv26s-Pose 模型推理、关键点解码、动作分类 ✅
-- **表情识别**：YuNet 人脸检测 + MobileNetV3-Small 6 分类 ✅
-- 推理结果经 WebSocket 发送至后端服务
-- **角色语音对话**：ASR + LLM + TTS 全流程（进行中）🔄
+1. **PYNQ-Z2**：摄像头采集 → ISP 预处理 → ROI 裁剪 → UDP 发送
+2. **Ascend 310B**：接收 UDP 流 → YOLO-Pose 姿态推理 → 人脸检测 → 表情分类 → TCP 推送事件
+3. **PC 后端**：接收事件 → 剧情状态机决策 → WebSocket 广播 → 控制视频播放
 
-### 通信层
+---
 
-- ✅ 已具备 PYNQ -> 310B -> PC 三端 UDP 分片链路
-- ✅ 已具备控制透传回路
-
-### IP 联动层
-
-- ✅ 采用预生成视频方案（熊二卡通形象）
-- ✅ 已实现：视频资产管理、触发逻辑引擎、无缝切换机制
-- ✅ 后端事件分发服务（WebSocket :8000）
-- ✅ 剧情状态机（欢呼累计触发场景切换）
-
-## 当前进度（2026-04）
-
-### 已完成
-
-#### 智能 IP 互动系统（smart_ip_interaction）✅
-
-- ✅ **姿态识别**：YOLOv26n-Pose 模型，支持挥手/比心/欢呼动作检测
-- ✅ **表情识别**：YuNet 人脸检测 + MobileNetV3-Small 6 分类（高兴/惊讶/生气/恐惧/悲伤/中性）
-- ✅ **视频联动**：熊二卡通形象互动视频播放，支持待机/挥手/比心/欢呼/表情回应
-- ✅ **后端服务**：WebSocket 事件分发 + 剧情状态机（欢呼累计 3 次触发场景切换）
-- ✅ **一键启动**：`scripts/launch_pipeline.py` 同时启动推理、后端、播放器
-- ✅ **联调测试**：`scripts/launch_local_test.py` 支持模拟数据验证完整链路
-
-#### 角色语音对话（character_voice_chat）🔄
-
-- ✅ ASR 语音识别模块（FunASR）
-- ✅ LLM 大语言模型集成
-- ✅ TTS 语音合成模块
-- 🔄 正在推进：端到端语音对话流程调试
-
-#### 310B 主工程
-
-- ✅ 310B 主程序骨架已推进到可编译状态
-- ✅ 已补齐并连通以下模块：
-  - 310B 主程序骨架（`code/ascend_310b/src/main.cpp`）
-  - 姿态 ROI 协议头（128B 对齐）
-  - CMake 构建配置与 aarch64 工具链
-  - 构建脚本与 Ascend 环境加载
-  - AIPP 静态配置占位文件
-- ✅ 已成功产出可执行文件：`ascend310b_pose`
-
-#### 核心算法
-
-- ✅ **姿态识别模型**：已集成 `yolo26s-pose.om`（位于 `code/ascend_310b/yolo26/`）
-- ✅ **动作分类逻辑**：已实现基于骨骼关键点的动作判定（挥手/欢呼/未知）
-  - 左手/右手腕部高于肩部判定
-  - 双手上举判定为欢呼
-  - 单手上举判定为挥手
-- ✅ **UDP 通信**：完整的三端 UDP 链路（`code/communication/`）
-
-#### 构建与部署
-
-- ✅ 已修复关键构建问题（环境变量、头文件路径、库架构误链、协议头长度断言）
-- ✅ 支持命令行参数配置（模型路径、绑定 IP、端口等）
-
-### 当前输入与模型约束
-
-- 输入格式：YUV420SP_U8 (NV12)
-- 当前固定输入尺寸：640x640
-- 当前聚焦：单模型姿态识别
-- 模型产物：已具备 OM（yolo26s-pose.om）
-
-### 待完成（下一阶段）
-
-#### 高优先级 🔴
-
-1. **角色语音对话端到端联调**
-   - [ ] 完善 ASR → LLM → TTS 全流程
-   - [ ] 集成到智能 IP 互动系统
-   - [ ] 实现语音触发视频联动
-
-2. **端到端数据通路**
-   - [ ] 推理结果到视频触发的闭环
-   - [ ] 延迟补偿与预测边距
-   - [ ] 多目标追踪与 ID 管理
-
-#### 中优先级 🟡
-
-3. **性能优化**
-   - [ ] 端到端时延压测（目标：<100ms）
-   - [ ] 动作识别准确率验证（目标：>90%）
-   - [ ] 光照变化鲁棒性测试
-   - [ ] 人群密集场景优化
-
-4. **显示输出**
-   - [ ] HDMI 本地直显确认
-   - [ ] 网络化实时渲染架构对接
-
-### 已知技术债务
-
-- ⚠️ AIPP 配置仅为占位文件，需根据实际模型调整
-- ⚠️ 错误处理与日志系统需完善
-- ⚠️ 缺少单元测试与集成测试框架
-
-## 里程碑状态
-
-| 里程碑 | 状态 | 说明 |
-|--------|------|------|
-| M1 通信链路打通 | ✅ 已完成 | PYNQ -> 310B -> PC，含控制透传 |
-| M2 姿态识别模块 | ✅ 已完成 | YOLOv26n-Pose + 动作分类 |
-| M3 表情识别模块 | ✅ 已完成 | YuNet + MobileNetV3 6 分类 |
-| M4 IP 视频联动 | ✅ 已完成 | 熊二卡通形象互动视频播放 |
-| M5 角色语音对话 | 🔄 进行中 | ASR + LLM + TTS 端到端联调 |
-| M6 端到端时延与稳定性压测 | ⏳ 待开始 | 性能指标验证 |
-
-## 目录说明
+## 目录结构
 
 ```
 /workspace/
 ├── code/
-│   ├── pynq_z2/          # PYNQ 侧 FPGA 工程（HLS 图像处理）
-│   ├── ascend_310B/      # 310B 推理与控制主工程
-│   │   ├── smart_ip_interaction/  # 智能 IP 互动系统（姿态 + 表情 + 视频联动）
-│   │   │   ├── run_pipeline.py    # 主推理入口
-│   │   │   ├── backend/           # WebSocket 事件分发服务
-│   │   │   ├── scripts/           # 启动脚本与测试工具
-│   │   │   └── datasets/          # 熊二互动视频资产
-│   │   ├── character_voice_chat/  # 角色语音对话（ASR+LLM+TTS）
-│   ├── communication/    # 三端 UDP 通信与中继
-│   │   └── src/          # pc_udp, 310B_udp, pynq_udp
-│   └── ip_player/        # [待创建] IP 视频播放控制
-├── docs/                 # 架构与方案文档
-├── Scripts/              # 环境与部署辅助脚本
-└── README.md             # 本文件
+│   ├── ascend_310B/
+│   │   ├── character_voice_chat/     # 角色语音对话系统
+│   │   │   ├── asr/                  # 语音识别 (Whisper/豆包 ASR)
+│   │   │   ├── llm/                  # 大语言模型 (豆包 API)
+│   │   │   ├── output/               # TTS 语音合成 (豆包 TTS)
+│   │   │   ├── core/                 # 对话管理 + 实时流水线
+│   │   │   ├── rag/                  # 简单知识库检索
+│   │   │   ├── audio/                # 音频输入/输出处理
+│   │   │   ├── main.py               # 文本对话入口
+│   │   │   └── requirements.txt      # Python 依赖
+│   │   │
+│   │   └── smart_ip_interaction/     # ★ 智能 IP 互动系统
+│   │       ├── run_pipeline.py       # 主推理入口
+│   │       ├── backend/
+│   │       │   └── server.py         # 事件分发 + 剧情状态机
+│   │       ├── src/
+│   │       │   ├── behavior/         # 动作规则 + 状态机
+│   │       │   ├── inference/        # 姿态/表情/人脸推理
+│   │       │   ├── interaction/      # 事件→指令映射
+│   │       │   └── communication/    # TCP 发送 + UDP 视频源
+│   │       ├── scripts/
+│   │       │   ├── launch_pipeline.py    # 一键启动
+│   │       │   ├── launch_local_test.py  # 模拟测试
+│   │       │   └── video_player.py       # 视频播放器
+│   │       ├── training/             # 模型训练脚本
+│   │       └── datasets/             # 互动视频资产
+│   │
+│   └── communication/                # 三端 UDP 通信模块 (C++)
+│       └── src/                      # pc_udp / 310B_udp / pynq_udp
+│
+├── Scripts/                          # 环境配置脚本
+├── docs/                             # 技术文档
+└── README.md                         # 本文件
 ```
 
-## 开发环境
-
-- Ubuntu 22.04 (WSL)
-- Vitis 2025.2
-- CANN 7.0RC1 (板载预设)
-- npu-smi 23.0.rc3
-- OpenCV 4.4.0
-
-建议先执行仓库初始化脚本：
-
-```bash
-cd Scripts/installation
-bash setup.sh
-```
-
-Vitis 依赖安装命令：
-
-```bash
-/opt/Xilinx/2025.2.1/Vitis/scripts/installLibs.sh
-```
-
-说明：Vitis 2025.2.1 下建议使用 vitis-run --mode hls，而非依赖 vitis_hls 命令。
+---
 
 ## 快速开始
 
-### 1) 构建通信模块
+### 环境准备
 
 ```bash
-cd code/communication
-cmake -S . -B build
-cmake --build build -j
-```
-
-生成目标：pc_udp、310B_udp、pynq_udp。
-
-### 2) 310B 端构建与运行（已验证）
-
-在仓库根目录执行，需先激活专属虚拟环境：
-
-```bash
-cd code/ascend_310b
+# 激活 Conda 环境
 conda activate 310B
-bash scripts/build.sh
+
+# 安装 Python 依赖
+pip install ultralytics opencv-python torch torchvision
+pip install fastapi uvicorn websockets requests sounddevice soundfile websocket-client
 ```
 
-当前状态下该命令已可成功完成构建并生成 `ascend310b_pose`。
+### 方式一：一键启动（推荐）
 
-运行姿态识别服务：
+在 Ascend 310B 或本地测试环境运行：
 
-```bash
-./build/ascend310b_pose \
-  --model yolo26/yolo26s-pose.om \
-  --bind-ip 192.168.2.2 \
-  --bind-port 9090 \
-  --peer-ip 192.168.137.1 \
-  --peer-port 5566
-```
-
-### 3) 启动 PC 端（后端 + 播放器）
-
-如果你需要分步启动智能互动系统的后端和本地播放器：
-
-```bash
-cd code/ascend_310B/smart_ip_interaction
-python backend/server.py
-
-# 【重要】清空代理环境变量（当前终端生效）
-unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-
-python scripts/video_player.py
-```
-
-如果你希望**一键同时启动**推理、后端和播放器，也可以直接使用：
 ```bash
 cd code/ascend_310B/smart_ip_interaction
 python scripts/launch_pipeline.py
 ```
 
-> 联调测试（模拟数据，无需真实推流）：
-> ```bash
-> python scripts/launch_local_test.py
-> ```
+该脚本自动启动：
+- `backend/server.py` — 后端事件分发服务
+- `scripts/video_player.py` — 互动视频播放器
+- `run_pipeline.py` — 姿态 + 表情推理引擎
 
-### 4) PYNQ HLS 综合（可选）
+### 方式二：分步启动
+
+#### 1. 启动后端服务
 
 ```bash
-cd code/pynq_z2
-vitis-run --mode hls --tcl hls/HLS_Proj/ROI_Test/scripts/run_hls.tcl
+cd code/ascend_310B/smart_ip_interaction
+python backend/server.py
 ```
 
-### 5) 三端联调建议顺序（仅用于完整 UDP 链路测试）
+验证后端状态：
+```bash
+curl http://127.0.0.1:8000/status
+```
 
-**注意：智能 IP 互动系统 (smart_ip_interaction) 是独立的 Python 实现，与 pc_udp 互斥。**
+#### 2. 启动视频播放器
 
-- **使用智能 IP 互动系统时** ✅（推荐）：
-  使用前述的 PC 端服务和 310B 运行即可，**不需要**启动 `pc_udp`、`310B_udp` 或 `pynq_udp`。
+```bash
+# 清除代理环境变量（重要）
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 
-- **测试完整 UDP 链路时**（PYNQ → 310B → PC）：
-  1. 启动 PC 端：`code/communication/build/pc_udp`
-  2. 启动 310B 中继：`code/communication/build/310B_udp`
-  3. 启动 PYNQ 采集：`code/communication/build/pynq_udp`
+python scripts/video_player.py
+```
 
-## 默认网络参数（当前配置）
+#### 3. 启动推理引擎
 
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| PC_IP | 192.168.137.1 | PC 端 IP |
-| ASCEND_310B_IP | 192.168.2.2 | 310B 接收 IP |
-| ASCEND_310B_PC_IP | 192.168.137.100 | 310B 发送 IP |
-| PYNQ_IP | 192.168.2.99 | PYNQ 端 IP |
-| PC_PORT | 5555 | PC 接收端口 |
-| PYNQ_PORT | 9090 | PYNQ 发送端口 |
-| RESULT_PORT | 5566 | 结果返回端口 |
+```bash
+python run_pipeline.py
+```
 
-如需修改，请统一调整 `code/communication/include/udp_common.h`。
+---
 
-## 动作识别协议
+## 配置说明
 
-### 输出 JSON 格式
+### 视频源选择 (`run_pipeline.py`)
+
+```python
+# 使用硬件 UDP 视频流（PYNQ → 310B）
+USE_UDP_STREAM = True
+UDP_LISTEN_PORT = 9090
+
+# 或使用本地摄像头/视频文件
+USE_UDP_STREAM = False
+VIDEO_SOURCE = 0              # 0 = 摄像头
+VIDEO_SOURCE = "video.mp4"    # 或视频文件路径
+```
+
+### 后端地址
+
+```python
+BACKEND_HOST = "192.168.137.1"
+BACKEND_PORT = 9000
+```
+
+### 互动视频配置
+
+编辑 `configs/video_config.json` 修改动作→视频映射，无需改代码。
+
+视频文件放置位置：
+```
+datasets/interaction_videos/
+├── idle/          # 待机循环
+├── wave/          # 挥手回应
+├── heart/         # 比心回应
+├── cheer/         # 欢呼回应
+└── expressions/   # 表情回应
+    ├── happy/
+    ├── surprised/
+    ├── angry/
+    ├── fear/
+    └── sad/
+```
+
+---
+
+## 算法模块
+
+### 姿态识别
+
+| 组件 | 模型 | 输入尺寸 |
+|------|------|----------|
+| 姿态估计 | YOLOv26s-Pose | 640x640 |
+| 动作分类 | 规则引擎 | COCO 17 关键点 |
+
+**动作判定规则**：
+| 动作 | 触发条件 |
+|------|----------|
+| 挥手 (WAVE) | 任一手腕高于同侧肩膀 |
+| 比心 (HEART) | 双腕靠拢且位于胸前区域 |
+| 欢呼 (CHEER) | 双手同时高于头部 |
+
+### 表情识别
+
+| 组件 | 模型 | 类别数 |
+|------|------|--------|
+| 人脸检测 | YuNet (ONNX) | - |
+| 表情分类 | MobileNetV3-Small | 6 类 |
+
+**表情类别**：happy(高兴), surprised(惊讶), angry(生气), fear(恐惧), sad(悲伤), neutral(中性)
+
+**平滑策略**：7 帧滑动窗口多数投票
+
+---
+
+## 通信协议
+
+### TCP 事件格式 (310B → PC)
 
 ```json
-{
-  "frame_id": 12345,
-  "timestamp_ms": 1712345678901,
-  "kps_conf_mean": 0.8523,
-  "action_flag": 1,
-  "action_conf": 0.9124
-}
+{"type": "action", "value": "wave_hand", "keypoints": [[x1,y1], ...]}
+{"type": "action", "value": "heart_particles", "face_bbox": [x1,y1,x2,y2]}
+{"type": "expression", "value": "smile_feedback", "face_bbox": [x1,y1,x2,y2]}
 ```
 
-### action_flag 说明
+### WebSocket 控制格式 (后端 → 播放器)
 
-| 值 | 动作 | 触发条件 |
-|----|------|----------|
-| 0 | 未知 | 无有效动作 |
-| 1 | 挥手 | 单手手腕高于肩部 |
-| 2 | 欢呼 | 双手手腕高于肩部 |
-| 3 | 比心 | 双腕靠拢且位于胸前区域 |
+```json
+{"scene": "dialogue", "character": "bear", "dialogue_id": "wave_response", "tts": "你好呀！"}
+{"scene": "switch_scene", "scene_id": 1, "trigger": "cheer", "cheer_total": 3}
+{"scene": "ar_overlay", "effect": "bear_hat", "keypoints": [[x1,y1], ...]}
+```
 
-## 表情识别协议
+---
 
-### 表情类别
+## 剧情状态机
 
-| 值 | 表情 | 说明 |
-|----|------|------|
-| 0 | happy | 高兴 |
-| 1 | surprised | 惊讶 |
-| 2 | angry | 生气 |
-| 3 | fear | 恐惧 |
-| 4 | sad | 悲伤 |
-| 5 | neutral | 中性 |
+后端内置简单剧情逻辑 (`backend/server.py`)：
 
-### 识别策略
+- **欢呼累计**：每 3 次 CHEER 触发剧情线切换（共 3 条剧情线循环）
+- **AR 合影**：HEART 动作附带关键点实时推送，用于 AR 道具叠加
+- **冷却机制**：所有事件 2 秒冷却时间，防止重复触发
 
-- 人脸检测：YuNet（ONNX 格式）
-- 表情分类：MobileNetV3-Small 6 分类
-- 平滑策略：7 帧滑动窗口多数投票
+修改阈值：
+```python
+CHEER_SCENE_THRESHOLD = 3  # 欢呼累计次数触发剧情切换
+SCENE_COUNT = 3            # 总剧情线数量
+```
 
-## 文档索引
+---
 
-- 根架构说明：`docs/报告.md`
-- 智能 IP 互动：`code/ascend_310B/smart_ip_interaction/README.md`
+## 角色语音对话（开发中）
+
+基于豆包 API 实现的熊二角色扮演对话系统。
+
+### 模块组成
+
+| 模块 | 实现 | 说明 |
+|------|------|------|
+| ASR | Whisper / 豆包 ASR | 语音转文字 |
+| LLM | 豆包 Seed 2.0 Pro | 角色扮演对话 |
+| TTS | 豆包 TTS | 文字转语音（熊二音色） |
+| RAG | 简单关键词检索 | 角色知识库增强 |
+
+### 快速测试
+
+```bash
+cd code/ascend_310B/character_voice_chat
+python main.py
+```
+
+进入交互式文本对话模式，输入 `exit` 或 `quit` 退出。
+
+### 配置文件
+
+- `llm/prompts.py`：角色提示词模板
+- `core/dialogue_manager.py`：对话管理逻辑
+- `output/doubao_tts_speaker.py`：TTS 参数配置
+
+---
+
+## 网络参数（默认）
+
+来源：`code/communication/include/udp_common.h`
+
+| 设备 | IP 地址 | 说明 |
+|------|---------|------|
+| PC | 192.168.137.1 | 后端服务 + 播放器 |
+| 310B (eth0) | 192.168.2.2 | 接收 PYNQ 视频流 |
+| 310B (eth1) | 192.168.137.100 | 与 PC 通信 |
+| PYNQ | 192.168.2.99 | 视频采集端 |
+
+| 端口 | 用途 |
+|------|------|
+| 9090 | PYNQ → 310B 视频流 |
+| 9000 | 310B → PC TCP 事件推送 |
+| 8000 | 后端 → 播放器 WebSocket |
+
+---
+
+## 调试工具
+
+### 模拟测试（无需硬件）
+
+```bash
+# 使用模拟数据验证完整链路
+python scripts/launch_local_test.py
+
+# 手动发送单条事件测试视频切换
+python scripts/simulate_310b.py --mode interactive
+
+# WebSocket 调试客户端
+python scripts/fake_frontend_client.py
+```
+
+### 日志查看
+
+```bash
+# 后端状态查询
+curl http://127.0.0.1:8000/status
+
+# 推理统计（每 10 秒打印）
+# 运行 run_pipeline.py 时自动输出
+```
+
+---
+
+## 模型训练
+
+### 表情模型训练
+
+```bash
+cd code/ascend_310B/smart_ip_interaction
+
+# 训练 6 分类表情模型
+python training/emotion/train_emotion_6cls.py
+
+# 导出 ONNX 格式
+python training/emotion/export_emotion_onnx.py
+```
+
+训练数据位于 `datasets/emotion_dataset_6cls/`。
+
+---
+
+## 已知问题与技术债务
+
+- ⚠️ **AIPP 硬件预处理未实现**：当前使用 OpenCV DNN + CANN/NPU 后端进行软件预处理，未使用昇腾 AIPP 硬件加速模块。如需部署到生产环境，建议根据实际模型格式创建 `.aipp` 配置文件并集成 DVPP+AIPP 流水线
+- ⚠️ 错误处理与日志系统需完善
+- ⚠️ 缺少单元测试与集成测试框架
+- ⚠️ 角色语音对话尚未与 IP 互动系统集成
+
+---
+
+## 里程碑状态
+
+| 里程碑 | 状态 | 说明 |
+|--------|------|------|
+| M1 通信链路打通 | ✅ | PYNQ → 310B → PC 三端 UDP 链路 |
+| M2 姿态识别模块 | ✅ | YOLOv26s-Pose + 动作分类 |
+| M3 表情识别模块 | ✅ | YuNet + MobileNetV3 六分类 |
+| M4 IP 视频联动 | ✅ | 熊二互动视频播放 + 剧情状态机 |
+| M5 角色语音对话 | 🔄 | ASR+LLM+TTS 端到端联调中 |
+| M6 性能压测 | ⏳ | 待开始 |
+
+---
+
+## 相关文档
+
+- 智能 IP 互动详细说明：`code/ascend_310B/smart_ip_interaction/README.md`
+- 算法接口规范：`code/ascend_310B/smart_ip_interaction/configs/algorithm_interface_v1.0.md`
+- 总体架构设计：`docs/报告.md`
+
+---
+
+## 许可证
+
+本项目为集创赛参赛代码，仅供学习交流使用。
 
