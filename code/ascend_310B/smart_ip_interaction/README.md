@@ -74,15 +74,19 @@ export PYTHONPATH="$(pwd)/build:${PYTHONPATH}"
 Python 依赖按实际环境安装：
 
 ```bash
-pip install ultralytics opencv-python torch torchvision numpy pillow
+pip install opencv-python numpy pillow
 pip install fastapi uvicorn websockets requests
 ```
 
-如果在 Ascend/CANN 环境运行，先加载现场环境脚本：
+310B 生产推理路径默认使用 `models/om/*.om`，需要先加载 CANN/ACL 环境：
 
 ```bash
+source /usr/local/Ascend/ascend-toolkit/set_env.sh
+# 或现场封装脚本：
 source /home/bb/competition_ws/ciciec_ascend/Scripts/ascend_310b/set_env.sh
 ```
+
+只有本地调试 PT/PTH 回退或训练脚本才需要额外安装 `ultralytics torch torchvision`。
 
 ## 快速启动
 
@@ -197,21 +201,50 @@ PC_VIDEO_CTRL_PORT = 5567
 
 姿态识别：
 
-- 首选：`models/onnx/yolo26s-pose.onnx`
-- 当前仓库回退：`yolo26n-pose.pt`
-- OM 产物：`models/om/yolo26s-pose.om`
+- 310B 生产首选：`models/om/yolo26s-pose.om`
+- 可选 NPU 路径：`models/onnx/yolo26s-pose.onnx` + OpenCV DNN CANN/NPU
+- 本地调试权重：`yolo26n-pose.pt`
 
-`PoseInfer` 会优先尝试 ONNX + OpenCV DNN/CANN 后端；ONNX 不存在或加载失败时回退到 Ultralytics PT 模型。
+`PoseInfer` 默认强制 `ACL + OM + NPU`，启动日志会打印 `pose_backend=acl_om_npu` 以及 OM 输入/输出尺寸；如果 CANN/ACL 未加载或 `.om` 不可用，会直接报错，避免静默回退到 CPU/PT。需要临时指定模型可设置：
+
+```bash
+export SMART_IP_POSE_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/yolo26s-pose.om
+```
+
+仅本地调试时才建议显式打开 PT 回退：
+
+```bash
+export SMART_IP_POSE_REQUIRE_NPU=0
+export SMART_IP_POSE_ALLOW_PT_FALLBACK=1
+export SMART_IP_POSE_MODEL=/home/bb/competition_ws/ciciec_ascend/code/ascend_310B/smart_ip_interaction/yolo26n-pose.pt
+```
 
 表情识别：
 
-- 人脸检测：`models/pretrained/face_detection_yunet_2023mar.onnx`
-- 表情 ONNX：`models/onnx/emotion_mobilenetv3_6cls.onnx`
-- 训练权重：`models/checkpoints/emotion_mobilenetv3_6cls_best.pth`
-- OM 产物：`models/om/emotion_mobilenetv3_6cls.om`
+- 人脸检测生产首选：`models/om/face_detection_yunet_2023mar_640.om`
+- 表情分类生产首选：`models/om/emotion_mobilenetv3_6cls.om`
+- 本地调试人脸 ONNX：`models/pretrained/face_detection_yunet_2023mar.onnx`
+- 本地调试表情 ONNX：`models/onnx/emotion_mobilenetv3_6cls.onnx`
+- 本地调试训练权重：`models/checkpoints/emotion_mobilenetv3_6cls_best.pth`
 - 类别顺序：`angry`、`fear`、`happy`、`neutral`、`sad`、`surprised`
 
-表情推理使用 7 帧概率均值做平滑。
+人脸检测和表情分类默认都强制 `ACL + OM + NPU`，启动日志会分别写出 `face_backend=acl_om_npu`、`expression_backend=acl_om_npu`；如果 `.om` 或 CANN/ACL 环境不可用，会直接报错，避免回退到 CPU 路径。需要临时指定模型可设置：
+
+```bash
+export SMART_IP_FACE_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/face_detection_yunet_2023mar_640.om
+export SMART_IP_EMOTION_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/emotion_mobilenetv3_6cls.om
+```
+
+仅本地调试时才建议显式打开 OpenCV/PTH 回退：
+
+```bash
+export SMART_IP_FACE_REQUIRE_NPU=0
+export SMART_IP_FACE_ALLOW_OPENCV_FALLBACK=1
+export SMART_IP_EXPR_REQUIRE_NPU=0
+export SMART_IP_EXPR_ALLOW_TORCH_FALLBACK=1
+```
+
+表情分类使用 7 帧概率均值做平滑。
 
 ## 动作与事件
 
@@ -278,5 +311,5 @@ python training/pose/test_action_rules.py
 
 - `run_pipeline.py` 无可用 GUI 时会禁用 `cv2.imshow`，推理仍继续运行。
 - UDP 视频流依赖 `code/communication` 的 pybind11 模块；导入失败时会尝试回退到本地摄像头。
-- `models/onnx/yolo26s-pose.onnx` 当前不在仓库内，实际运行会使用根目录的 `yolo26n-pose.pt` 回退模型。
+- 姿态、人脸检测、表情分类默认不再回退到 CPU/PT/PTH；现场确认 `pipeline.jsonl` 中的 `pose_runtime`、`face_runtime`、`expression_runtime` 都应显示 `acl_om_npu`。
 - 本目录只负责视觉互动链路；角色语音对话模块在 `../character_voice_chat/`，当前尚未完整接入该链路。

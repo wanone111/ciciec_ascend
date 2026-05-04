@@ -1,0 +1,216 @@
+{
+  "log_dir": "/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_155646",
+  "log_dirs": {
+    "pynq": "/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_155646",
+    "pc": "/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_155646",
+    "ascend_310b": "/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_155646"
+  },
+  "duration_s": 51853.67526435852,
+  "frames": 498,
+  "pynq": {
+    "sent_frames": 1184,
+    "last_frame_id": 660,
+    "sent_frame_cnt": 661,
+    "total_sent_pkt": 13781,
+    "total_send_fail_pkt": 0,
+    "failed_fragments": 0
+  },
+  "pipeline_fps_by_duration": 0.009603947983650427,
+  "pipeline_fps_reported": {
+    "count": 498,
+    "avg": 11.603191640171564,
+    "p50": 11.929182308374875,
+    "p95": 14.867815956542216,
+    "min": 0.3190554331186876,
+    "max": 16.987865532604292
+  },
+  "pose_ms": {
+    "count": 498,
+    "avg": 45.65077284536506,
+    "p50": 44.83519099994737,
+    "p95": 51.323464650317874,
+    "min": 43.80199699971854,
+    "max": 61.09193800011781
+  },
+  "expression_ms": {
+    "count": 166,
+    "avg": 24.08547329517216,
+    "p50": 23.10003699972185,
+    "p95": 31.952336999779618,
+    "min": 18.325342000025557,
+    "max": 35.33098700017945
+  },
+  "frame_total_ms": {
+    "count": 498,
+    "avg": 69.98603172088228,
+    "p50": 65.5487459998767,
+    "p95": 94.79950300003566,
+    "min": 44.333022000046185,
+    "max": 114.86912300006225
+  },
+  "frame_gap_ms": {
+    "count": 497,
+    "avg": 89.5265664612983,
+    "p50": 83.75692367553711,
+    "p95": 124.51729774475096,
+    "min": 58.866262435913086,
+    "max": 198.26531410217285
+  },
+  "events": {
+    "action": 48,
+    "expression": 28,
+    "video_switch": 16,
+    "backend_suppressed": 42
+  },
+  "latency_ms": {
+    "pipeline_to_backend": {
+      "count": 0,
+      "avg": null,
+      "p50": null,
+      "p95": null,
+      "min": null,
+      "max": null
+    },
+    "backend_to_player": {
+      "count": 16,
+      "avg": 1.010790467262268,
+      "p50": 0.9530782699584961,
+      "p95": 1.3962984085083008,
+      "min": 0.6475448608398438,
+      "max": 1.8079280853271484
+    },
+    "pipeline_to_player_switch": {
+      "count": 0,
+      "avg": null,
+      "p50": null,
+      "p95": null,
+      "min": null,
+      "max": null
+    },
+    "capture_to_player_switch": {
+      "count": 15,
+      "avg": 4808.941125869751,
+      "p50": 4587.2931480407715,
+      "p95": 9440.682220458984,
+      "min": 257.9314708709717,
+      "max": 9581.542253494263
+    }
+  },
+  "udp": {
+    "frame_cnt": 410,
+    "packet_loss_rate_percent": 0.0,
+    "frame_loss_rate_percent": 0.0,
+    "assembly_latency_avg_ms": 80.769,
+    "sender_latency_avg_ms": 4859.174,
+    "dropped_frame_cnt": 0,
+    "dropped_frag_cnt": 0
+  },
+  "accuracy": {
+    "action": {
+      "trial_count": 3,
+      "accuracy": 0.0,
+      "correct": 0,
+      "outside_false_positives": 48,
+      "per_class": {
+        "CHEER": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        },
+        "HEART": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        },
+        "WAVE": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        }
+      },
+      "confusion": {
+        "WAVE": {
+          "NONE": 1
+        },
+        "HEART": {
+          "NONE": 1
+        },
+        "CHEER": {
+          "NONE": 1
+        }
+      }
+    },
+    "expression": {
+      "trial_count": 6,
+      "accuracy": 0.0,
+      "correct": 0,
+      "outside_false_positives": 28,
+      "per_class": {
+        "angry": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        },
+        "fear": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        },
+        "happy": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        },
+        "neutral": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        },
+        "sad": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        },
+        "surprised": {
+          "precision": null,
+          "recall": 0.0,
+          "f1": null,
+          "support": 1
+        }
+      },
+      "confusion": {
+        "happy": {
+          "NONE": 1
+        },
+        "surprised": {
+          "NONE": 1
+        },
+        "angry": {
+          "NONE": 1
+        },
+        "fear": {
+          "NONE": 1
+        },
+        "sad": {
+          "NONE": 1
+        },
+        "neutral": {
+          "NONE": 1
+        }
+      }
+    }
+  },
+  "stability": {
+    "ws_client_disconnects": 1,
+    "video_missing": 26,
+    "max_frame_gap_ms": 198.26531410217285
+  }
+}

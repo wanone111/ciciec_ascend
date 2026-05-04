@@ -44,16 +44,7 @@ from communication.tcp_sender import TCPSender
 from inference.ar_overlay import AROverlay
 from benchmark.logger import JsonlLogger, time_ms
 
-# ─────────────────────────── 配置 ───────────────────────────
-# NPU 优先：优先使用 ONNX + CANN；找不到则回退到 PT
-POSE_MODEL_PATH    = os.path.join(PROJECT_ROOT, "models", "onnx", "yolo26s-pose.onnx")
-FACE_MODEL_PATH    = os.path.join(PROJECT_ROOT, "models", "pretrained", "face_detection_yunet_2023mar.onnx")
-EMOTION_MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "onnx", "emotion_mobilenetv3_6cls.onnx")
-NUM_EMOTION_CLASSES = 6
 
-# ── 视频源选择 ────────────────────────────────────────────────
-# USE_UDP_STREAM = False 时使用本地源（摄像头或视频文件）
-# USE_UDP_STREAM = True  时使用硬件 UDP 视频流（PYNQ→310B→PC）
 def _env_bool(name, default):
     raw = os.environ.get(name)
     if raw is None:
@@ -71,6 +62,41 @@ def _env_video_source(name, default):
         return raw
 
 
+# ─────────────────────────── 配置 ───────────────────────────
+# 310B 生产路径：默认强制使用 ACL + OM，避免静默回退到 CPU/PT。
+POSE_REQUIRE_NPU   = _env_bool("SMART_IP_POSE_REQUIRE_NPU", True)
+POSE_ALLOW_PT_FALLBACK = _env_bool("SMART_IP_POSE_ALLOW_PT_FALLBACK", False)
+POSE_DEFAULT_MODEL_PATH = (
+    os.path.join(PROJECT_ROOT, "models", "om", "yolo26s-pose.om")
+    if POSE_REQUIRE_NPU or not POSE_ALLOW_PT_FALLBACK
+    else os.path.join(PROJECT_ROOT, "yolo26n-pose.pt")
+)
+POSE_MODEL_PATH    = os.environ.get("SMART_IP_POSE_MODEL", POSE_DEFAULT_MODEL_PATH)
+FACE_REQUIRE_NPU = _env_bool("SMART_IP_FACE_REQUIRE_NPU", True)
+FACE_ALLOW_OPENCV_FALLBACK = _env_bool("SMART_IP_FACE_ALLOW_OPENCV_FALLBACK", False)
+FACE_DEFAULT_MODEL_PATH = (
+    os.path.join(PROJECT_ROOT, "models", "om", "face_detection_yunet_2023mar_640.om")
+    if FACE_REQUIRE_NPU or not FACE_ALLOW_OPENCV_FALLBACK
+    else os.path.join(PROJECT_ROOT, "models", "pretrained", "face_detection_yunet_2023mar.onnx")
+)
+FACE_MODEL_PATH    = os.environ.get("SMART_IP_FACE_MODEL", FACE_DEFAULT_MODEL_PATH)
+EXPR_REQUIRE_NPU = _env_bool("SMART_IP_EXPR_REQUIRE_NPU", True)
+EXPR_ALLOW_TORCH_FALLBACK = _env_bool("SMART_IP_EXPR_ALLOW_TORCH_FALLBACK", False)
+EMOTION_DEFAULT_MODEL_PATH = (
+    os.path.join(PROJECT_ROOT, "models", "om", "emotion_mobilenetv3_6cls.om")
+    if EXPR_REQUIRE_NPU or not EXPR_ALLOW_TORCH_FALLBACK
+    else os.path.join(PROJECT_ROOT, "models", "checkpoints", "emotion_mobilenetv3_6cls_best.pth")
+)
+EMOTION_MODEL_PATH = (
+    os.environ.get("SMART_IP_EMOTION_MODEL")
+    or os.environ.get("SMART_IP_EXPRESSION_MODEL")
+    or EMOTION_DEFAULT_MODEL_PATH
+)
+NUM_EMOTION_CLASSES = 6
+
+# ── 视频源选择 ────────────────────────────────────────────────
+# USE_UDP_STREAM = False 时使用本地源（摄像头或视频文件）
+# USE_UDP_STREAM = True  时使用硬件 UDP 视频流（PYNQ→310B→PC）
 USE_UDP_STREAM = _env_bool("SMART_IP_USE_UDP", True)
 
 # 本地源：0 = 摄像头；填路径 = 视频文件（USE_UDP_STREAM=False 时生效）
@@ -237,14 +263,42 @@ def main():
         backend_port=BACKEND_PORT,
         expr_skip=EXPR_SKIP,
         expr_send_interval=EXPR_SEND_INTERVAL,
+        pose_model_path=POSE_MODEL_PATH,
+        pose_require_npu=POSE_REQUIRE_NPU,
+        pose_allow_pt_fallback=POSE_ALLOW_PT_FALLBACK,
+        face_model_path=FACE_MODEL_PATH,
+        face_require_npu=FACE_REQUIRE_NPU,
+        face_allow_opencv_fallback=FACE_ALLOW_OPENCV_FALLBACK,
+        expression_model_path=EMOTION_MODEL_PATH,
+        expression_require_npu=EXPR_REQUIRE_NPU,
+        expression_allow_torch_fallback=EXPR_ALLOW_TORCH_FALLBACK,
     )
 
     # ── 加载模型 ──
     print("[INFO] 加载姿态模型:", POSE_MODEL_PATH)
-    pose_model = PoseInfer(model_path=POSE_MODEL_PATH, imgsz=640, conf=0.25, iou=0.45, use_npu=True)
+    pose_model = PoseInfer(
+        model_path=POSE_MODEL_PATH,
+        imgsz=640,
+        conf=0.25,
+        iou=0.45,
+        use_npu=True,
+        require_npu=POSE_REQUIRE_NPU,
+        allow_pt_fallback=POSE_ALLOW_PT_FALLBACK,
+    )
+    pose_runtime = pose_model.runtime_info()
+    print("[INFO] 姿态推理运行时:", pose_runtime)
+    bench_logger.log("pose_runtime", **pose_runtime)
 
     print("[INFO] 加载人脸检测模型:", FACE_MODEL_PATH)
-    face_detector = FaceDetector(model_path=FACE_MODEL_PATH)
+    face_detector = FaceDetector(
+        model_path=FACE_MODEL_PATH,
+        use_npu=True,
+        require_npu=FACE_REQUIRE_NPU,
+        allow_opencv_fallback=FACE_ALLOW_OPENCV_FALLBACK,
+    )
+    face_runtime = face_detector.runtime_info()
+    print("[INFO] 人脸检测运行时:", face_runtime)
+    bench_logger.log("face_runtime", **face_runtime)
 
     print("[INFO] 加载表情模型:", EMOTION_MODEL_PATH)
     expr_infer = ExpressionInfer(
@@ -252,7 +306,12 @@ def main():
         num_classes=NUM_EMOTION_CLASSES,
         smooth_window=7,
         use_npu=True,
+        require_npu=EXPR_REQUIRE_NPU,
+        allow_torch_fallback=EXPR_ALLOW_TORCH_FALLBACK,
     )
+    expression_runtime = expr_infer.runtime_info()
+    print("[INFO] 表情推理运行时:", expression_runtime)
+    bench_logger.log("expression_runtime", **expression_runtime)
 
     # ── AR 道具 ──
     ar = AROverlay(prop_path=AR_PROP_PATH)
@@ -264,6 +323,12 @@ def main():
     # ── 打开视频源 ──
     cap = open_video_source()
     if cap is None:
+        face_detector.close()
+        expr_infer.close()
+        pose_model.close()
+        sender.close()
+        bench_logger.log("pipeline_stop", frame_idx=0, reason="video_source_open_failed")
+        bench_logger.close()
         return
 
     action_sm    = ActionStateMachine()
@@ -405,6 +470,9 @@ def main():
                 expression_label=expr_label,
                 expression_confidence=expr_conf,
                 tcp_connected=sender.connected,
+                pose_backend=pose_model.backend,
+                face_backend=face_detector.backend,
+                expression_backend=expr_infer.backend,
             )
 
         annotated = draw_overlay(
@@ -453,6 +521,9 @@ def main():
                 gui_enabled = False
 
     cap.release()
+    face_detector.close()
+    expr_infer.close()
+    pose_model.close()
     if gui_enabled:
         try:
             cv2.destroyAllWindows()
