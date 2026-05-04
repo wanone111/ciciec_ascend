@@ -13,7 +13,7 @@
 
 ## 当前进度快照（2026-05-04）
 
-本轮已完成 PYNQ、Ascend 310B、PC 三端时钟对齐和一次真实硬件端到端压测。日志目录如下：
+本轮已完成 PYNQ、Ascend 310B、PC 三端真实硬件联调，并将姿态、人脸检测、表情分类三条视觉推理路径统一到 **ACL + OM + NPU**。日志目录如下：
 
 | 端侧 | 日志目录 | 主要文件 |
 |---|---|---|
@@ -21,45 +21,51 @@
 | Ascend 310B | `/root/userdata/ciciec/ascend_310B/log/` | `pipeline.jsonl` |
 | PC | `/home/bb/competition_ws/ciciec_ascend/log` | `backend.jsonl`、`player.jsonl` |
 
-已归档的本次 run 位于：
+最新已归档 run 位于：
 
 ```text
-/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_004009
+/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_155646
 ```
 
-压测结论：
+该目录包含多次启动追加日志，以下指标按最后一次成功 `pipeline_start` 重新截取统计：
 
 | 指标 | 当前结果 |
 |---|---|
-| PYNQ 发送帧数 | 494 帧 |
-| PYNQ 实际发送帧率 | 约 15.05 FPS |
+| PYNQ 发送帧数 | 690 帧 |
+| PYNQ 实际发送帧率 | 约 15.02 FPS |
 | PYNQ 发送失败包 | 0 |
-| UDP 重组帧数 | 259 帧 |
-| UDP 丢包率 | 0.00% |
-| UDP 组帧平均延迟 | 107.43 ms |
-| 310B 姿态推理耗时 | 平均约 1.45 s/帧，P95 约 1.62 s |
-| 表情分支耗时 | 平均约 132 ms，P95 约 152 ms |
-| 310B 有效处理帧率 | 约 0.64 FPS |
-| PC 后端到播放器切换 | 平均约 30 ms |
-| 播放器实际切换 | 10 次，`heart_response` 6 次，`wave_response` 4 次 |
+| 310B 处理帧数 | 498 帧 |
+| 310B 有效处理帧率 | 约 11.17 FPS |
+| 310B 汇报 FPS | 平均 11.60，P95 14.87 |
+| UDP 包/帧丢失率 | 0.00% / 0.00% |
+| UDP 组帧平均延迟 | 80.77 ms |
+| 源帧缺失率 | 13 / 511，约 2.54% |
+| 姿态推理后端 | `acl_om_npu` |
+| 人脸检测后端 | `acl_om_npu` |
+| 表情分类后端 | `acl_om_npu` |
+| 310B 姿态推理耗时 | 平均 45.65 ms，P50 44.84 ms，P95 51.32 ms |
+| 表情分支耗时 | 平均 24.09 ms，P50 23.10 ms，P95 31.95 ms |
+| 310B 单帧总耗时 | 平均 69.99 ms，P50 65.55 ms，P95 94.80 ms |
+| PC 后端到播放器切换 | 平均约 1.01 ms |
+| 播放器实际切换 | 16 次，`heart_response` 14 次，`wave_response` 2 次 |
 
 当前判断：
 
-- 三端互通已经跑通，PYNQ 采集发送、UDP 分片重组、310B 推理事件、PC 后端和播放器联动均有日志闭环。
-- 通信链路表现稳定，本轮 PYNQ 发送失败包为 0，UDP 丢包率为 0。
-- 主要性能瓶颈在 310B 姿态推理侧，当前 YOLO-Pose 单帧约 1.45 s，导致端到端响应达到秒级。
-- 本轮只出现 `HEART` 和 `WAVE` 事件，未触发 `CHEER`。
-- 表情识别输出以 `angry` 为主，说明现场样本、光照或表情模型阈值仍需复核。
-- 播放器有 14 次 missing，其中 `angry_response` 8 次、`ar_overlay` 6 次；需要补齐表情视频资源或调整映射策略。
-- 本轮没有人工 trial 标注 CSV，因此动作识别准确率和表情识别准确率暂不能作为最终量化指标。
+- 三端互通已经跑通，PYNQ 采集发送、UDP 分片重组、310B NPU 推理事件、PC 后端和播放器联动均有日志闭环。
+- 视觉推理侧已确认不再走 CPU/PT/PTH 常规回退路径；`pipeline.jsonl` 中应能看到 `pose_runtime`、`face_runtime`、`expression_runtime` 均为 `acl_om_npu`。
+- 通信链路表现稳定，本轮 PYNQ 发送失败包为 0，UDP 包/帧丢失率为 0。
+- 姿态推理从秒级 CPU/PT 路径收敛到约 45.65 ms/帧，当前主要耗时变为姿态 OM 推理 + 表情分支 + UDP 组帧综合开销。
+- 本轮事件以 `HEART` 为主，少量 `WAVE` 和 1 次 `CHEER`；表情输出以 `angry`、`neutral` 为主，仍需带标注样本复核阈值和类别映射。
+- 播放器仍有 26 次 missing，其中 `ar_overlay` 14 次、`angry_response` 8 次、`wow_response` 3 次、`cheer_effect` 1 次；需要补齐素材或调整后端映射。
+- 本轮 trial CSV 仍是模板时间戳，准确率 0% 属于标注无效结果，不能作为最终动作/表情准确率。
 
 下一步优先事项：
 
-1. 固定一个新的 run 目录，避免多次启动日志追加到同一目录。
-2. 补齐 `angry_response` 等表情视频资源，或暂时关闭缺失素材的表情映射。
-3. 优化 310B 姿态推理路径，优先确认是否真正使用 CANN/NPU/OM 推理，避免回退到 CPU/PT 路径。
-4. 采集带人工标注的 `action_trials.csv` 和 `expression_trials.csv`，再生成最终准确率表。
-5. 复测 `WAVE/HEART/CHEER` 各 10 次，6 类表情各 10 次，再做 30 到 60 分钟稳定性测试。
+1. 每次压测使用新的 run 目录或清空旧 JSONL，避免多次启动日志污染汇总。
+2. 采集真实 `action_trials.csv` 和 `expression_trials.csv`，按 `WAVE/HEART/CHEER` 各 10 次、6 类表情各 10 次生成准确率表。
+3. 补齐 `ar_overlay`、`angry_response`、`wow_response`、`cheer_effect` 等视频资源，或暂时关闭缺失素材映射。
+4. 针对 `HEART` 和 `angry/neutral` 偏多的问题，复核动作规则阈值、现场光照和表情模型类别阈值。
+5. 复测 30 到 60 分钟稳定性，并同步观察 `npu-smi info`、`pipeline.jsonl` runtime 字段和帧率波动。
 
 ---
 
@@ -158,8 +164,14 @@
 按实际板端/本地环境激活 Conda 或 Python 虚拟环境，然后安装常用依赖：
 
 ```bash
-pip install ultralytics opencv-python torch torchvision numpy pillow
+pip install opencv-python numpy pillow
 pip install fastapi uvicorn websockets requests sounddevice soundfile websocket-client
+```
+
+310B 生产推理默认使用 `models/om/*.om`，姿态、人脸检测和表情分类都走 `ACL + OM + NPU`。只有本地调试 PT/PTH 回退或训练脚本才需要额外安装：
+
+```bash
+pip install ultralytics torch torchvision
 ```
 
 如需 Ascend/CANN 相关环境，可按现场路径调整后加载：
@@ -295,13 +307,18 @@ PC_VIDEO_CTRL_PORT = 5567
 
 入口：`src/inference/pose_infer.py`
 
-- 首选路径：`models/onnx/yolo26s-pose.onnx`
-- 当前仓库内回退模型：`yolo26n-pose.pt`
-- 其他部署产物：`models/om/yolo26s-pose.om`
+- 310B 生产首选：`models/om/yolo26s-pose.om`
+- 可选调试路径：`models/onnx/yolo26s-pose.onnx`
+- 本地调试权重：`yolo26n-pose.pt`
 - 输入尺寸：`640 x 640`
 - 检测目标：人体 COCO 17 关键点
 
-`PoseInfer` 会优先尝试 ONNX + OpenCV DNN，并在 OpenCV 支持 CANN/NPU 时使用 Ascend 后端；ONNX 不存在或加载失败时，回退到 Ultralytics PT 模型。
+`PoseInfer` 默认强制 `ACL + OM + NPU`，启动时会在 `pipeline.jsonl` 写出 `pose_runtime.backend=acl_om_npu`，逐帧日志也会包含 `pose_backend=acl_om_npu`。如果 CANN/ACL 环境或 OM 文件不可用，会直接报错，避免静默回退到 CPU/PT。只有本地调试时才建议显式打开 PT 回退：
+
+```bash
+export SMART_IP_POSE_REQUIRE_NPU=0
+export SMART_IP_POSE_ALLOW_PT_FALLBACK=1
+```
 
 ### 动作规则
 
@@ -319,14 +336,22 @@ PC_VIDEO_CTRL_PORT = 5567
 
 入口：`src/inference/face_detector.py`、`src/inference/expression_infer.py`
 
-- 人脸检测：YuNet ONNX，`models/pretrained/face_detection_yunet_2023mar.onnx`
-- 表情分类：MobileNetV3-Small，`models/onnx/emotion_mobilenetv3_6cls.onnx`
-- 训练权重：`models/checkpoints/emotion_mobilenetv3_6cls_best.pth`
-- OM 部署产物：`models/om/emotion_mobilenetv3_6cls.om`
+- 人脸检测生产首选：`models/om/face_detection_yunet_2023mar_640.om`
+- 表情分类生产首选：`models/om/emotion_mobilenetv3_6cls.om`
+- 本地调试人脸 ONNX：`models/pretrained/face_detection_yunet_2023mar.onnx`
+- 本地调试表情 ONNX：`models/onnx/emotion_mobilenetv3_6cls.onnx`
+- 本地训练权重：`models/checkpoints/emotion_mobilenetv3_6cls_best.pth`
 - 表情类别：`angry`、`fear`、`happy`、`neutral`、`sad`、`surprised`
 - 平滑策略：7 帧概率均值滑动窗口
 
-表情推理同样优先 ONNX + CANN/NPU，环境不满足时回退到 OpenCV CPU 或 PyTorch 权重。
+人脸检测和表情分类默认同样强制 `ACL + OM + NPU`，启动时会写出 `face_runtime.backend=acl_om_npu`、`expression_runtime.backend=acl_om_npu`，逐帧日志包含 `face_backend` 和 `expression_backend`。只有本地调试时才建议显式打开 OpenCV/PTH 回退：
+
+```bash
+export SMART_IP_FACE_REQUIRE_NPU=0
+export SMART_IP_FACE_ALLOW_OPENCV_FALLBACK=1
+export SMART_IP_EXPR_REQUIRE_NPU=0
+export SMART_IP_EXPR_ALLOW_TORCH_FALLBACK=1
+```
 
 ---
 
@@ -462,7 +487,8 @@ python python/example_python_inference.py
 - 姿态识别、表情识别、后端分发和视频播放器主链路已具备可演示代码。
 - PYNQ-Z2 HLS 预处理工程和通信模块已在仓库中保留，硬件端到端部署需结合现场网络、Vitis/CANN 环境和板端路径调整。
 - `smart_ip_interaction/scripts/benchmark/` 已补充真实硬件压测日志汇总脚本和 trial 标注模板；最终准确率、端到端延迟和稳定性数据需要由比赛设备实测日志生成。
-- `run_pipeline.py` 默认使用 UDP 视频流；无硬件输入时会尝试回退到本地摄像头。
+- `run_pipeline.py` 默认使用 UDP 视频流；如果 UDP 模块或视频源不可用，本地调试时可改用摄像头/视频文件。
+- 姿态、人脸检测、表情分类默认不回退到 CPU/PT/PTH；现场确认 `pipeline.jsonl` 中的 `pose_runtime`、`face_runtime`、`expression_runtime` 均为 `acl_om_npu`。
 - `video_config.json` 中部分表情/欢呼视频路径可能需要按素材补齐。
 - 语音对话模块仍是联调中能力，不应视为已和 IP 视频系统完整闭环。
 - AIPP/DVPP 深度集成仍需根据最终模型格式和板端部署方式继续收敛。

@@ -73,6 +73,16 @@ scripts/video_player.py
 
 详细说明见 `smart_ip_interaction/README.md`。
 
+当前主线推理状态：
+
+| 模块 | 生产模型 | 默认后端 |
+|---|---|---|
+| 姿态关键点 | `smart_ip_interaction/models/om/yolo26s-pose.om` | `ACL + OM + NPU` |
+| 人脸检测 | `smart_ip_interaction/models/om/face_detection_yunet_2023mar_640.om` | `ACL + OM + NPU` |
+| 表情分类 | `smart_ip_interaction/models/om/emotion_mobilenetv3_6cls.om` | `ACL + OM + NPU` |
+
+现场运行时，`pipeline.jsonl` 的 `pose_runtime`、`face_runtime`、`expression_runtime` 都应显示 `backend=acl_om_npu`。如果 CANN/ACL 环境或 OM 文件不可用，生产路径会直接报错，避免静默回退到 CPU/PT/PTH。
+
 ### `character_voice_chat`
 
 这是角色语音对话实验模块：
@@ -114,8 +124,14 @@ source /home/bb/competition_ws/ciciec_ascend/Scripts/ascend_310b/set_env.sh
 视觉互动主链路常用依赖：
 
 ```bash
-pip install ultralytics opencv-python torch torchvision numpy pillow
+pip install opencv-python numpy pillow
 pip install fastapi uvicorn websockets requests
+```
+
+只有本地调试 PT/PTH 回退或运行训练脚本时，才需要额外安装：
+
+```bash
+pip install ultralytics torch torchvision
 ```
 
 语音对话模块会额外依赖麦克风、音频播放、WebSocket 或第三方 ASR/TTS SDK 相关库，当前 `character_voice_chat/requirements.txt` 仍为空，使用前需要按实际脚本补齐依赖。
@@ -199,18 +215,33 @@ BACKEND_PORT = 9000
 
 姿态识别：
 
-- 首选：`smart_ip_interaction/models/onnx/yolo26s-pose.onnx`
-- 当前仓库回退：`smart_ip_interaction/yolo26n-pose.pt`
-- OM 产物：`smart_ip_interaction/models/om/yolo26s-pose.om`
+- 310B 生产首选：`smart_ip_interaction/models/om/yolo26s-pose.om`
+- 本地调试 ONNX：`smart_ip_interaction/models/onnx/yolo26s-pose.onnx`
+- 本地调试 PT：`smart_ip_interaction/yolo26n-pose.pt`
 
 表情识别：
 
-- YuNet 人脸检测：`smart_ip_interaction/models/pretrained/face_detection_yunet_2023mar.onnx`
-- MobileNetV3 ONNX：`smart_ip_interaction/models/onnx/emotion_mobilenetv3_6cls.onnx`
-- PyTorch 权重：`smart_ip_interaction/models/checkpoints/emotion_mobilenetv3_6cls_best.pth`
-- OM 产物：`smart_ip_interaction/models/om/emotion_mobilenetv3_6cls.om`
+- 人脸检测生产首选：`smart_ip_interaction/models/om/face_detection_yunet_2023mar_640.om`
+- 表情分类生产首选：`smart_ip_interaction/models/om/emotion_mobilenetv3_6cls.om`
+- 本地调试人脸 ONNX：`smart_ip_interaction/models/pretrained/face_detection_yunet_2023mar.onnx`
+- 本地调试表情 ONNX：`smart_ip_interaction/models/onnx/emotion_mobilenetv3_6cls.onnx`
+- 本地调试 PTH：`smart_ip_interaction/models/checkpoints/emotion_mobilenetv3_6cls_best.pth`
 
-`PoseInfer` 和 `ExpressionInfer` 都会优先尝试 ONNX + OpenCV DNN/CANN 后端；环境不满足时回退到 CPU 或 PT/PTH 权重路径。
+生产路径默认强制 `ACL + OM + NPU`。需要临时指定模型或只在本地打开调试回退时，可使用：
+
+```bash
+export SMART_IP_POSE_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/yolo26s-pose.om
+export SMART_IP_FACE_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/face_detection_yunet_2023mar_640.om
+export SMART_IP_EMOTION_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/emotion_mobilenetv3_6cls.om
+
+# 仅本地调试使用
+export SMART_IP_POSE_REQUIRE_NPU=0
+export SMART_IP_POSE_ALLOW_PT_FALLBACK=1
+export SMART_IP_FACE_REQUIRE_NPU=0
+export SMART_IP_FACE_ALLOW_OPENCV_FALLBACK=1
+export SMART_IP_EXPR_REQUIRE_NPU=0
+export SMART_IP_EXPR_ALLOW_TORCH_FALLBACK=1
+```
 
 ## 端口与协议
 
@@ -267,9 +298,12 @@ python scripts/benchmark/summarize_hardware_e2e.py \
 
 动作和表情准确率需要配合 `scripts/benchmark/action_trials_template.csv`、`scripts/benchmark/expression_trials_template.csv` 的真实 trial 标注计算。
 
+最新硬件快照见 `smart_ip_interaction/README.md`。截至 `log/e2e_20260504_155646` 的最后一次成功启动，姿态、人脸检测、表情分类均为 `acl_om_npu`，310B 有效处理约 11.17 FPS，姿态推理平均 45.65 ms，表情分支平均 24.09 ms，单帧总耗时平均 69.99 ms。该 run 目录包含多次追加启动，正式压测建议每次使用新的日志目录。
+
 ## 注意事项
 
 - `smart_ip_interaction` 是当前比赛演示主线，优先维护这里的 README 和启动方式。
+- 视觉推理生产路径默认要求 CANN/ACL 和 OM 文件可用；不要把 CPU/PT/PTH 回退作为现场默认路径。
 - `character_voice_chat` 当前仍有包路径、依赖和密钥配置整理工作，直接运行前需要先处理导入路径和环境变量。
 - 语音相关脚本不应把真实 API Key、Token 或 App ID 固化在源码中，建议统一改为环境变量读取。
 - 真实硬件联调时，需要同时确认 PYNQ/310B/PC 三端 IP、端口和 `code/communication/include/udp_common.h` 一致。

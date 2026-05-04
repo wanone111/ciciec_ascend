@@ -78,3 +78,11 @@ python scripts/benchmark/summarize_hardware_e2e.py --log-dir /tmp/smart_ip_bench
 - `hardware_e2e_summary.json`：机器可读统计结果。
 
 如果不提供 trial CSV，脚本仍会汇总 FPS、分段延迟、UDP 丢包、视频切换次数和稳定性，但不会计算动作/表情准确率。
+
+## 日志目录注意事项
+
+正式压测建议每轮使用新的 `SMART_IP_BENCH_DIR`，或在三端启动前清空旧的 `pynq.jsonl`、`pipeline.jsonl`、`backend.jsonl`、`player.jsonl`。如果多次启动追加到同一个目录，汇总脚本会把旧 session 的时间跨度也算进去，导致总时长、FPS、跨设备延迟被污染。
+
+如果已经出现同目录多次追加，需要按最后一次成功 `pipeline_start`、对应的 PYNQ start 和 PC/backend/player 事件手动截取后再计算，或把本轮 JSONL 单独整理到新的目录。
+
+`action_trials_template.csv` 和 `expression_trials_template.csv` 只是格式模板，里面的时间戳不能直接当作准确率标注。使用模板时间戳会得到 0% 或大量 outside-window 结果；正式准确率必须记录每个动作/表情 trial 的真实 Unix `start_ts` 和 `end_ts`。

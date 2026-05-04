@@ -170,6 +170,45 @@ python scripts/benchmark/summarize_hardware_e2e.py \
 
 输出的 `hardware_e2e_summary.md` 包含动作/表情准确率、端到端延迟、FPS、UDP 丢包率和稳定性统计。若未提供 trial CSV，脚本只汇总性能和稳定性，不计算准确率。
 
+### 最新硬件压测快照
+
+归档目录：
+
+```text
+/home/bb/competition_ws/ciciec_ascend/log/e2e_20260504_155646
+```
+
+该目录中存在多次启动追加日志，下面按最后一次成功 `pipeline_start` 重新截取统计：
+
+| 指标 | 数值 |
+|---|---|
+| PYNQ 发送帧数 | 690 帧 |
+| PYNQ 实际发送帧率 | 15.02 FPS |
+| PYNQ 发送失败包 | 0 |
+| 310B 处理帧数 | 498 帧 |
+| 310B 有效处理帧率 | 11.17 FPS |
+| 310B 汇报 FPS | 平均 11.60，P50 11.93，P95 14.87 |
+| UDP 包/帧丢失率 | 0.00% / 0.00% |
+| UDP 组帧平均延迟 | 80.77 ms |
+| 源帧缺失率 | 13 / 511，约 2.54% |
+| 姿态推理后端 | `acl_om_npu` |
+| 人脸检测后端 | `acl_om_npu` |
+| 表情分类后端 | `acl_om_npu` |
+| 姿态推理耗时 | 平均 45.65 ms，P50 44.84 ms，P95 51.32 ms |
+| 表情分支耗时 | 平均 24.09 ms，P50 23.10 ms，P95 31.95 ms |
+| 单帧总耗时 | 平均 69.99 ms，P50 65.55 ms，P95 94.80 ms |
+| 播放器实际切换 | 16 次，`heart_response` 14 次，`wave_response` 2 次 |
+
+事件分布：动作事件 48 次，其中 `HEART` 42 次、`WAVE` 5 次、`CHEER` 1 次；表情事件 28 次，其中 `angry` 14 次、`neutral` 10 次、`surprised` 4 次。播放器 missing 26 次，主要来自 `ar_overlay`、`angry_response`、`wow_response`、`cheer_effect` 缺少素材或映射未补齐。
+
+准确率注意事项：本次 action/expression trial CSV 仍是模板时间戳，汇总中的 0% 准确率不是模型真实准确率。正式报告需要按现场 trial 的真实 Unix 时间戳重新采集 `action_trials.csv` 和 `expression_trials.csv`。
+
+NPU 确认方式：
+
+- 启动日志应出现 `pose_runtime`、`face_runtime`、`expression_runtime`，且 `backend` 均为 `acl_om_npu`。
+- 逐帧日志应包含 `pose_backend=acl_om_npu`、`face_backend=acl_om_npu`、`expression_backend=acl_om_npu`。
+- `npu-smi info` 的 AICore 是瞬时值，短间隔采样可能看到 0；建议联调时用 `watch -n 0.2 npu-smi info` 观察，同时以 JSONL runtime 字段作为是否走 NPU 的主判据。
+
 ## 关键配置
 
 `run_pipeline.py` 当前默认配置：
@@ -312,4 +351,5 @@ python training/pose/test_action_rules.py
 - `run_pipeline.py` 无可用 GUI 时会禁用 `cv2.imshow`，推理仍继续运行。
 - UDP 视频流依赖 `code/communication` 的 pybind11 模块；导入失败时会尝试回退到本地摄像头。
 - 姿态、人脸检测、表情分类默认不再回退到 CPU/PT/PTH；现场确认 `pipeline.jsonl` 中的 `pose_runtime`、`face_runtime`、`expression_runtime` 都应显示 `acl_om_npu`。
+- 每次正式压测建议使用新的日志目录或清空旧 JSONL；如果多个 `pipeline_start` 追加到同一目录，直接汇总会污染持续时间和 FPS。
 - 本目录只负责视觉互动链路；角色语音对话模块在 `../character_voice_chat/`，当前尚未完整接入该链路。
