@@ -235,6 +235,7 @@ PC_VIDEO_CTRL_PORT = 5567
 ```
 
 播放器优先使用 WebSocket 指令，同时兼容 UDP 控制通道。
+默认会在互动视频播放期间忽略新的切换指令，保证当前视频完整播完；需要临时允许打断时设置 `SMART_IP_PLAYER_ALLOW_INTERRUPT=1`。
 
 ## 模型文件
 

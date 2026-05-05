@@ -50,6 +50,18 @@ WINDOW_NAME  = "IP Interaction Display"
 bench_logger = JsonlLogger.from_env("player")
 
 
+def _env_bool(name, default):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in ("0", "false", "no", "off")
+
+
+PLAYER_ALLOW_INTERRUPT = _env_bool("SMART_IP_PLAYER_ALLOW_INTERRUPT", False)
+PLAYER_FLUSH_ON_FINISH = _env_bool("SMART_IP_PLAYER_FLUSH_ON_FINISH", True)
+MAX_COMMANDS_PER_FRAME = 50
+
+
 def load_config():
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -171,6 +183,8 @@ def main():
         ws_url=WS_URL,
         udp_ctrl_port=PC_VIDEO_CTRL_PORT,
         idle_path=idle_path,
+        allow_interrupt=PLAYER_ALLOW_INTERRUPT,
+        flush_on_finish=PLAYER_FLUSH_ON_FINISH,
     )
 
     # 启动 WS 监听线程
@@ -204,51 +218,102 @@ def main():
     if current_path:
         cap, frame_delay = open_cap(current_path)
 
+    def _log_command_suppressed(item, reason, key=None):
+        raw = item.get("raw", {})
+        bench_logger.log(
+            "player_command_suppressed",
+            event_id=raw.get("event_id"),
+            key=key or item.get("key"),
+            reason=reason,
+            current_video=current_path,
+            transport=item.get("transport"),
+            pipeline_ts=raw.get("pipeline_ts"),
+            backend_broadcast_ts=raw.get("backend_broadcast_ts"),
+            player_receive_ts=item.get("received_ts"),
+        )
+
+    def flush_pending_commands(reason):
+        flushed = 0
+        while True:
+            try:
+                item = _cmd_queue.get_nowait()
+            except queue.Empty:
+                break
+            flushed += 1
+            _log_command_suppressed(item, reason)
+        if flushed:
+            bench_logger.log("player_command_queue_flushed", reason=reason, count=flushed)
+        return flushed
+
+    def handle_command(item):
+        nonlocal cap, frame_delay, is_idle, current_path
+
+        key = item["key"]
+        raw = item.get("raw", {})
+
+        if not is_idle and not PLAYER_ALLOW_INTERRUPT:
+            _log_command_suppressed(item, "busy_playing_interaction", key)
+            print(f"[BUSY] 正在播放互动视频，忽略指令: {key}")
+            return False
+
+        video_path = cmd_map.get(key)
+        if video_path and os.path.exists(video_path):
+            print(f"[SWITCH] {key} → {os.path.basename(video_path)}")
+            if cap:
+                cap.release()
+            cap, frame_delay = open_cap(video_path)
+            if cap is None:
+                is_idle = True
+                current_path = idle_path if idle_exists else None
+                if idle_exists:
+                    cap, frame_delay = open_cap(idle_path)
+                return False
+
+            current_path = video_path
+            is_idle = False
+            switch_ts = time.time()
+            bench_logger.log(
+                "video_switch",
+                event_id=raw.get("event_id"),
+                key=key,
+                video_path=video_path,
+                transport=item.get("transport"),
+                pipeline_ts=raw.get("pipeline_ts"),
+                model_event_ts=raw.get("model_event_ts"),
+                backend_receive_ts=raw.get("backend_receive_ts"),
+                backend_broadcast_ts=raw.get("backend_broadcast_ts"),
+                player_receive_ts=item.get("received_ts"),
+                player_switch_ts=switch_ts,
+                frame_idx=raw.get("frame_idx"),
+                source_frame_id=raw.get("source_frame_id"),
+                source_timestamp_us=raw.get("source_timestamp_us"),
+                source_type=raw.get("source_type"),
+                source_value=raw.get("source_value"),
+            )
+            return True
+
+        if video_path:
+            print(f"[WARN] 视频文件不存在: {video_path}，指令 {key} 被忽略")
+        bench_logger.log(
+            "video_missing",
+            event_id=raw.get("event_id"),
+            key=key,
+            video_path=video_path,
+        )
+        return False
+
     print("[INFO] 视频展示程序已启动，按 ESC 退出")
 
     while True:
         # ── 从队列取指令（非阻塞）──
-        try:
-            item = _cmd_queue.get_nowait()
-            key = item["key"]
-            raw = item.get("raw", {})
-            video_path = cmd_map.get(key)
-            if video_path and os.path.exists(video_path):
-                print(f"[SWITCH] {key} → {os.path.basename(video_path)}")
-                if cap:
-                    cap.release()
-                cap, frame_delay = open_cap(video_path)
-                is_idle  = False
-                switch_ts = time.time()
-                bench_logger.log(
-                    "video_switch",
-                    event_id=raw.get("event_id"),
-                    key=key,
-                    video_path=video_path,
-                    transport=item.get("transport"),
-                    pipeline_ts=raw.get("pipeline_ts"),
-                    model_event_ts=raw.get("model_event_ts"),
-                    backend_receive_ts=raw.get("backend_receive_ts"),
-                    backend_broadcast_ts=raw.get("backend_broadcast_ts"),
-                    player_receive_ts=item.get("received_ts"),
-                    player_switch_ts=switch_ts,
-                    frame_idx=raw.get("frame_idx"),
-                    source_frame_id=raw.get("source_frame_id"),
-                    source_timestamp_us=raw.get("source_timestamp_us"),
-                    source_type=raw.get("source_type"),
-                    source_value=raw.get("source_value"),
-                )
-            else:
-                if video_path:
-                    print(f"[WARN] 视频文件不存在: {video_path}，指令 {key} 被忽略")
-                bench_logger.log(
-                    "video_missing",
-                    event_id=raw.get("event_id"),
-                    key=key,
-                    video_path=video_path,
-                )
-        except queue.Empty:
-            pass
+        handled = 0
+        while handled < MAX_COMMANDS_PER_FRAME:
+            try:
+                item = _cmd_queue.get_nowait()
+            except queue.Empty:
+                break
+            handled += 1
+            handle_command(item)
 
         # ── 读帧 ──
         frame = None
@@ -262,7 +327,12 @@ def main():
                 if not is_idle:
                     # 动作视频播完 → 回 idle
                     print("[INFO] 动作视频播完，回到待机")
+                    if PLAYER_FLUSH_ON_FINISH:
+                        flushed = flush_pending_commands("interaction_finished")
+                        if flushed:
+                            print(f"[INFO] 已清理播放期间积压指令: {flushed} 条")
                     is_idle = True
+                    current_path = idle_path if idle_exists else None
                     if idle_exists:
                         cap, frame_delay = open_cap(idle_path)
                 else:

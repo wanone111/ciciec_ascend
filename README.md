@@ -281,6 +281,7 @@ PC_VIDEO_CTRL_PORT = 5567
 ```
 
 播放器优先监听后端 WebSocket 指令，同时保留 UDP 控制端口 `5567` 作为兼容通道。
+默认情况下，互动视频播放期间会忽略新的切换指令，避免动作/表情误检打断当前视频；如确实需要允许打断，可设置 `SMART_IP_PLAYER_ALLOW_INTERRUPT=1`。
 
 ### 视频映射
 
@@ -330,7 +331,7 @@ export SMART_IP_POSE_ALLOW_PT_FALLBACK=1
 | HEART | 双腕靠近，且位于胸前区域 |
 | CHEER | 双手同时高于头部/鼻子附近 |
 
-状态机默认连续 2 帧触发，同一动作冷却 0.8 秒，优先级为 `CHEER > HEART > WAVE`。
+状态机默认连续 4 帧触发，同一动作冷却 2.5 秒，并要求动作释放后才能再次触发，优先级为 `CHEER > HEART > WAVE`。现场需要调参时可设置 `SMART_IP_ACTION_TRIGGER_FRAMES`、`SMART_IP_ACTION_COOLDOWN`、`SMART_IP_ACTION_REARM_FRAMES`。
 
 ### 表情识别
 
