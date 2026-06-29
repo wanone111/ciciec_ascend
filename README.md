@@ -502,6 +502,7 @@ python python/example_python_inference.py
 - 系统设计与实现报告：`docs/智能视觉交互系统报告.md`
 - Ascend 310B 侧代码说明：`code/ascend_310B/README.md`
 - 智能 IP 互动子系统：`code/ascend_310B/smart_ip_interaction/README.md`
+- Ascend NPU 推理提速 TODO：`docs/ascend_npu_inference_speedup_todo.md`
 - 角色语音对话模块：`code/ascend_310B/character_voice_chat/README.md`
 - 辅助脚本说明：`Scripts/README.md`
 - 算法接口规范：`code/ascend_310B/smart_ip_interaction/configs/algorithm_interface_v1.0.md`
