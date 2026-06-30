@@ -17,24 +17,24 @@
 
 ## 1. 低风险运行时开关
 
-- [ ] 将表情分支跳帧参数改为环境变量。
+- [x] 将表情分支跳帧参数改为环境变量。
   - 当前位置：`run_pipeline.py` 中 `EXPR_SKIP = 3`
   - 建议变量：`SMART_IP_EXPR_SKIP`
   - 目标：现场可快速在准确率和吞吐之间调节。
-- [ ] 将表情事件发送间隔改为环境变量。
+- [x] 将表情事件发送间隔改为环境变量。
   - 当前位置：`run_pipeline.py` 中 `EXPR_SEND_INTERVAL = 1.5`
   - 建议变量：`SMART_IP_EXPR_SEND_INTERVAL`
-- [ ] 增加可视化开关，压测时关闭绘制。
+- [x] 增加可视化开关，压测时关闭绘制。
   - 涉及位置：`results[0].plot()`、`cv2.rectangle`、`cv2.putText`、`draw_overlay`
   - 建议变量：`SMART_IP_ENABLE_OVERLAY`
   - 目标：减少 CPU 绘制开销对 FPS 统计的干扰。
-- [ ] 增加 AR 叠加开关。
+- [x] 增加 AR 叠加开关。
   - 涉及位置：`AROverlay` 初始化、`ar.apply(...)`
   - 建议变量：`SMART_IP_ENABLE_AR`
   - 目标：压测 NPU 推理时避免 PIL/OpenCV 叠加成本。
-- [ ] 将逐帧 JSONL 记录默认改为可降采样。
+- [x] 将逐帧 JSONL 记录默认改为可降采样。
   - 当前已有：`SMART_IP_BENCH_FRAME_STRIDE`
-  - TODO：README 中补充说明，压测可设为 `5` 或 `10`。
+  - 已在 README 中补充说明，压测可设为 `5` 或 `10`。
 
 ## 2. ACL/OM wrapper 搬运优化
 
@@ -45,9 +45,10 @@
 - [ ] 优化输出读取路径。
   - 当前问题：`ptr_to_bytes -> np.frombuffer(...).copy()`
   - 建议改动：评估是否可以复用 host output buffer，减少额外 copy。
-- [ ] 在 `AclOmSession` 中加入可选 profiling。
+- [x] 在 `AclOmSession` 中加入可选 profiling。
   - 建议变量：`SMART_IP_ACL_PROFILE=1`
   - 输出字段：`acl_h2d_ms`、`acl_execute_ms`、`acl_d2h_ms`
+  - 已覆盖通用 `AclOmSession` 和姿态内部 `_AclOmSession`，逐帧日志会写出 `pose_*`、`face_*`、`expression_*` 前缀字段。
 - [ ] 统一姿态和通用 ACL wrapper。
   - 当前现象：`pose_infer.py` 内部还有一份 `_AclOmSession` 风格实现，`acl_om.py` 也有通用实现。
   - 目标：减少重复代码，避免两个 wrapper 优化不一致。
@@ -118,7 +119,7 @@
 
 ## 7. 文档与验证
 
-- [ ] README 增加提速参数说明。
+- [x] README 增加提速参数说明。
   - 涉及：`SMART_IP_EXPR_SKIP`、`SMART_IP_ENABLE_OVERLAY`、`SMART_IP_ENABLE_AR`、`SMART_IP_ACL_PROFILE`
 - [ ] 增加压测 SOP。
   - 内容：清空/新建日志目录、启动顺序、`npu-smi info` 观察方式、汇总命令。

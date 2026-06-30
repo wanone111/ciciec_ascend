@@ -8,6 +8,7 @@ NPU path, while PT/Ultralytics loading is disabled unless callers opt in.
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass
 from functools import reduce
 from operator import mul
@@ -134,6 +135,8 @@ class _AclOmSession:
         self.output_sizes: list[int] = []
         self.input_dims: list[list[int] | None] = []
         self.output_dims: list[list[int] | None] = []
+        self.profile_enabled = _env_bool("SMART_IP_ACL_PROFILE", False)
+        self.last_profile: dict[str, float] = {}
         self._closed = False
 
         self._check(self.acl.init(), "acl.init")
@@ -229,6 +232,7 @@ class _AclOmSession:
         if self._closed:
             raise RuntimeError("ACL OM session is already closed")
 
+        total_start = time.perf_counter()
         self._set_context()
         arr = np.ascontiguousarray(input_array)
         input_bytes = arr.tobytes()
@@ -240,18 +244,27 @@ class _AclOmSession:
             )
 
         src_ptr = self.acl.util.bytes_to_ptr(input_bytes)
+        h2d_start = time.perf_counter()
         self._check(
             self.acl.rt.memcpy(self.input_device_ptrs[0], input_size, src_ptr, input_size, 1),
             "acl.rt.memcpy(host_to_device)",
         )
+        h2d_ms = _elapsed_ms(h2d_start)
+        execute_start = time.perf_counter()
         self._check(self.acl.mdl.execute(self.model_id, self.input_dataset, self.output_dataset), "acl.mdl.execute")
+        execute_ms = _elapsed_ms(execute_start)
 
         outputs = []
+        d2h_ms = 0.0
+        decode_ms = 0.0
         for idx, (dev_ptr, host_ptr, size) in enumerate(zip(self.output_device_ptrs, self.output_host_ptrs, self.output_sizes)):
+            d2h_start = time.perf_counter()
             self._check(
                 self.acl.rt.memcpy(host_ptr, size, dev_ptr, size, 2),
                 "acl.rt.memcpy(device_to_host)",
             )
+            d2h_ms += _elapsed_ms(d2h_start)
+            decode_start = time.perf_counter()
             raw = self.acl.util.ptr_to_bytes(host_ptr, size)
             arr_out = np.frombuffer(raw, dtype=np.float32).copy()
             dims = self.output_dims[idx]
@@ -260,6 +273,15 @@ class _AclOmSession:
                 if elem_count == arr_out.size:
                     arr_out = arr_out.reshape(dims)
             outputs.append(arr_out)
+            decode_ms += _elapsed_ms(decode_start)
+        if self.profile_enabled:
+            self.last_profile = {
+                "acl_h2d_ms": h2d_ms,
+                "acl_execute_ms": execute_ms,
+                "acl_d2h_ms": d2h_ms,
+                "acl_output_decode_ms": decode_ms,
+                "acl_total_ms": _elapsed_ms(total_start),
+            }
         return outputs
 
     def close(self) -> None:
@@ -616,6 +638,17 @@ def _prod(values: list[int] | tuple[int, ...] | None) -> int:
     if not values:
         return 0
     return int(reduce(mul, values, 1))
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in ("0", "false", "no", "off")
+
+
+def _elapsed_ms(start: float) -> float:
+    return (time.perf_counter() - start) * 1000.0
 
 
 def _infer_layout(dims: list[int] | None) -> str:

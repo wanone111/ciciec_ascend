@@ -283,6 +283,34 @@ PC_VIDEO_CTRL_PORT = 5567
 播放器优先监听后端 WebSocket 指令，同时保留 UDP 控制端口 `5567` 作为兼容通道。
 默认情况下，互动视频播放期间会忽略新的切换指令，避免动作/表情误检打断当前视频；如确实需要允许打断，可设置 `SMART_IP_PLAYER_ALLOW_INTERRUPT=1`。
 
+### Ascend NPU 推理提速开关
+
+位置：`code/ascend_310B/smart_ip_interaction/run_pipeline.py`
+
+以下环境变量用于硬件压测和现场调参：
+
+```bash
+# 表情分支频率：每 N 帧做人脸检测 + 表情推理，默认 3
+export SMART_IP_EXPR_SKIP=3
+
+# 表情事件最短发送间隔，默认 1.5 秒
+export SMART_IP_EXPR_SEND_INTERVAL=1.5
+
+# 压测纯推理时可关闭画框、文字、顶部状态条
+export SMART_IP_ENABLE_OVERLAY=0
+
+# 压测纯推理时可关闭 AR 道具叠加
+export SMART_IP_ENABLE_AR=0
+
+# 逐帧日志降采样，默认 1；压测长跑建议设为 5 或 10
+export SMART_IP_BENCH_FRAME_STRIDE=5
+
+# 记录 ACL H2D / execute / D2H 分段耗时
+export SMART_IP_ACL_PROFILE=1
+```
+
+打开 `SMART_IP_ACL_PROFILE=1` 后，`pipeline.jsonl` 的 `frame` 记录会额外包含 `pose_acl_*`、`face_acl_*`、`expression_acl_*` 字段，用于判断瓶颈是在数据搬运还是 NPU 执行。
+
 ### 视频映射
 
 位置：`code/ascend_310B/smart_ip_interaction/configs/video_config.json`

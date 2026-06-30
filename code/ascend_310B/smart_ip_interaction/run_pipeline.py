@@ -62,6 +62,36 @@ def _env_video_source(name, default):
         return raw
 
 
+def _env_int(name, default, min_value=None):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        print(f"[WARN] invalid {name}={raw!r}, fallback to {default}")
+        return default
+    if min_value is not None and value < min_value:
+        print(f"[WARN] invalid {name}={raw!r}, fallback to {default}")
+        return default
+    return value
+
+
+def _env_float(name, default, min_value=None):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = float(raw)
+    except ValueError:
+        print(f"[WARN] invalid {name}={raw!r}, fallback to {default}")
+        return default
+    if min_value is not None and value < min_value:
+        print(f"[WARN] invalid {name}={raw!r}, fallback to {default}")
+        return default
+    return value
+
+
 # ─────────────────────────── 配置 ───────────────────────────
 # 310B 生产路径：默认强制使用 ACL + OM，避免静默回退到 CPU/PT。
 POSE_REQUIRE_NPU   = _env_bool("SMART_IP_POSE_REQUIRE_NPU", True)
@@ -112,10 +142,15 @@ BACKEND_HOST = os.environ.get("SMART_IP_BACKEND_HOST", "192.168.137.1")
 BACKEND_PORT = int(os.environ.get("SMART_IP_BACKEND_PORT", "9000"))
 
 # 表情事件最短推送间隔（秒）
-EXPR_SEND_INTERVAL = 1.5
+EXPR_SEND_INTERVAL = _env_float("SMART_IP_EXPR_SEND_INTERVAL", 1.5, min_value=0.0)
 
 # 每隔几帧做一次人脸检测+表情推理（表情变化慢，不需要每帧推理）
-EXPR_SKIP = 3
+EXPR_SKIP = _env_int("SMART_IP_EXPR_SKIP", 3, min_value=1)
+
+# 压测时可关闭绘制和 AR，减少 CPU 可视化开销对推理指标的干扰。
+ENABLE_OVERLAY = _env_bool("SMART_IP_ENABLE_OVERLAY", True)
+ENABLE_AR = _env_bool("SMART_IP_ENABLE_AR", True)
+ACL_PROFILE = _env_bool("SMART_IP_ACL_PROFILE", False)
 
 # AR 道具
 AR_PROP_PATH = os.path.join(PROJECT_ROOT,"assets", "bear_ears.png")
@@ -189,6 +224,14 @@ def draw_overlay(frame, action_label, expr_label, expr_conf, fps, tcp_ok):
     return frame
 
 
+def acl_profile_fields(prefix, owner):
+    session = getattr(owner, "_om_session", None)
+    profile = getattr(session, "last_profile", None)
+    if not profile:
+        return {}
+    return {f"{prefix}_{key}": value for key, value in profile.items()}
+
+
 def open_video_source():
     """根据配置打开本地视频源或硬件 UDP 流，返回 cap 对象。"""
     if USE_UDP_STREAM:
@@ -252,7 +295,7 @@ def _event_trace(prefix, frame_idx, frame_info, model_event):
 
 def main():
     bench_logger = JsonlLogger.from_env("pipeline")
-    bench_frame_stride = int(os.environ.get("SMART_IP_BENCH_FRAME_STRIDE", "1"))
+    bench_frame_stride = _env_int("SMART_IP_BENCH_FRAME_STRIDE", 1, min_value=0)
     bench_logger.log(
         "pipeline_start",
         use_udp_stream=USE_UDP_STREAM,
@@ -263,6 +306,9 @@ def main():
         backend_port=BACKEND_PORT,
         expr_skip=EXPR_SKIP,
         expr_send_interval=EXPR_SEND_INTERVAL,
+        enable_overlay=ENABLE_OVERLAY,
+        enable_ar=ENABLE_AR,
+        acl_profile=ACL_PROFILE,
         pose_model_path=POSE_MODEL_PATH,
         pose_require_npu=POSE_REQUIRE_NPU,
         pose_allow_pt_fallback=POSE_ALLOW_PT_FALLBACK,
@@ -314,7 +360,7 @@ def main():
     bench_logger.log("expression_runtime", **expression_runtime)
 
     # ── AR 道具 ──
-    ar = AROverlay(prop_path=AR_PROP_PATH)
+    ar = AROverlay(prop_path=AR_PROP_PATH) if ENABLE_AR else None
 
     # ── TCP 推送（后台自动重连）──
     print(f"[INFO] 启动 TCP 推送 → {BACKEND_HOST}:{BACKEND_PORT}")
@@ -367,16 +413,19 @@ def main():
         pose_start = time.perf_counter()
         results = pose_model(frame, verbose=False)
         pose_ms = time_ms(pose_start)
-        annotated = results[0].plot() if (
-            results[0].boxes is not None and len(results[0].boxes) > 0
-        ) else frame.copy()
+        if ENABLE_OVERLAY:
+            annotated = results[0].plot() if (
+                results[0].boxes is not None and len(results[0].boxes) > 0
+            ) else frame.copy()
+        else:
+            annotated = frame
 
         kp = find_main_person(results)
         action_label = "NONE"
         kp_list = None
 
         # ── AR 道具：每帧叠加到所有检测到的人 ──
-        if results[0].keypoints is not None and len(results[0].keypoints.xy) > 0:
+        if ar is not None and results[0].keypoints is not None and len(results[0].keypoints.xy) > 0:
             ar.apply(annotated, results[0].keypoints.xy)
 
         if kp is not None and valid_keypoints(kp):
@@ -419,10 +468,11 @@ def main():
             expr_ms = time_ms(expr_start)
 
         if face_bbox is not None and expr_label is not None:
-            x1, y1, x2, y2 = face_bbox
-            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 220, 80), 2)
-            cv2.putText(annotated, f"{expr_label}", (x1, max(y1 - 8, 12)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 220, 80), 2)
+            if ENABLE_OVERLAY:
+                x1, y1, x2, y2 = face_bbox
+                cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 220, 80), 2)
+                cv2.putText(annotated, f"{expr_label}", (x1, max(y1 - 8, 12)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 220, 80), 2)
 
             now = time.time()
             if now - last_expr_time > EXPR_SEND_INTERVAL:
@@ -457,6 +507,11 @@ def main():
         frame_total_ms = time_ms(frame_start)
 
         if bench_frame_stride > 0 and frame_idx % bench_frame_stride == 0:
+            profile_fields = {}
+            if ACL_PROFILE:
+                profile_fields.update(acl_profile_fields("pose", pose_model))
+                profile_fields.update(acl_profile_fields("face", face_detector))
+                profile_fields.update(acl_profile_fields("expression", expr_infer))
             bench_logger.log(
                 "frame",
                 frame_idx=frame_idx,
@@ -473,11 +528,13 @@ def main():
                 pose_backend=pose_model.backend,
                 face_backend=face_detector.backend,
                 expression_backend=expr_infer.backend,
+                **profile_fields,
             )
 
-        annotated = draw_overlay(
-            annotated, action_label, expr_label, expr_conf, fps, sender.connected
-        )
+        if ENABLE_OVERLAY:
+            annotated = draw_overlay(
+                annotated, action_label, expr_label, expr_conf, fps, sender.connected
+            )
 
         # 周期性打印底层 pybind 接收统计（仅当使用 UDPVideoSource 并且底层 interface 可用）
         try:
