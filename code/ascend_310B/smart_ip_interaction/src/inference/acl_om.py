@@ -11,6 +11,9 @@ from typing import Any
 import numpy as np
 
 
+NPY_FLOAT32 = 11
+
+
 class AclOmSession:
     """Load and execute one static-input OM model through ACL."""
 
@@ -36,11 +39,13 @@ class AclOmSession:
         self.input_device_ptrs: list[Any] = []
         self.output_device_ptrs: list[Any] = []
         self.output_host_ptrs: list[Any] = []
+        self.output_host_arrays: list[np.ndarray | None] = []
         self.input_sizes: list[int] = []
         self.output_sizes: list[int] = []
         self.input_dims: list[list[int] | None] = []
         self.output_dims: list[list[int] | None] = []
         self.profile_enabled = _env_bool("SMART_IP_ACL_PROFILE", False)
+        self.zero_copy_output_enabled = _env_bool("SMART_IP_ACL_ZERO_COPY_OUTPUT", True)
         self.last_profile: dict[str, float] = {}
         self._closed = False
 
@@ -132,7 +137,48 @@ class AclOmSession:
             self.output_buffers.append(buf)
             self._check(self.acl.mdl.add_dataset_buffer(self.output_dataset, buf), "acl.mdl.add_dataset_buffer(output)")
 
+        self._create_output_host_views()
+
+    def _create_output_host_views(self) -> None:
+        """Create reusable NumPy views over pinned ACL host output buffers."""
+        ptr_to_numpy = getattr(self.acl.util, "ptr_to_numpy", None)
+        if not self.zero_copy_output_enabled or ptr_to_numpy is None:
+            self.output_host_arrays = [None] * len(self.output_host_ptrs)
+            return
+
+        self.output_host_arrays = []
+        for idx, (host_ptr, size) in enumerate(zip(self.output_host_ptrs, self.output_sizes)):
+            shape = self._output_shape(idx, size)
+            try:
+                view = ptr_to_numpy(host_ptr, shape, NPY_FLOAT32)
+                view = np.asarray(view, dtype=np.float32)
+                if view.nbytes != size or view.flags.owndata:
+                    raise RuntimeError(
+                        f"unexpected ACL host view: nbytes={view.nbytes}, "
+                        f"expected={size}, owndata={view.flags.owndata}"
+                    )
+                self.output_host_arrays.append(view)
+            except Exception:
+                # Some CANN versions remove/deprecate ptr_to_numpy. Keep the
+                # portable bytes path available per output without failing init.
+                self.output_host_arrays.append(None)
+
+    def _output_shape(self, index: int, size: int) -> tuple[int, ...]:
+        if size % np.dtype(np.float32).itemsize:
+            raise RuntimeError(f"OM output {index} is not float32-aligned: {size} bytes")
+        dims = self.output_dims[index]
+        if dims and prod(dims) * np.dtype(np.float32).itemsize == size:
+            return tuple(dims)
+        return (size // np.dtype(np.float32).itemsize,)
+
     def execute(self, input_array: np.ndarray) -> list[np.ndarray]:
+        """Execute the model.
+
+        With zero-copy output enabled (the default), returned arrays are views
+        over reusable ACL host buffers and remain valid only until this
+        session's next ``execute`` call. Set SMART_IP_ACL_ZERO_COPY_OUTPUT=0
+        when a caller needs to retain outputs across calls.
+        """
         if self._closed:
             raise RuntimeError("ACL OM session is already closed")
         if len(self.input_sizes) != 1:
@@ -140,16 +186,17 @@ class AclOmSession:
 
         total_start = time.perf_counter()
         self._set_context()
+        pack_start = time.perf_counter()
         arr = np.ascontiguousarray(input_array)
-        input_bytes = arr.tobytes()
         input_size = self.input_sizes[0]
-        if len(input_bytes) != input_size:
+        if arr.nbytes != input_size:
             raise RuntimeError(
                 f"OM input size mismatch: model expects {input_size} bytes, "
-                f"preprocess produced {len(input_bytes)} bytes."
+                f"preprocess produced {arr.nbytes} bytes."
             )
+        src_ptr, src_owner = self._host_array_ptr(arr)
+        pack_ms = _elapsed_ms(pack_start)
 
-        src_ptr = self.acl.util.bytes_to_ptr(input_bytes)
         h2d_start = time.perf_counter()
         self._check(
             self.acl.rt.memcpy(self.input_device_ptrs[0], input_size, src_ptr, input_size, 1),
@@ -171,13 +218,10 @@ class AclOmSession:
             )
             d2h_ms += _elapsed_ms(d2h_start)
             decode_start = time.perf_counter()
-            raw = self.acl.util.ptr_to_bytes(host_ptr, size)
-            arr_out = np.frombuffer(raw, dtype=np.float32).copy()
-            dims = self.output_dims[idx]
-            if dims:
-                elem_count = prod(dims)
-                if elem_count == arr_out.size:
-                    arr_out = arr_out.reshape(dims)
+            arr_out = self.output_host_arrays[idx]
+            if arr_out is None:
+                raw = self.acl.util.ptr_to_bytes(host_ptr, size)
+                arr_out = np.frombuffer(raw, dtype=np.float32).copy().reshape(self._output_shape(idx, size))
             outputs.append(arr_out)
             decode_ms += _elapsed_ms(decode_start)
         if self.profile_enabled:
@@ -185,10 +229,18 @@ class AclOmSession:
                 "acl_h2d_ms": h2d_ms,
                 "acl_execute_ms": execute_ms,
                 "acl_d2h_ms": d2h_ms,
+                "acl_input_pack_ms": pack_ms,
                 "acl_output_decode_ms": decode_ms,
                 "acl_total_ms": _elapsed_ms(total_start),
             }
         return outputs
+
+    def _host_array_ptr(self, arr: np.ndarray) -> tuple[Any, Any]:
+        numpy_to_ptr = getattr(self.acl.util, "numpy_to_ptr", None)
+        if numpy_to_ptr is not None:
+            return numpy_to_ptr(arr), arr
+        input_bytes = arr.tobytes()
+        return self.acl.util.bytes_to_ptr(input_bytes), input_bytes
 
     def close(self) -> None:
         if self._closed:
@@ -210,6 +262,8 @@ class AclOmSession:
                     self.acl.mdl.destroy_dataset(dataset)
                 except Exception:
                     pass
+        # Drop NumPy views before releasing the pinned host memory they expose.
+        self.output_host_arrays.clear()
         for ptr in self.output_host_ptrs:
             try:
                 self.acl.rt.free_host(ptr)

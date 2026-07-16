@@ -7,7 +7,7 @@ import uuid
 import websocket
 import numpy as np
 
-from ciciec_ascend.character_voice_chat.asr.asr_engine import ASREngine
+from .asr_engine import ASREngine
 
 # Volcengine BigASR binary protocol constants
 _PROTOCOL_VERSION = 1
@@ -59,11 +59,13 @@ def _parse_server_frame(data: bytes) -> dict:
 
 
 class DoubaoASREngine(ASREngine):
-    def __init__(self, ws_url, app_id, token, resource_id="volc.bigasr.sauc.duration"):
+    def __init__(self, ws_url, app_id, token, resource_id="volc.bigasr.sauc.duration",
+                 request_timeout=20.0):
         self.ws_url = ws_url
         self.app_id = app_id
         self.token = token
         self.resource_id = resource_id
+        self.request_timeout = float(request_timeout)
 
     def transcribe(self, audio):
         audio_bytes = self._float32_to_pcm16(audio)
@@ -83,9 +85,12 @@ class DoubaoASREngine(ASREngine):
 
         )
 
-        t = threading.Thread(target=ws.run_forever)
+        t = threading.Thread(target=ws.run_forever, daemon=True)
         t.start()
-        t.join(timeout=20)
+        t.join(timeout=self.request_timeout)
+        if t.is_alive():
+            ws.close()
+            t.join(timeout=1)
 
         return result_queue.get() if not result_queue.empty() else ""
 
@@ -209,6 +214,9 @@ class DoubaoASREngine(ASREngine):
 
         audio_queue.put(None)  # 通知发送线程结束
         ws_thread.join(timeout=10)
+        if ws_thread.is_alive():
+            ws.close()
+            ws_thread.join(timeout=1)
         print()  # 换行
         return last_text[0]
 
@@ -244,4 +252,3 @@ class DoubaoASREngine(ASREngine):
 
     def _float32_to_pcm16(self, audio):
         return (np.clip(audio, -1, 1) * 32767).astype(np.int16).tobytes()
-

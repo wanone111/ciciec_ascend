@@ -293,6 +293,10 @@ PC_VIDEO_CTRL_PORT = 5567
 # 表情分支频率：每 N 帧做人脸检测 + 表情推理，默认 3
 export SMART_IP_EXPR_SKIP=3
 
+# 表情分支内的人脸检测频率，默认 1；设为 2/3 可复用最近 bbox，降低 YuNet 调用频率
+export SMART_IP_FACE_DETECT_INTERVAL=1
+export SMART_IP_FACE_TRACK_TTL=6
+
 # 表情事件最短发送间隔，默认 1.5 秒
 export SMART_IP_EXPR_SEND_INTERVAL=1.5
 
@@ -305,7 +309,7 @@ export SMART_IP_ENABLE_AR=0
 # 逐帧日志降采样，默认 1；压测长跑建议设为 5 或 10
 export SMART_IP_BENCH_FRAME_STRIDE=5
 
-# 记录 ACL H2D / execute / D2H 分段耗时
+# 记录 ACL input pack / H2D / execute / D2H 分段耗时
 export SMART_IP_ACL_PROFILE=1
 ```
 

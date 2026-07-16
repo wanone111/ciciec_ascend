@@ -4,7 +4,7 @@ import requests
 import sounddevice as sd
 import soundfile as sf
 
-from ciciec_ascend.character_voice_chat.output.speaker import Speaker
+from .speaker import Speaker
 
 
 class DoubaoTTSSpeaker(Speaker):
@@ -14,8 +14,10 @@ class DoubaoTTSSpeaker(Speaker):
         self.app_id = app_id
         self.token = token
         self.voice_type = voice_type
-        self._lock = threading.Lock()
+        self._play_lock = threading.Lock()
+        self._state_lock = threading.Lock()
         self._speaking = False
+        self._generation = 0
 
     def speak(self, message: dict):
         text = message.get("text", "")
@@ -23,11 +25,20 @@ class DoubaoTTSSpeaker(Speaker):
         if not text:
             return
         print(f"熊二[{emotion}]: {text}")
-        threading.Thread(target=self._synthesize_and_play, args=(text,), daemon=True).start()
-
-    def _synthesize_and_play(self, text: str):
-        with self._lock:
+        # 新回复取代旧回复；旧合成请求即使稍后返回，也不允许再次播放。
+        self.interrupt()
+        with self._state_lock:
+            self._generation += 1
+            generation = self._generation
             self._speaking = True
+        threading.Thread(
+            target=self._synthesize_and_play,
+            args=(text, generation),
+            daemon=True,
+        ).start()
+
+    def _synthesize_and_play(self, text: str, generation: int):
+        with self._play_lock:
             try:
                 payload = {
                     "app": {"appid": self.app_id, "token": self.token, "cluster": "volcano_tts"},
@@ -59,16 +70,28 @@ class DoubaoTTSSpeaker(Speaker):
                 audio_bytes = base64.b64decode(audio_b64)
                 audio_buf = io.BytesIO(audio_bytes)
                 samples, sr = sf.read(audio_buf, dtype="float32")
+                if not self._is_current(generation):
+                    return
                 sd.play(samples, samplerate=sr)
                 sd.wait()
             except Exception as e:
-                print("TTS错误:", e)
+                if self._is_current(generation):
+                    print("TTS错误:", e)
             finally:
-                self._speaking = False
+                with self._state_lock:
+                    if generation == self._generation:
+                        self._speaking = False
+
+    def _is_current(self, generation: int) -> bool:
+        with self._state_lock:
+            return generation == self._generation and self._speaking
 
     def interrupt(self):
+        with self._state_lock:
+            self._generation += 1
+            self._speaking = False
         sd.stop()
-        self._speaking = False
 
     def is_speaking(self) -> bool:
-        return self._speaking
+        with self._state_lock:
+            return self._speaking

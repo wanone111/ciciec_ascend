@@ -39,6 +39,7 @@ class ExpressionInfer:
         self._image_cls = None
         self.transform = None
         self._backend = "uninitialized"
+        self.fused_preprocess = _env_bool("SMART_IP_EXPRESSION_FUSED_PREPROCESS", True)
 
         if model_path.lower().endswith(".om") and os.path.exists(model_path):
             if not self.use_npu:
@@ -173,13 +174,11 @@ class ExpressionInfer:
     def _preprocess_om(self, bgr_img):
         if self._om_session is None:
             raise RuntimeError("Emotion OM session is not initialized")
-        rgb = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
-        rgb = cv2.resize(rgb, (self.img_size, self.img_size), interpolation=cv2.INTER_LINEAR)
         dims = self._om_session.input_dims[0]
         expected_size = self._om_session.input_sizes[0]
         elem_count = prod(dims) if dims else 1 * 3 * self.img_size * self.img_size
+        is_nhwc = bool(dims and len(dims) == 4 and dims[-1] in (1, 3))
         if expected_size == elem_count * np.dtype(np.float32).itemsize:
-            tensor = rgb.astype(np.float32) / 255.0
             dtype = np.float32
         elif expected_size == elem_count:
             tensor = rgb.astype(np.uint8)
@@ -188,7 +187,21 @@ class ExpressionInfer:
             raise RuntimeError(
                 f"Unsupported emotion OM input contract: dims={dims}, expected_size={expected_size}"
             )
-        if dims and len(dims) == 4 and dims[-1] in (1, 3):
+        if dtype is np.float32 and not is_nhwc and self.fused_preprocess:
+            return cv2.dnn.blobFromImage(
+                bgr_img,
+                scalefactor=1.0 / 255.0,
+                size=(self.img_size, self.img_size),
+                swapRB=True,
+                crop=False,
+            )
+
+        rgb = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
+        rgb = cv2.resize(rgb, (self.img_size, self.img_size), interpolation=cv2.INTER_LINEAR)
+        tensor = rgb.astype(dtype)
+        if dtype is np.float32:
+            tensor /= 255.0
+        if is_nhwc:
             tensor = tensor[np.newaxis, ...]
         else:
             tensor = tensor.transpose(2, 0, 1)[np.newaxis, ...]
@@ -274,3 +287,10 @@ def _softmax(logits):
     logits = np.asarray(logits, dtype=np.float32)
     exp = np.exp(logits - np.max(logits))
     return exp / np.sum(exp)
+
+
+def _env_bool(name, default):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in ("0", "false", "no", "off")

@@ -1,4 +1,4 @@
-from ciciec_ascend.character_voice_chat.audio.mic_input import MicrophoneInput
+from .audio.mic_input import MicrophoneInput
 
 
 def main():

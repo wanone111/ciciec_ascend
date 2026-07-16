@@ -1,44 +1,57 @@
-import requests
+"""Volcengine Ark chat client."""
 
-API_KEY = "ark-d75e387a-250c-44ad-aa00-a7afd271c206-af86e"
+from __future__ import annotations
 
-URL = "https://ark.cn-beijing.volces.com/api/v3/responses"
+from typing import Any
 
-def chat(prompt: str) -> str:
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json",
-    }
+from ..config import VoiceChatSettings
 
-    data = {
-        "model": "doubao-seed-2-0-pro-260215",
-        "input": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": prompt
-                    }
-                ]
-            }
-        ]
-    }
 
-    resp = requests.post(URL, headers=headers, json=data, timeout=60)
-
-    print("status:", resp.status_code)
-    print("resp:", resp.text)
-
-    result = resp.json()
-
+def _extract_text(result: dict[str, Any]) -> str:
     if "error" in result:
-        raise RuntimeError(result["error"])
+        raise RuntimeError(str(result["error"]))
 
     for item in result.get("output", []):
-        if item.get("type") == "message":
-            for c in item.get("content", []):
-                if c.get("type") == "output_text":
-                    return c.get("text", "")
+        if item.get("type") != "message":
+            continue
+        for content in item.get("content", []):
+            if content.get("type") == "output_text":
+                text = content.get("text", "").strip()
+                if text:
+                    return text
+    raise RuntimeError("模型响应中没有文本输出")
 
-    raise RuntimeError(f"没有在返回中找到模型文本输出: {result}")
+
+def chat(prompt: str, settings: VoiceChatSettings | None = None) -> str:
+    """Send one prompt to Ark. Credentials are read only from the environment."""
+
+    if not prompt.strip():
+        raise ValueError("prompt 不能为空")
+
+    settings = settings or VoiceChatSettings.from_env()
+    settings.require_ark()
+
+    try:
+        import requests
+    except ImportError as exc:
+        raise RuntimeError("在线对话需要安装 requests") from exc
+
+    response = requests.post(
+        settings.ark_url,
+        headers={
+            "Authorization": f"Bearer {settings.ark_api_key}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": settings.ark_model,
+            "input": [
+                {
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": prompt}],
+                }
+            ],
+        },
+        timeout=(5, 60),
+    )
+    response.raise_for_status()
+    return _extract_text(response.json())

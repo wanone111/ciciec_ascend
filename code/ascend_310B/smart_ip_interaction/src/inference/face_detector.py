@@ -7,6 +7,8 @@ only as an explicit non-production fallback.
 
 from __future__ import annotations
 
+import os
+
 import cv2
 import numpy as np
 
@@ -39,6 +41,9 @@ class FaceDetector:
         self.detector = None
         self._om_session = None
         self._backend = "uninitialized"
+        self.reuse_input_buffer = _env_bool("SMART_IP_REUSE_INPUT_BUFFER", True)
+        self._input_canvas = None
+        self._om_input_buffer = None
 
         if model_path.lower().endswith(".om"):
             if not self.use_npu:
@@ -168,14 +173,20 @@ class FaceDetector:
         scale = min(model_w / max(w, 1), model_h / max(h, 1))
         new_w, new_h = int(round(w * scale)), int(round(h * scale))
         resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-        canvas = np.zeros((model_h, model_w, 3), dtype=np.uint8)
+        if self.reuse_input_buffer:
+            canvas_shape = (model_h, model_w, 3)
+            if self._input_canvas is None or self._input_canvas.shape != canvas_shape:
+                self._input_canvas = np.empty(canvas_shape, dtype=np.uint8)
+            canvas = self._input_canvas
+            canvas.fill(0)
+        else:
+            canvas = np.zeros((model_h, model_w, 3), dtype=np.uint8)
         canvas[:new_h, :new_w] = resized
 
         dims = self._om_session.input_dims[0]
         expected_size = self._om_session.input_sizes[0]
         elem_count = prod(dims) if dims else 1 * 3 * model_h * model_w
         if expected_size == elem_count * np.dtype(np.float32).itemsize:
-            tensor = canvas.astype(np.float32)
             dtype = np.float32
         elif expected_size == elem_count:
             tensor = canvas.astype(np.uint8)
@@ -185,7 +196,19 @@ class FaceDetector:
                 f"Unsupported face OM input contract: dims={dims}, expected_size={expected_size}"
             )
 
-        if dims and len(dims) == 4 and dims[-1] in (1, 3):
+        is_nhwc = bool(dims and len(dims) == 4 and dims[-1] in (1, 3))
+        if dtype is np.float32 and not is_nhwc and self.reuse_input_buffer:
+            shape = tuple(dims) if dims else (1, 3, model_h, model_w)
+            if self._om_input_buffer is None or self._om_input_buffer.shape != shape:
+                self._om_input_buffer = np.empty(shape, dtype=np.float32)
+            tensor = self._om_input_buffer
+            np.copyto(tensor[0, 0], canvas[:, :, 0], casting="unsafe")
+            np.copyto(tensor[0, 1], canvas[:, :, 1], casting="unsafe")
+            np.copyto(tensor[0, 2], canvas[:, :, 2], casting="unsafe")
+            return tensor, scale
+
+        tensor = canvas.astype(dtype)
+        if is_nhwc:
             tensor = tensor[np.newaxis, ...]
         else:
             tensor = tensor.transpose(2, 0, 1)[np.newaxis, ...]
@@ -226,6 +249,13 @@ def _reshape_yunet_outputs(outputs):
             arr = arr.reshape(shape)
         result[name] = arr[0]
     return result
+
+
+def _env_bool(name, default):
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in ("0", "false", "no", "off")
 
 
 def _decode_yunet(heads, input_size, score_threshold, nms_threshold, top_k=5):

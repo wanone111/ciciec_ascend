@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>熊乐园 · 智能互动</title>
+    <link rel="stylesheet" href="/frontend/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">ASCEND 310B · LIVE EXPERIENCE</p>
+          <h1>熊乐园智能互动</h1>
+        </div>
+        <div class="system-state">
+          <span id="ws-dot" class="dot"></span>
+          <span id="ws-state">正在连接系统</span>
+        </div>
+      </header>
+
+      <section class="stage">
+        <article class="panel camera-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-index">01</span>
+              <h2>实时镜头</h2>
+            </div>
+            <span class="live-pill"><i></i> LIVE</span>
+          </div>
+          <div class="media-frame camera-frame">
+            <img id="camera-stream" alt="Ascend 实时摄像头画面" />
+            <div id="camera-placeholder" class="placeholder">
+              <div class="spinner"></div>
+              <span>正在连接昇腾视频流</span>
+            </div>
+          </div>
+          <footer>
+            <span>USB CAMERA · MJPEG</span>
+            <span id="camera-state">等待画面</span>
+          </footer>
+        </article>
+
+        <div class="flow-mark" aria-hidden="true"><span>AI</span></div>
+
+        <article class="panel anime-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-index">02</span>
+              <h2>角色反馈</h2>
+            </div>
+            <span id="event-pill" class="event-pill">IDLE</span>
+          </div>
+          <div class="media-frame anime-frame">
+            <video id="anime-video" muted autoplay playsinline></video>
+            <div class="anime-glow"></div>
+          </div>
+          <footer>
+            <span>BEAR INTERACTION</span>
+            <span id="event-state">等待互动</span>
+          </footer>
+        </article>
+      </section>
+
+      <section class="telemetry">
+        <div><span>识别来源</span><strong id="source-value">—</strong></div>
+        <div><span>当前事件</span><strong id="event-value">IDLE</strong></div>
+        <div><span>系统状态</span><strong id="system-value">初始化</strong></div>
+      </section>
+    </main>
+    <script src="/frontend/app.js" defer></script>
+  </body>
+</html>

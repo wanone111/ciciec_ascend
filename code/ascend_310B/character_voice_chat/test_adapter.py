@@ -1,49 +1,29 @@
-from ciciec_ascend.character_voice_chat.audio.fake_stream import FakeAudioStream
-from ciciec_ascend.character_voice_chat.audio.audio_adapter import AudioStreamAdapter
-from ciciec_ascend.character_voice_chat.rag.simple_kb import load_kb
-from ciciec_ascend.character_voice_chat.core.dialogue_manager import DialogueManager
-from ciciec_ascend.character_voice_chat.asr.doubao_asr_engine import DoubaoASREngine
-from ciciec_ascend.character_voice_chat.output.console_speaker import ConsoleSpeaker
-from ciciec_ascend.character_voice_chat.core.realtime_pipeline import RealtimeDialoguePipeline
+"""Offline smoke test for byte/ndarray audio adaptation."""
+
+from .asr.fake_asr import FakeASREngine
+from .audio.audio_adapter import AudioStreamAdapter
+from .audio.fake_stream import FakeAudioStream
+from .config import DEFAULT_KB_DIR
+from .core.dialogue_manager import DialogueManager
+from .core.realtime_pipeline import RealtimeDialoguePipeline
+from .output.console_speaker import ConsoleSpeaker
+from .rag.simple_kb import load_kb
 
 
 def main():
-    print("=== Audio Adapter 测试 ===")
-
-    kb = load_kb("data/character_kb")
-    manager = DialogueManager(kb)
-    asr_engine = DoubaoASREngine(
-        app_id="3659409540",
-        token="hm5k63hRlAmI1p-b6k7QhEXyS2WGkw1b",
-        ws_url="wss://openspeech.bytedance.com/api/v3/sauc/bigmodel"
+    manager = DialogueManager(
+        load_kb(DEFAULT_KB_DIR),
+        chat_fn=lambda _prompt: "音频适配器运行正常。",
     )
-    
-    speaker = ConsoleSpeaker()
-
-    pipeline = RealtimeDialoguePipeline(
-        asr_engine=asr_engine,
-        dialogue_manager=manager,
-        speaker=speaker,
-        silence_threshold=0.002,
-        silence_chunks_needed=3,
-        speech_start_threshold=0.006
+    adapter = AudioStreamAdapter(
+        RealtimeDialoguePipeline(FakeASREngine(), manager, ConsoleSpeaker())
     )
-
-    adapter = AudioStreamAdapter(pipeline)
-
-    stream = FakeAudioStream(interval=0.05)
-
-    for idx, chunk in enumerate(stream, start=1):
-        print(f"[外部] 推送 chunk {idx}")
-
+    for chunk in FakeAudioStream(interval=0):
         result = adapter.on_chunk(chunk)
-
         if result:
-            print("识别文本：", result["user_text"])
-            print("回复结构：", result["reply"])
-            print("----")
-
-    print("测试结束")
+            print(result)
+            return
+    raise RuntimeError("适配器未输出对话结果")
 
 
 if __name__ == "__main__":

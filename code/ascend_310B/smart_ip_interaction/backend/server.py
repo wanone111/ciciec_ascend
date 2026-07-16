@@ -27,9 +27,14 @@ import time
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SRC_ROOT = os.path.join(PROJECT_ROOT, "src")
+FRONTEND_ROOT = os.path.join(PROJECT_ROOT, "frontend")
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, "datasets", "interaction_videos")
+VIDEO_CONFIG_PATH = os.path.join(PROJECT_ROOT, "configs", "video_config.json")
 if SRC_ROOT not in sys.path:
     sys.path.insert(0, SRC_ROOT)
 
@@ -55,6 +60,39 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.mount("/frontend", StaticFiles(directory=FRONTEND_ROOT), name="frontend")
+app.mount("/media", StaticFiles(directory=MEDIA_ROOT), name="media")
+
+
+@app.get("/", include_in_schema=False)
+def frontend_index():
+    return FileResponse(os.path.join(FRONTEND_ROOT, "index.html"))
+
+
+@app.get("/frontend-config")
+def frontend_config():
+    with open(VIDEO_CONFIG_PATH, "r", encoding="utf-8") as config_file:
+        video_config = json.load(config_file)
+
+    def media_url(path):
+        prefix = "datasets/interaction_videos/"
+        relative = path[len(prefix):] if path.startswith(prefix) else path
+        return "/media/" + relative.lstrip("/")
+
+    camera_stream_url = os.environ.get(
+        "SMART_IP_CAMERA_STREAM_URL", "http://192.168.2.2:8081/stream.mjpg"
+    )
+    camera_base_url = camera_stream_url.rsplit("/", 1)[0]
+    return {
+        "camera_stream_url": camera_stream_url,
+        "camera_snapshot_url": camera_base_url + "/snapshot.jpg",
+        "camera_health_url": camera_base_url + "/health",
+        "idle": media_url(video_config["idle"]),
+        "commands": {
+            key: media_url(path)
+            for key, path in video_config.get("commands", {}).items()
+        },
+    }
 
 # ── WebSocket 连接池 ──────────────────────────────────────────
 class ConnectionManager:

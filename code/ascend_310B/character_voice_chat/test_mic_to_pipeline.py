@@ -1,37 +1,39 @@
+"""Cloud microphone demo. Credentials must be supplied through environment variables."""
 
-from ciciec_ascend.character_voice_chat.rag.simple_kb import load_kb
-from ciciec_ascend.character_voice_chat.core.dialogue_manager import DialogueManager
-from ciciec_ascend.character_voice_chat.asr.doubao_asr_engine import DoubaoASREngine
-from ciciec_ascend.character_voice_chat.output.doubao_tts_speaker import DoubaoTTSSpeaker
+import time
+
+from .asr.doubao_asr_engine import DoubaoASREngine
+from .config import DEFAULT_KB_DIR, VoiceChatSettings
+from .core.dialogue_manager import DialogueManager
+from .output.doubao_tts_speaker import DoubaoTTSSpeaker
+from .rag.simple_kb import load_kb
 
 
 def main():
-    print("=== 麦克风 → 熊二 对话测试 ===")
+    settings = VoiceChatSettings.from_env()
+    settings.require_doubao()
+    settings.require_ark()
 
-    kb = load_kb("data/character_kb")
-    manager = DialogueManager(kb)
-
-    # ========== 最重要：ws_url 修复 ==========
+    manager = DialogueManager(load_kb(DEFAULT_KB_DIR))
     asr_engine = DoubaoASREngine(
-        ws_url="wss://openspeech.bytedance.com/api/v3/sauc/bigmodel",
-        app_id="3785499164",
-        token="VKTUe_BH266lor_MAuYcNipSYxq16GtY",
+        ws_url=settings.doubao_asr_url,
+        app_id=settings.doubao_app_id,
+        token=settings.doubao_token,
+    )
+    speaker = DoubaoTTSSpeaker(
+        app_id=settings.doubao_app_id,
+        token=settings.doubao_token,
     )
 
-    speaker = DoubaoTTSSpeaker(
-        app_id="3785499164",
-        token="VKTUe_BH266lor_MAuYcNipSYxq16GtY",
-    )
     print("Ctrl+C 退出")
     while True:
-        user_text = asr_engine.transcribe_stream(device=1)
-        print("识别文本：", user_text)
-
-        if not user_text:
-            continue
-
-        message = manager.handle_text(user_text)
-        speaker.speak(message)
+        user_text = asr_engine.transcribe_stream()
+        if user_text:
+            print("识别文本：", user_text)
+            speaker.speak(manager.handle_text(user_text))
+            # 当前入口采用稳定的半双工模式，避免扬声器回声被麦克风当成用户输入。
+            while speaker.is_speaking():
+                time.sleep(0.05)
 
 
 if __name__ == "__main__":

@@ -8,14 +8,14 @@ NPU path, while PT/Ultralytics loading is disabled unless callers opt in.
 from __future__ import annotations
 
 import os
-import time
 from dataclasses import dataclass
 from functools import reduce
 from operator import mul
-from typing import Any
 
 import cv2
 import numpy as np
+
+from inference.acl_om import AclOmSession as _CommonAclOmSession
 
 
 _SKELETON = (
@@ -105,244 +105,7 @@ class PoseResult:
         return image
 
 
-class _AclOmSession:
-    """Minimal ACL model session for one static-input OM model."""
-
-    def __init__(self, model_path: str, device_id: int = 0):
-        try:
-            import acl  # type: ignore
-        except ImportError as exc:
-            raise RuntimeError(
-                "Cannot import acl. Source the Ascend CANN environment before "
-                "starting the 310B pipeline, for example "
-                "`source /usr/local/Ascend/ascend-toolkit/set_env.sh`."
-            ) from exc
-
-        self.acl = acl
-        self.model_path = model_path
-        self.device_id = device_id
-        self.context = None
-        self.model_id = None
-        self.model_desc = None
-        self.input_dataset = None
-        self.output_dataset = None
-        self.input_buffers: list[Any] = []
-        self.output_buffers: list[Any] = []
-        self.input_device_ptrs: list[Any] = []
-        self.output_device_ptrs: list[Any] = []
-        self.output_host_ptrs: list[Any] = []
-        self.input_sizes: list[int] = []
-        self.output_sizes: list[int] = []
-        self.input_dims: list[list[int] | None] = []
-        self.output_dims: list[list[int] | None] = []
-        self.profile_enabled = _env_bool("SMART_IP_ACL_PROFILE", False)
-        self.last_profile: dict[str, float] = {}
-        self._closed = False
-
-        self._check(self.acl.init(), "acl.init")
-        self._check(self.acl.rt.set_device(device_id), "acl.rt.set_device")
-        self.context = self._value(self.acl.rt.create_context(device_id), "acl.rt.create_context")
-        self._set_context()
-        self.model_id = self._value(self.acl.mdl.load_from_file(model_path), "acl.mdl.load_from_file")
-        self.model_desc = self.acl.mdl.create_desc()
-        self._check(self.acl.mdl.get_desc(self.model_desc, self.model_id), "acl.mdl.get_desc")
-
-        input_count = int(self._value(self.acl.mdl.get_num_inputs(self.model_desc), "acl.mdl.get_num_inputs"))
-        output_count = int(self._value(self.acl.mdl.get_num_outputs(self.model_desc), "acl.mdl.get_num_outputs"))
-        if input_count != 1:
-            raise RuntimeError(f"Expected one pose OM input, got {input_count}")
-        if output_count < 1:
-            raise RuntimeError("Pose OM has no outputs")
-
-        self.input_sizes = [
-            int(self._value(self.acl.mdl.get_input_size_by_index(self.model_desc, i), "acl.mdl.get_input_size_by_index"))
-            for i in range(input_count)
-        ]
-        self.output_sizes = [
-            int(self._value(self.acl.mdl.get_output_size_by_index(self.model_desc, i), "acl.mdl.get_output_size_by_index"))
-            for i in range(output_count)
-        ]
-        self.input_dims = [self._get_dims("input", i) for i in range(input_count)]
-        self.output_dims = [self._get_dims("output", i) for i in range(output_count)]
-
-        self._create_datasets()
-
-    @staticmethod
-    def _check(ret: Any, op: str) -> None:
-        if isinstance(ret, tuple):
-            ret = ret[-1]
-        if op == "acl.init" and ret in (100002, 207015):
-            return
-        if ret not in (0, None):
-            raise RuntimeError(f"{op} failed, ret={ret}")
-
-    @classmethod
-    def _value(cls, result: Any, op: str) -> Any:
-        if isinstance(result, tuple) and len(result) >= 2:
-            cls._check(result[-1], op)
-            return result[0]
-        return result
-
-    def _set_context(self) -> None:
-        if self.context is None:
-            return
-        set_context = getattr(self.acl.rt, "set_context", None)
-        if set_context is not None:
-            self._check(set_context(self.context), "acl.rt.set_context")
-
-    def _get_dims(self, kind: str, index: int) -> list[int] | None:
-        fn_name = f"get_{kind}_dims"
-        fn = getattr(self.acl.mdl, fn_name, None)
-        if fn is None:
-            return None
-        try:
-            dims = self._value(fn(self.model_desc, index), f"acl.mdl.{fn_name}")
-        except Exception:
-            return None
-        if isinstance(dims, dict):
-            values = dims.get("dims")
-            count = dims.get("dimCount") or (len(values) if values is not None else 0)
-            if values:
-                return [int(v) for v in values[:count]]
-        if isinstance(dims, (list, tuple)):
-            return [int(v) for v in dims]
-        return None
-
-    def _create_datasets(self) -> None:
-        self.input_dataset = self.acl.mdl.create_dataset()
-        self.output_dataset = self.acl.mdl.create_dataset()
-
-        for size in self.input_sizes:
-            ptr = self._value(self.acl.rt.malloc(size, 0), "acl.rt.malloc(input)")
-            self.input_device_ptrs.append(ptr)
-            buf = self.acl.create_data_buffer(ptr, size)
-            self.input_buffers.append(buf)
-            self._check(self.acl.mdl.add_dataset_buffer(self.input_dataset, buf), "acl.mdl.add_dataset_buffer(input)")
-
-        for size in self.output_sizes:
-            dev_ptr = self._value(self.acl.rt.malloc(size, 0), "acl.rt.malloc(output)")
-            host_ptr = self._value(self.acl.rt.malloc_host(size), "acl.rt.malloc_host(output)")
-            self.output_device_ptrs.append(dev_ptr)
-            self.output_host_ptrs.append(host_ptr)
-            buf = self.acl.create_data_buffer(dev_ptr, size)
-            self.output_buffers.append(buf)
-            self._check(self.acl.mdl.add_dataset_buffer(self.output_dataset, buf), "acl.mdl.add_dataset_buffer(output)")
-
-    def execute(self, input_array: np.ndarray) -> list[np.ndarray]:
-        if self._closed:
-            raise RuntimeError("ACL OM session is already closed")
-
-        total_start = time.perf_counter()
-        self._set_context()
-        arr = np.ascontiguousarray(input_array)
-        input_bytes = arr.tobytes()
-        input_size = self.input_sizes[0]
-        if len(input_bytes) != input_size:
-            raise RuntimeError(
-                f"Pose OM input size mismatch: model expects {input_size} bytes, "
-                f"preprocess produced {len(input_bytes)} bytes."
-            )
-
-        src_ptr = self.acl.util.bytes_to_ptr(input_bytes)
-        h2d_start = time.perf_counter()
-        self._check(
-            self.acl.rt.memcpy(self.input_device_ptrs[0], input_size, src_ptr, input_size, 1),
-            "acl.rt.memcpy(host_to_device)",
-        )
-        h2d_ms = _elapsed_ms(h2d_start)
-        execute_start = time.perf_counter()
-        self._check(self.acl.mdl.execute(self.model_id, self.input_dataset, self.output_dataset), "acl.mdl.execute")
-        execute_ms = _elapsed_ms(execute_start)
-
-        outputs = []
-        d2h_ms = 0.0
-        decode_ms = 0.0
-        for idx, (dev_ptr, host_ptr, size) in enumerate(zip(self.output_device_ptrs, self.output_host_ptrs, self.output_sizes)):
-            d2h_start = time.perf_counter()
-            self._check(
-                self.acl.rt.memcpy(host_ptr, size, dev_ptr, size, 2),
-                "acl.rt.memcpy(device_to_host)",
-            )
-            d2h_ms += _elapsed_ms(d2h_start)
-            decode_start = time.perf_counter()
-            raw = self.acl.util.ptr_to_bytes(host_ptr, size)
-            arr_out = np.frombuffer(raw, dtype=np.float32).copy()
-            dims = self.output_dims[idx]
-            if dims:
-                elem_count = _prod(dims)
-                if elem_count == arr_out.size:
-                    arr_out = arr_out.reshape(dims)
-            outputs.append(arr_out)
-            decode_ms += _elapsed_ms(decode_start)
-        if self.profile_enabled:
-            self.last_profile = {
-                "acl_h2d_ms": h2d_ms,
-                "acl_execute_ms": execute_ms,
-                "acl_d2h_ms": d2h_ms,
-                "acl_output_decode_ms": decode_ms,
-                "acl_total_ms": _elapsed_ms(total_start),
-            }
-        return outputs
-
-    def close(self) -> None:
-        if self._closed:
-            return
-        self._closed = True
-        try:
-            self._set_context()
-        except Exception:
-            pass
-
-        for buf in self.input_buffers + self.output_buffers:
-            try:
-                self.acl.destroy_data_buffer(buf)
-            except Exception:
-                pass
-        for dataset in (self.input_dataset, self.output_dataset):
-            if dataset is not None:
-                try:
-                    self.acl.mdl.destroy_dataset(dataset)
-                except Exception:
-                    pass
-        for ptr in self.output_host_ptrs:
-            try:
-                self.acl.rt.free_host(ptr)
-            except Exception:
-                pass
-        for ptr in self.input_device_ptrs + self.output_device_ptrs:
-            try:
-                self.acl.rt.free(ptr)
-            except Exception:
-                pass
-        if self.model_id is not None:
-            try:
-                self.acl.mdl.unload(self.model_id)
-            except Exception:
-                pass
-        if self.model_desc is not None:
-            try:
-                self.acl.mdl.destroy_desc(self.model_desc)
-            except Exception:
-                pass
-        if self.context is not None:
-            try:
-                self.acl.rt.destroy_context(self.context)
-            except Exception:
-                pass
-        try:
-            self.acl.rt.reset_device(self.device_id)
-        except Exception:
-            pass
-        try:
-            self.acl.finalize()
-        except Exception:
-            pass
-
-    def __del__(self):
-        try:
-            self.close()
-        except Exception:
-            pass
+_AclOmSession = _CommonAclOmSession
 
 
 class PoseInfer:
@@ -377,6 +140,8 @@ class PoseInfer:
         self._om_session: _AclOmSession | None = None
         self._backend = "uninitialized"
         self._input_shape = (self.cfg.imgsz, self.cfg.imgsz)
+        self.reuse_input_buffer = _env_bool("SMART_IP_REUSE_INPUT_BUFFER", True)
+        self._om_input_buffer: np.ndarray | None = None
         self._project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
         resolved = self._resolve_model_path(self.cfg.model_path)
@@ -520,9 +285,8 @@ class PoseInfer:
 
         expected_size = self._om_session.input_sizes[0]
         dims = self._om_session.input_dims[0]
-        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         layout = _infer_layout(dims)
-        elem_count = _prod(dims) if dims else rgb.size
+        elem_count = _prod(dims) if dims else image.size
         dtype: type[np.float32] | type[np.uint8]
         if expected_size == elem_count * np.dtype(np.float32).itemsize:
             dtype = np.float32
@@ -535,8 +299,19 @@ class PoseInfer:
             )
 
         if dtype is np.float32:
+            if layout == "NCHW" and self.reuse_input_buffer:
+                shape = tuple(dims) if dims else (1, 3, image.shape[0], image.shape[1])
+                if self._om_input_buffer is None or self._om_input_buffer.shape != shape:
+                    self._om_input_buffer = np.empty(shape, dtype=np.float32)
+                tensor = self._om_input_buffer
+                np.multiply(image[:, :, 2], 1.0 / 255.0, out=tensor[0, 0], casting="unsafe")
+                np.multiply(image[:, :, 1], 1.0 / 255.0, out=tensor[0, 1], casting="unsafe")
+                np.multiply(image[:, :, 0], 1.0 / 255.0, out=tensor[0, 2], casting="unsafe")
+                return tensor
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             tensor = rgb.astype(np.float32) / 255.0
         else:
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             tensor = rgb.astype(np.uint8)
 
         if layout == "NHWC":
@@ -645,10 +420,6 @@ def _env_bool(name: str, default: bool) -> bool:
     if raw is None:
         return default
     return raw.strip().lower() not in ("0", "false", "no", "off")
-
-
-def _elapsed_ms(start: float) -> float:
-    return (time.perf_counter() - start) * 1000.0
 
 
 def _infer_layout(dims: list[int] | None) -> str:

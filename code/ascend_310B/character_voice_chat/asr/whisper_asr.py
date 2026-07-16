@@ -1,5 +1,4 @@
 import sounddevice as sd
-from character_voice_chat.test_fw_import import WhisperModel
 
 _model = None
 
@@ -7,6 +6,10 @@ _model = None
 def get_model():
     global _model
     if _model is None:
+        try:
+            from faster_whisper import WhisperModel
+        except ImportError as exc:
+            raise RuntimeError("本地 Whisper 需要安装 faster-whisper") from exc
         print("正在加载 Whisper 模型...")
         _model = WhisperModel("small", device="cpu", compute_type="int8")
         print("Whisper 模型加载完成")

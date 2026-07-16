@@ -1,4 +1,4 @@
-from ciciec_ascend.character_voice_chat.asr.asr_engine import ASREngine
+from .asr_engine import ASREngine
 
 
 class FakeASREngine(ASREngine):

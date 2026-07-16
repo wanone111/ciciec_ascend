@@ -20,6 +20,29 @@ export SMART_IP_BACKEND_HOST=192.168.137.1
 export SMART_IP_USE_UDP=1
 ```
 
+纯推理压测时建议关闭可视化和 AR，并开启 ACL 分段 profiling：
+
+```bash
+export SMART_IP_ENABLE_OVERLAY=0
+export SMART_IP_ENABLE_AR=0
+export SMART_IP_ACL_PROFILE=1
+export SMART_IP_BENCH_FRAME_STRIDE=5
+```
+
+如果现场人脸位置稳定，可以降低 YuNet 调用频率，复用最近 bbox：
+
+```bash
+export SMART_IP_EXPR_SKIP=3
+export SMART_IP_FACE_DETECT_INTERVAL=2
+export SMART_IP_FACE_TRACK_TTL=6
+```
+
+每轮压测建议使用新目录，避免旧 JSONL 污染统计：
+
+```bash
+export SMART_IP_BENCH_DIR=/tmp/smart_ip_bench_$(date +%Y%m%d_%H%M%S)
+```
+
 真实硬件链路建议先做时钟同步，否则 PYNQ 采集时间到 PC 播放器切换时间无法直接相减：
 
 ```bash
@@ -76,6 +99,36 @@ python scripts/benchmark/summarize_hardware_e2e.py --log-dir /tmp/smart_ip_bench
 
 - `hardware_e2e_summary.md`：可直接摘入比赛报告的 Markdown 表格。
 - `hardware_e2e_summary.json`：机器可读统计结果。
+
+## ACL profiling 汇总
+
+如果 310B 运行前开启：
+
+```bash
+export SMART_IP_ACL_PROFILE=1
+```
+
+ACL 输出默认直接复用 pinned host buffer 的 NumPy 视图，减少 `ptr_to_bytes` 和额外 copy。如需让输出数组跨越同一 session 的下一次推理继续有效，或排查 CANN 版本兼容性，可关闭零拷贝：
+
+```bash
+export SMART_IP_ACL_ZERO_COPY_OUTPUT=0
+```
+
+CPU 预处理默认复用姿态/人脸 NCHW 输入 buffer，并融合表情 resize、换色、归一化和 layout 转换。做兼容路径 A/B 时可关闭：
+
+```bash
+export SMART_IP_REUSE_INPUT_BUFFER=0
+export SMART_IP_EXPRESSION_FUSED_PREPROCESS=0
+```
+
+`pipeline.jsonl` 的 `frame` 记录会包含 `pose_acl_*`、`face_acl_*`、`expression_acl_*` 字段。可用下面脚本汇总 NPU 执行和 Host/Device 搬运耗时：
+
+```bash
+python scripts/benchmark/summarize_acl_profile.py \
+  --pipeline-log /root/userdata/ciciec/ascend_310B/log/pipeline.jsonl
+```
+
+输出字段包括 `acl_input_pack_ms`、`acl_h2d_ms`、`acl_execute_ms`、`acl_d2h_ms`、`acl_output_decode_ms` 和 `acl_total_ms` 的平均值、P50、P95 与最大值。
 
 如果不提供 trial CSV，脚本仍会汇总 FPS、分段延迟、UDP 丢包、视频切换次数和稳定性，但不会计算动作/表情准确率。
 

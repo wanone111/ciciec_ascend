@@ -8,6 +8,7 @@
 Scripts/
 ├── README.md
 ├── ascend_310b/
+│   ├── convert_onnx_to_om.sh
 │   ├── export_to_onnx.py
 │   └── set_env.sh
 ├── installation/
@@ -42,6 +43,25 @@ source Scripts/ascend_310b/set_env.sh
 ```
 
 `ascend_310b/export_to_onnx.py` 当前为空，占位用于后续模型导出脚本。
+
+`ascend_310b/convert_onnx_to_om.sh` 用于将智能互动系统中的 ONNX 模型转换为 Ascend OM：
+
+```bash
+source Scripts/ascend_310b/set_env.sh
+bash Scripts/ascend_310b/convert_onnx_to_om.sh emotion
+bash Scripts/ascend_310b/convert_onnx_to_om.sh face
+bash Scripts/ascend_310b/convert_onnx_to_om.sh pose
+```
+
+常用覆盖项：
+
+```bash
+export SMART_IP_SOC_VERSION=Ascend310B1
+export SMART_IP_ATC_INPUT_SHAPE='image:1,3,112,112'
+export SMART_IP_AIPP_CONFIG=/path/to/aipp.cfg
+```
+
+不同 CANN 版本或板卡型号的 `soc_version` 可能不同，现场应以 `atc --help` 和板端环境为准。
 
 ## PYNQ-Z2 HLS 脚本
 

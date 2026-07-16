@@ -43,6 +43,7 @@ from interaction.action_mapper import map_event_to_command
 from communication.tcp_sender import TCPSender
 from inference.ar_overlay import AROverlay
 from benchmark.logger import JsonlLogger, time_ms
+from streaming import MJPEGServer
 
 
 def _env_bool(name, default):
@@ -147,6 +148,10 @@ EXPR_SEND_INTERVAL = _env_float("SMART_IP_EXPR_SEND_INTERVAL", 1.5, min_value=0.
 # 每隔几帧做一次人脸检测+表情推理（表情变化慢，不需要每帧推理）
 EXPR_SKIP = _env_int("SMART_IP_EXPR_SKIP", 3, min_value=1)
 
+# 表情分支内的人脸检测频率。默认每次表情分支都检测；设为 2/3 可复用最近 bbox。
+FACE_DETECT_INTERVAL = _env_int("SMART_IP_FACE_DETECT_INTERVAL", 1, min_value=1)
+FACE_TRACK_TTL = _env_int("SMART_IP_FACE_TRACK_TTL", 6, min_value=1)
+
 # 压测时可关闭绘制和 AR，减少 CPU 可视化开销对推理指标的干扰。
 ENABLE_OVERLAY = _env_bool("SMART_IP_ENABLE_OVERLAY", True)
 ENABLE_AR = _env_bool("SMART_IP_ENABLE_AR", True)
@@ -196,6 +201,19 @@ def find_main_person(results):
 def kp_to_list(kp):
     """关键点 tensor 转可序列化的列表 [[x,y], ...]。"""
     return [[round(float(p[0]), 1), round(float(p[1]), 1)] for p in kp]
+
+
+def crop_bbox(frame, bbox):
+    if bbox is None:
+        return None
+    h, w = frame.shape[:2]
+    x1, y1, x2, y2 = [int(round(v)) for v in bbox]
+    x1, y1 = max(0, x1), max(0, y1)
+    x2, y2 = min(w, x2), min(h, y2)
+    if x2 <= x1 or y2 <= y1:
+        return None
+    roi = frame[y1:y2, x1:x2]
+    return roi if roi.size else None
 
 
 def draw_overlay(frame, action_label, expr_label, expr_conf, fps, tcp_ok):
@@ -306,6 +324,8 @@ def main():
         backend_port=BACKEND_PORT,
         expr_skip=EXPR_SKIP,
         expr_send_interval=EXPR_SEND_INTERVAL,
+        face_detect_interval=FACE_DETECT_INTERVAL,
+        face_track_ttl=FACE_TRACK_TTL,
         enable_overlay=ENABLE_OVERLAY,
         enable_ar=ENABLE_AR,
         acl_profile=ACL_PROFILE,
@@ -378,9 +398,22 @@ def main():
         return
 
     action_sm    = ActionStateMachine()
+    stream_server = None
+    if _env_bool("SMART_IP_STREAM_ENABLED", False):
+        stream_server = MJPEGServer(
+            host=os.environ.get("SMART_IP_STREAM_HOST", "0.0.0.0"),
+            port=_env_int("SMART_IP_STREAM_PORT", 8081, 1),
+            quality=_env_int("SMART_IP_STREAM_JPEG_QUALITY", 65, 30),
+            max_fps=_env_float("SMART_IP_STREAM_MAX_FPS", 6.0, 0.5),
+            max_width=_env_int("SMART_IP_STREAM_MAX_WIDTH", 640, 0),
+        )
+        stream_server.start()
+
     last_expr_time = 0.0
     expr_label, expr_conf = None, 0.0
     face_bbox    = None
+    face_bbox_age = FACE_TRACK_TTL + 1
+    expr_eval_count = 0
     frame_idx    = 0
 
     prev_time = time.time()
@@ -458,9 +491,23 @@ def main():
 
         # ── Stage 1b + 2：每 EXPR_SKIP 帧做人脸检测 + 表情推理 ──
         expr_ms = None
+        if face_bbox is not None:
+            face_bbox_age += 1
         if frame_idx % EXPR_SKIP == 0:
+            expr_eval_count += 1
             expr_start = time.perf_counter()
-            face_roi, face_bbox = face_detector.detect_best(frame)
+            should_detect_face = (
+                face_bbox is None
+                or face_bbox_age > FACE_TRACK_TTL
+                or expr_eval_count % FACE_DETECT_INTERVAL == 0
+            )
+            if should_detect_face:
+                face_roi, detected_bbox = face_detector.detect_best(frame)
+                if detected_bbox is not None:
+                    face_bbox = detected_bbox
+                    face_bbox_age = 0
+            else:
+                face_roi = crop_bbox(frame, face_bbox)
             if face_roi is not None:
                 result = expr_infer.predict_smooth(face_roi)
                 expr_label = result["expression"]
@@ -536,6 +583,9 @@ def main():
                 annotated, action_label, expr_label, expr_conf, fps, sender.connected
             )
 
+        if stream_server is not None:
+            stream_server.publish(annotated)
+
         # 周期性打印底层 pybind 接收统计（仅当使用 UDPVideoSource 并且底层 interface 可用）
         try:
             now = time.time()
@@ -587,6 +637,8 @@ def main():
         except cv2.error:
             pass
     sender.close()
+    if stream_server is not None:
+        stream_server.close()
     bench_logger.log("pipeline_stop", frame_idx=frame_idx)
     bench_logger.close()
     print("[INFO] 退出")

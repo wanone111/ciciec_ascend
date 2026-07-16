@@ -170,6 +170,15 @@ python scripts/benchmark/summarize_hardware_e2e.py \
 
 输出的 `hardware_e2e_summary.md` 包含动作/表情准确率、端到端延迟、FPS、UDP 丢包率和稳定性统计。若未提供 trial CSV，脚本只汇总性能和稳定性，不计算准确率。
 
+ACL 输出默认复用 pinned host buffer 的 NumPy 视图以避免逐帧 bytes copy。返回数组只在同一模型 session 的下一次推理前有效；需要长期持有输出或排查 CANN 兼容性时，设置 `SMART_IP_ACL_ZERO_COPY_OUTPUT=0` 回到兼容路径。
+
+姿态和人脸默认复用固定 NCHW 输入 buffer，表情默认使用融合 OpenCV blob 预处理。兼容性排查时可分别设置：
+
+```bash
+export SMART_IP_REUSE_INPUT_BUFFER=0
+export SMART_IP_EXPRESSION_FUSED_PREPROCESS=0
+```
+
 ### 最新硬件压测快照
 
 归档目录：
@@ -242,6 +251,8 @@ PC_VIDEO_CTRL_PORT = 5567
 姿态识别：
 
 - 310B 生产首选：`models/om/yolo26s-pose.om`
+- 310B 性能候选：`models/om/yolo26n-pose-640.om`（动作准确率回归完成前不作为默认）
+- 轻量模型静态 ONNX：`models/onnx/yolo26n-pose-640.onnx`、`models/onnx/yolo26n-pose-512.onnx`
 - 可选 NPU 路径：`models/onnx/yolo26s-pose.onnx` + OpenCV DNN CANN/NPU
 - 本地调试权重：`yolo26n-pose.pt`
 
@@ -249,6 +260,12 @@ PC_VIDEO_CTRL_PORT = 5567
 
 ```bash
 export SMART_IP_POSE_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/yolo26s-pose.om
+```
+
+临时测试已验证的 n640 性能候选：
+
+```bash
+export SMART_IP_POSE_MODEL=/path/to/smart_ip_interaction/models/om/yolo26n-pose-640.om
 ```
 
 仅本地调试时才建议显式打开 PT 回退：
