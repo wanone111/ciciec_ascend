@@ -5,7 +5,7 @@
 ## 已完成
 
 - 包路径和模块启动方式已统一，可从 `ascend_310B` 目录用 `python -m` 启动。
-- 配置集中在 `config.py`，凭据只从环境变量读取。
+- 保留用户指定的源码硬编码凭据；同名环境变量可临时覆盖方舟 LLM 凭据。
 - 离线测试不会调用云端服务。
 - 端点检测会忽略开口前底噪，并限制单句最大缓存长度。
 - 空 ASR 结果不会进入 LLM/TTS。
@@ -21,7 +21,6 @@
 ```bash
 python3 -m unittest discover -s character_voice_chat/tests -v
 python3 -m character_voice_chat.test_stream_pipeline
-python3 -m character_voice_chat.test_adapter
 ```
 
 离线文本对话：
@@ -45,16 +44,28 @@ python3 -m character_voice_chat.main --online
 python3 -m pip install -r character_voice_chat/requirements.txt
 ```
 
-配置凭据并启动：
+源码已保留现有凭据，可直接启动：
 
 ```bash
-export DOUBAO_APP_ID="你的 App ID"
-export DOUBAO_TOKEN="你的访问令牌"
-export VOLCENGINE_API_KEY="你的方舟 API Key"
 python3 -m character_voice_chat.test_mic_to_pipeline
 ```
 
 程序会自动等待开口、检测尾静音、识别、生成角色回复并播放语音。为了避免声学回声，当前默认等 TTS 播放完成后再开启下一轮监听；使用耳机时可在后续全双工入口中启用插话打断。
+
+指定麦克风并显示实时输入电平：
+
+```bash
+python3 -m character_voice_chat.test_mic_to_pipeline \
+  --input-device 4 \
+  --debug-audio
+```
+
+程序会先丢弃 0.5 秒设备启动瞬态，再进行 0.8 秒环境噪声校准，此时请保持安静。可用
+`--list-devices` 查看设备；仍无法触发时可手动传入
+`--speech-threshold 0.002 --silence-threshold 0.001`。
+
+对于只支持 44.1/48 kHz 的 ALSA 硬件设备，程序会自动按设备原生采样率采集，
+再重采样到 ASR 所需的 16 kHz；也可用 `--capture-sample-rate 48000` 手动指定。
 
 ## 配置
 
@@ -91,5 +102,3 @@ python3 -m character_voice_chat.test_mic_to_pipeline
 - 当前 VAD 是能量阈值法；嘈杂环境建议接入 Silero VAD 或 WebRTC VAD，并增加 200–300 ms 预卷缓冲。
 - 云端 ASR/TTS 尚需补请求级延迟指标、重试/熔断和错误码分类。
 - 尚未把 `emotion/action` 实时推送给右侧动漫前端；可接入 `smart_ip_interaction` 的 WebSocket 事件协议。
-
-如果真实凭据曾经写入或提交过源码，应在服务商控制台轮换；仅从当前文件删除不能使旧凭据失效。

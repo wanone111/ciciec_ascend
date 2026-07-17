@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 
 from character_voice_chat.asr.asr_engine import ASREngine
+from character_voice_chat.asr.doubao_asr_engine import _resample_float32
 from character_voice_chat.audio.stream_buffer import AudioStreamBuffer
 from character_voice_chat.core.dialogue_manager import DialogueManager
 from character_voice_chat.core.pipeline_state import PipelineState
@@ -102,6 +103,14 @@ class AudioBufferTests(unittest.TestCase):
         np.testing.assert_array_equal(
             buffer.get_audio(), np.array([3, 4, 5, 6, 7], dtype=np.float32)
         )
+
+
+class AudioResampleTests(unittest.TestCase):
+    def test_resamples_48khz_chunk_to_16khz(self):
+        source = np.linspace(-1, 1, 4800, dtype=np.float32)
+        result = _resample_float32(source, 48_000, 16_000)
+        self.assertEqual(result.dtype, np.float32)
+        self.assertEqual(result.size, 1600)
 
 
 if __name__ == "__main__":

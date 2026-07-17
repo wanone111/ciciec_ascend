@@ -20,6 +20,19 @@ _SER_JSON          = 1
 _COMPRESS_NONE     = 0
 
 
+def _resample_float32(audio, source_rate: int, target_rate: int):
+    """Resample a mono float32 chunk while keeping the streaming chunk duration."""
+    audio = np.asarray(audio, dtype=np.float32).reshape(-1)
+    if source_rate == target_rate or audio.size == 0:
+        return audio
+
+    target_size = max(1, int(round(audio.size * target_rate / source_rate)))
+    source_positions = np.arange(audio.size, dtype=np.float64)
+    target_positions = np.arange(target_size, dtype=np.float64) * source_rate / target_rate
+    target_positions = np.minimum(target_positions, audio.size - 1)
+    return np.interp(target_positions, source_positions, audio).astype(np.float32)
+
+
 def _build_header(msg_type, msg_flags=0, serialization=_SER_JSON, compression=_COMPRESS_NONE):
     b0 = (_PROTOCOL_VERSION << 4) | _HEADER_SIZE
     b1 = (msg_type << 4) | msg_flags
@@ -152,16 +165,19 @@ class DoubaoASREngine(ASREngine):
         self,
         device=None,
         samplerate=16000,
-        speech_threshold=0.01,
-        silence_threshold=0.008,
+        speech_threshold=None,
+        silence_threshold=None,
         silence_duration=1.8,
         max_duration=30.0,
         chunk_ms=100,
+        calibration_duration=0.8,
+        warmup_duration=0.5,
+        debug_audio=False,
+        capture_samplerate=None,
     ) -> str:
         """边录音边实时发送到 ASR，流式显示识别结果，静音结束后返回完整文本。"""
         import sounddevice as sd
 
-        chunk_size = int(samplerate * chunk_ms / 1000)
         silence_chunks_needed = int(silence_duration * 1000 / chunk_ms)
         max_chunks = int(max_duration * 1000 / chunk_ms)
 
@@ -176,33 +192,84 @@ class DoubaoASREngine(ASREngine):
                 f"X-Api-Resource-Id: {self.resource_id}",
                 f"X-Api-Connect-Id: {uuid.uuid4()}",
             ],
-            on_open=lambda ws: self._stream_sender(ws, audio_queue),
+            on_open=lambda ws: self._stream_sender(ws, audio_queue, samplerate),
             on_message=lambda ws, msg: self._on_stream_message(ws, msg, last_text),
             on_error=lambda ws, err: None if "opcode=8" in str(err) else print("ASR错误:", err),
         )
 
         ws_thread = threading.Thread(target=ws.run_forever, daemon=True)
-        ws_thread.start()
 
         speech_started = False
         silence_count = 0
-        print("🎤 请说话...")
+        selected_device = sd.query_devices(device, "input")
+        capture_samplerate = int(round(
+            capture_samplerate or selected_device.get("default_samplerate") or samplerate
+        ))
+        chunk_size = int(capture_samplerate * chunk_ms / 1000)
+        print(
+            f"🎤 输入设备: {selected_device['name']} "
+            f"({capture_samplerate} Hz → ASR {samplerate} Hz)"
+        )
 
-        with sd.InputStream(device=device, samplerate=samplerate, channels=1,
+        with sd.InputStream(device=device, samplerate=capture_samplerate, channels=1,
                             dtype="float32", blocksize=chunk_size) as stream:
+            if speech_threshold is None or silence_threshold is None:
+                # PulseAudio/ALSA 刚启动时可能返回较大的瞬态脉冲，不能用于估计底噪。
+                warmup_chunks = max(1, int(warmup_duration * 1000 / chunk_ms))
+                for _ in range(warmup_chunks):
+                    stream.read(chunk_size)
+
+                calibration_chunks = max(1, int(calibration_duration * 1000 / chunk_ms))
+                noise_peaks = []
+                print("🔧 正在校准环境噪声，请暂时保持安静...")
+                for _ in range(calibration_chunks):
+                    chunk, overflowed = stream.read(chunk_size)
+                    if overflowed and debug_audio:
+                        print("\n[音频] 输入缓冲发生溢出")
+                    noise_peaks.append(float(np.max(np.abs(chunk))))
+
+                # 中位数不易受偶发爆音影响；自动开口阈值限制在可讲话触发的范围内。
+                noise_floor = float(np.median(noise_peaks))
+                if speech_threshold is None:
+                    speech_threshold = float(np.clip(noise_floor * 3.0, 0.002, 0.02))
+                if silence_threshold is None:
+                    silence_threshold = float(np.clip(
+                        noise_floor * 1.5,
+                        0.0008,
+                        speech_threshold * 0.6,
+                    ))
+                print(
+                    f"✅ 校准完成: noise={noise_floor:.5f}, "
+                    f"start={speech_threshold:.5f}, silence={silence_threshold:.5f}"
+                )
+
+            # 麦克风成功打开后才建立云端连接，避免设备错误时遗留连接线程。
+            ws_thread.start()
+            print("🎤 请说话...")
             for _ in range(max_chunks):
-                chunk, _ = stream.read(chunk_size)
+                chunk, overflowed = stream.read(chunk_size)
                 chunk = chunk.flatten()
                 amplitude = float(np.max(np.abs(chunk)))
+
+                if debug_audio and not speech_started:
+                    print(
+                        f"\r等待开口: peak={amplitude:.5f} / "
+                        f"threshold={speech_threshold:.5f}      ",
+                        end="",
+                        flush=True,
+                    )
+                if overflowed and debug_audio:
+                    print("\n[音频] 输入缓冲发生溢出")
 
                 if not speech_started:
                     if amplitude >= speech_threshold:
                         speech_started = True
-                        print("🔴 识别中...", end="\r")
+                        print("\n🔴 检测到开口，识别中...", end="\r")
                     else:
                         continue
 
-                pcm = (np.clip(chunk, -1, 1) * 32767).astype(np.int16).tobytes()
+                asr_chunk = _resample_float32(chunk, capture_samplerate, samplerate)
+                pcm = (np.clip(asr_chunk, -1, 1) * 32767).astype(np.int16).tobytes()
                 audio_queue.put(pcm)
 
                 if amplitude < silence_threshold:
@@ -220,11 +287,11 @@ class DoubaoASREngine(ASREngine):
         print()  # 换行
         return last_text[0]
 
-    def _stream_sender(self, ws, audio_queue: queue.Queue):
+    def _stream_sender(self, ws, audio_queue: queue.Queue, samplerate=16000):
         start_msg = {
             "app": {"appid": self.app_id, "token": self.token, "cluster": "volcano_bigasr"},
             "user": {"uid": "user"},
-            "audio": {"format": "pcm", "sample_rate": 16000, "channel": 1, "bit_depth": 16, "codec": "raw"},
+            "audio": {"format": "pcm", "sample_rate": samplerate, "channel": 1, "bit_depth": 16, "codec": "raw"},
             "request": {"reqid": str(uuid.uuid4()), "model_name": "bigmodel", "enable_punc": True},
         }
         ws.send(_pack_json_frame(_MSG_FULL_CLIENT, start_msg), opcode=websocket.ABNF.OPCODE_BINARY)

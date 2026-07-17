@@ -142,13 +142,233 @@
   - 动作：`WAVE/HEART/CHEER` 各 10 次以上。
   - 表情：6 类各 10 次以上。
 
+## 8. NPU 算子级 profiling（P0，后续算子优化的入口）
+
+> 原则：不根据 ONNX 节点数量猜热点。先用真实 310B、真实输入和固定频率采集算子时间，再决定改图、改精度或写自定义算子。优化结果同时看端到端延迟、精度和稳定性，不能只看单算子耗时。
+
+- [ ] 为姿态、人脸、表情三个 OM 分别建立 `msprof` 单模型基线。
+  - 每个模型固定 warmup、输入、运行次数和环境温度，至少输出算子级平均/P50/P95。
+  - 采集范围：ACL API、Runtime task、GE graph、AICore/AIVector/AICPU、H2D/D2H、内存带宽和任务间空洞。
+  - 产物目录建议：`artifacts/profiling/<date>/<model>/<variant>/`，不要提交体积较大的原始 trace，只提交汇总 CSV/Markdown 和复现命令。
+- [ ] 新增 `scripts/benchmark/profile_om.sh`，把 `msprof` 启动、导出和元数据记录标准化。
+  - 自动记录 CANN、驱动、固件、SoC、ATC、Python ACL 版本，OM checksum、输入 shape/dtype/layout 和关键环境变量。
+  - 先在板端通过 `msprof --help`/本机 CANN 文档确认参数；CANN 版本不同，不在脚本里硬编码未经验证的参数组合。
+- [ ] 新增算子汇总脚本，将 profiler 输出聚合为以下视图。
+  - Top-K：总耗时、单次耗时、调用次数。
+  - 执行单元：AI Core、AI CPU、CPU fallback。
+  - 算子族：Conv/MatMul、激活、Resize、Transpose/TransData、Concat/Split、Cast、后处理。
+  - 图间隙：Host enqueue、stream synchronize、模型切换和 memcpy 空洞。
+- [ ] 导出 ATC/GE 编译日志和可读图，建立 `ONNX node -> GE op -> device task` 映射。
+  - 对每个热点保存原始节点名、融合后节点名、输入输出 shape/dtype、执行引擎和耗时。
+  - 明确“耗时来自计算、内存带宽、格式转换、同步还是 AICPU fallback”。
+- [ ] 建立算子优化准入线。
+  - 单算子/算子族占模型执行时间不足 5%，且端到端收益预计不足 1 ms 时，默认不投入自定义算子开发。
+  - 任一候选必须有基线、假设、A/B 数据、数值误差和业务准确率结论。
+
+## 9. 图编译、算子融合与混合精度（P0/P1）
+
+- [ ] 检查三个 OM 是否存在 AICPU/Host fallback；发现后优先消除。
+  - 优先级高于微调普通 AI Core 算子，因为 fallback 往往伴随同步和数据搬运。
+  - 处理顺序：替换 ONNX 表达、固定 shape、调整 opset、使用 CANN 支持算子，最后才评估自定义算子。
+- [ ] 清点冗余格式转换和碎片算子。
+  - 重点搜索 `TransData/Transpose/Cast/Reshape/Squeeze/Unsqueeze/Slice/Concat` 链，以及连续 layout 往返。
+  - 统一模型输入输出的 layout/dtype，避免 CPU NCHW 与内部 NZ/NHWC 之间反复转换。
+  - 对只改变 view、但被编译成真实搬运的节点做 ONNX 常量折叠或图改写。
+- [ ] 验证 Conv + BN + activation 的实际融合情况。
+  - 分别检查 YOLO pose、YuNet、MobileNetV3 中 BN 是否已折叠，SiLU/Hardswish/Hardsigmoid 是否形成高效融合算子。
+  - 若未融合，比较“导出前模型融合”“ONNX 图融合”“ATC 融合配置”三种路径，保留最稳定方案。
+- [ ] 建立 ATC 编译策略矩阵，而不是只保留一个默认 OM。
+  - 维度：默认精度、FP16 优先、必须保留 FP32 的敏感节点、融合开关、不同静态输入尺寸。
+  - `precision_mode`/`precision_mode_v2`、算子实现选择和 fusion 配置名称以板端 CANN 7.0 实际 `atc --help` 为准。
+  - 每个 OM 保存完整 ATC 命令、编译日志、checksum 和输入输出契约。
+- [ ] 做 FP16/FP32 混合精度逐模型 A/B。
+  - 姿态重点检查小目标、关键点置信度和动作阈值边界。
+  - 人脸重点检查低置信度 bbox、`exp` 解码前的回归输出。
+  - 表情重点检查相近类别 logits 排序，不只比较 top-1。
+  - 验收：输出误差受控，动作/表情回归不退化，并且 `acl_execute_ms` 有实测收益。
+- [ ] 检查常量折叠、死分支删除和静态 shape 传播。
+  - 所有生产 OM 固定 batch=1 和固定分辨率；删除训练态、动态 shape 和未消费输出。
+  - 使用 ONNX checker/shape inference 和板端输出对齐测试共同验收，不能只以 ATC 转换成功为准。
+- [ ] 评估融合配置的收益和副作用。
+  - 对 profiler 中连续的小算子链尝试 GE 融合；记录融合前后 task 数、workspace、执行时间和精度。
+  - 若融合增加 workspace、引入额外 TransData 或没有端到端收益，则回退。
+- [ ] 仅在上述路径无法解决明确热点时评估 Ascend C 自定义算子。
+  - 候选应满足：稳定 Top-K 热点、现有实现落到 AICPU/多次小 kernel、输入 shape 固定、预计收益覆盖维护成本。
+  - 自定义算子必须包含 tiling、边界 shape、精度、性能和 ATC 集成测试；当前不把“写自定义算子”本身作为目标。
+
+## 10. 三个模型的算子/模型图专项（P0/P1）
+
+### 10.1 YOLO Pose
+
+- [ ] 对 `yolo26s-pose` 和 `yolo26n-pose` 生成逐层热点对比。
+  - 确认 n 模型 35.8% ACL 收益具体来自哪些 Conv/特征融合/检测头节点，避免只保留模型级结论。
+- [ ] 完成 `yolo26n-pose-512.onnx -> OM` 转换和三维 A/B：`s640 / n640 / n512`。
+  - 指标：算子时间、模型时间、整帧 P95、三类动作召回率、误触发率和关键点误差。
+- [ ] 检查 pose 检测头是否仍有可裁剪的类别/分支。
+  - 当前业务只有 person + 17 个关键点；确认导出图不存在未使用类别、冗余输出或 CPU 才会丢弃的分支。
+- [ ] 检查 pose 输出是已解码 `[1,300,57]` 还是原始多尺度 head，并记录 NMS/TopK 所在位置。
+  - 若 NMS/TopK 在图内且成为 AICPU 热点，比较图外向量化后处理。
+  - 若后处理继续保持约 0.3 ms，则停止优化，不为“全 NPU”牺牲可维护性。
+- [ ] 针对 profiler 热点验证 SiLU、Concat、Resize/上采样和检测头小卷积的融合/实现选择。
+  - 特别关注大量短 kernel 和 TransData 是否导致调度开销高于计算本身。
+- [ ] 评估结构化通道剪枝和蒸馏。
+  - 以 n640 为 teacher/student 基线，优先剪高耗时 stage，而不是按参数量平均剪枝。
+  - 剪枝后重新导出静态 ONNX/OM，并完成动作级回归。
+
+### 10.2 YuNet 人脸检测
+
+- [ ] 优先评估 `640 -> 320` 或 ROI 输入版本。
+  - 原始 OpenCV fallback 使用 320 输入，而生产 OM 当前为 640；这是比微调单算子更高潜力的计算量削减项。
+  - 验收必须覆盖远距离、小脸、侧脸和遮挡，不能只测镜头前单人。
+- [ ] 裁剪未使用的关键点输出分支。
+  - 当前业务只消费 bbox/score，`_decode_yunet()` 计算了 5 点但随即丢弃；评估从 ONNX 中删除 `kps_8/16/32` head。
+  - 比较 OM 大小、NPU task、12 路输出 D2H、decode 时间和人脸检测一致性。
+- [ ] 合并或打包 YuNet 多输出 head。
+  - 当前 12 个输出分别 D2H；评估在图末尾 reshape/concat 为较少输出，降低 ACL dataset 和 memcpy 调用开销。
+  - 只有 profiler 证明多输出调度/搬运显著时实施，避免为了少量数据增加 TransData/Concat 成本。
+- [ ] 向量化 CPU decode，删除无用 landmark 列表构造。
+  - 先记录 decode/NMS P95；若不足 1 ms，只修正无用工作，不进行复杂 NPU 后处理迁移。
+- [ ] 评估复用 pose 面部关键点直接产生表情 ROI。
+  - 高置信度正脸优先使用 pose ROI，低置信度/侧脸/丢失时再运行 YuNet。
+  - 这是跨模型算子消除：目标是减少 YuNet 调用次数，而非让两个模型每次都更快。
+
+### 10.3 MobileNetV3 表情模型
+
+- [ ] 从 profiler 确认 Hardswish/Hardsigmoid、SE、GlobalAveragePool、Gemm 是否正确落在 AI Core 并完成融合。
+- [ ] 生成 FP16 混合精度 OM，重点保护最后 classifier 和对类别排序敏感的节点。
+- [ ] 评估 `112 -> 96` 静态输入和宽度系数更小的模型。
+  - 结合蒸馏和现有 7 帧概率平滑，比较 6 类准确率、混淆矩阵和端到端收益。
+- [ ] 评估把 softmax 留在 CPU 还是并入图。
+  - 当前仅 6 个 logits，CPU softmax 理论成本很小；只有它造成同步/接口复杂度时才改图。
+- [ ] 修复并测试 OM `uint8` 输入兼容分支。
+  - `expression_infer.py::_preprocess_om()` 的 uint8 分支在 `rgb` 定义前引用它；带 AIPP 的 uint8 OM 会触发该问题。
+  - 新增 float32 NCHW、uint8 NCHW、uint8 NHWC 三种输入契约单测。
+
+## 11. ACL Runtime、内存与多模型调度（P0/P1）
+
+- [ ] 把 ACL device/context 生命周期提升为共享 runtime owner。
+  - 当前三个 `AclOmSession` 分别执行 `acl.init/set_device/create_context`，且每次 `execute()` 都 `set_context`。
+  - 目标：同一 device 共享 context，session 只管理 model/dataset/buffer；验证初始化、切模和退出顺序。
+- [ ] 量化 `set_context`、同步 execute 和三模型切换的 Host 开销。
+  - 若 `set_context` 可观，减少逐调用设置；若不可观，保留安全路径。
+- [ ] 增加 `execute_async + stream/event` 的实验实现。
+  - 为姿态和表情/人脸使用独立 stream，先验证 310B 是否能真实重叠，而非只把阻塞转移到最后一次 synchronize。
+  - 记录并发前后 AI Core 利用率、内存带宽、单模型 P95 和整帧 P95；资源争用导致长尾变差时回退。
+- [ ] 为异步执行实现双缓冲或环形 buffer。
+  - 输入、device output、pinned host output 和 NumPy view 必须按 in-flight slot 隔离。
+  - 明确 output view 生命周期，禁止下一次 execute 覆盖仍在后处理的数据。
+- [ ] 评估只拷贝业务需要的输出。
+  - Pose 只需要主人的 bbox/keypoints；YuNet 可删除 landmark 输出；表情只需 6 logits。
+  - 优先在模型图裁剪输出，再考虑分段 D2H。
+- [ ] 评估 device-resident 数据链路。
+  - `DVPP decode/resize -> AIPP/model input -> device output` 尽量避免回到 Host。
+  - 人脸 ROI 到表情输入若要留在 device，需验证 DVPP ROI/crop 与模型归一化契约；不要为零拷贝引入更多同步。
+- [ ] 增加 ACL 错误码、资源和内存观测。
+  - 初始化失败时完整回滚已分配资源；退出检查 model、dataset、buffer、stream、event、context、device 的逆序释放。
+  - 长稳测试采集 device/host memory，确认无逐帧增长。
+- [ ] 评估模型常驻内存和 workspace 峰值。
+  - 三模型并发前先确认 310B 可用内存；记录加载前后占用和峰值，避免异步双缓冲造成 OOM。
+
+## 12. AIPP、DVPP 与数据布局（P1）
+
+- [ ] 为三个模型补齐经过验证的 AIPP 配置，而不只是转换脚本入口。
+  - 明确输入格式、通道顺序、量化范围、mean/min/var、crop/resize 能力和最终 tensor dtype/layout。
+  - 每份配置配套 100 帧 CPU preprocess vs AIPP 输出/模型输出对齐报告。
+- [ ] 优先为 pose 和 expression 生成 uint8 输入 OM。
+  - 目标是消除 Host float32 扩张：pose 640 输入从约 1.2 MB uint8 变为约 4.9 MB float32 的开销应由 AIPP 接管。
+  - 重新测 H2D、AIPP、execute 和端到端，而不是只看 H2D 字节数。
+- [ ] 评估 YuNet letterbox/resize 是否由 AIPP 完成。
+  - 校验 padding 颜色、缩放取整和 bbox 反变换必须与现路径一致。
+- [ ] 接入 DVPP 解码/颜色转换前，先固定 PYNQ 输出格式契约。
+  - 比较当前 UDP/OpenCV BGR、PYNQ NV12 和 DVPP 可直接消费格式，避免 NV12↔BGR↔RGB 往返。
+- [ ] 做 DVPP ROI crop -> expression AIPP 的小型 PoC。
+  - 目标：只传 ROI 描述/设备地址，不在 ARM CPU 上执行 `cv2.resize/blobFromImage`。
+- [ ] 检查宽高 stride/alignment 和零拷贝边界。
+  - 将对齐信息纳入帧 metadata，避免每帧重新打包；错误 stride 必须 fail-fast。
+
+## 13. 主流水线、CPU 与系统调优（P0/P1）
+
+- [ ] 将采集、姿态、表情支路和事件发送改为“latest frame”流水线。
+  - 每级队列默认深度 1，覆盖旧帧；记录 drop count、queue age 和 in-flight frame id。
+  - 端到端低延迟优先，不允许为了提高处理 FPS 累积旧帧。
+- [ ] 让表情分支异步消费最近一次 pose/face 信息，并给共享结果增加版本号。
+- [ ] 以单调时钟补齐每帧 stage trace。
+  - 覆盖 capture/assembly、preprocess、H2D、execute、D2H、postprocess、queue、backend 和 player。
+  - 跨设备继续保留同步后的 wall clock；单机阶段耗时使用 monotonic/perf counter。
+- [ ] 处理摄像头 10 FPS 上限。
+  - 测试 USB 摄像头支持的分辨率/FourCC/FPS 组合；正式 NPU 吞吐压测改用可重复视频或内存帧源。
+  - 区分“推理吞吐”“实时采集 FPS”和“交互端到端延迟”，不再用摄像头上限掩盖 NPU 收益。
+- [ ] 固定和记录 CPU 执行环境。
+  - OpenCV/BLAS 线程数、Python 线程、CPU affinity、governor、NPU 频率/温度和降频事件均纳入基线元数据。
+  - 分析 ARM CPU 预处理是否与 ACL runtime 线程争抢同一核心。
+- [ ] 优化 pose CPU 后处理和动作判断的数据访问。
+  - 避免为所有人构造完整 Python 对象后再选择主目标；先按置信度/面积筛主目标，再处理关键点。
+  - 只有 profiling 显示其显著时再引入 C++/NEON 扩展。
+- [ ] 将 JSONL 日志改为独立写线程/批量 flush，并量化关闭日志时的差值。
+- [ ] 增加 30 分钟和 4 小时稳定性测试。
+  - 指标：P50/P95/P99、丢帧、队列年龄、重连、内存、温度、降频和资源释放。
+
+## 14. 通信、后端与播放器低延迟（P1）
+
+- [ ] 先优化现有 TCP，再决定是否引入 ZeroMQ。
+  - 310B sender 设置 `TCP_NODELAY`、keepalive 和可配置重连退避。
+  - 区分事件消息与状态消息：动作事件短期可靠，表情状态只保留最新一条。
+  - 队列由 30 条改为按类型限深，增加 TTL；重连后不补发已经过期的互动事件。
+- [ ] 给 `TCPSender` 增加 queue age、drop、reconnect、send duration 指标。
+- [ ] 若 A/B 证明 raw TCP 的维护/扇出成为瓶颈，再做 ZeroMQ PoC。
+  - 候选：PUSH/PULL 或 DEALER/ROUTER；状态类设置低 HWM/只保留最新值，退出设置零 linger。
+  - 验收比较 P50/P95/P99、断线行为、旧消息比例和 CPU，不以“换了中间件”作为完成标准。
+- [ ] 后端消除 TCP thread -> asyncio loop -> WebSocket 中不必要的排队。
+  - 记录 `backend_receive_ts` 到实际 broadcast/send 完成的时间，而不只记录 queued 时间。
+  - 为慢 WebSocket 客户端设置独立限深/覆盖策略，不能拖慢全部客户端。
+- [ ] 将 FastAPI `on_event` 迁移到 lifespan，统一启动和关闭 TCP 线程、socket、logger。
+- [ ] 播放器 `_cmd_queue` 增加上限、TTL、按场景去重和旧命令覆盖；记录 receive -> actual switch 完成延迟。
+- [ ] 视频展示链路比较 MJPEG、低延迟 H.264/WebRTC 或本地直连方案。
+  - 当前 MJPEG 编码、HTTP 传输和浏览器解码的 CPU/带宽成本需单独 profiling；不与模型推理指标混算。
+
+## 15. 语音与多模态链路（P1/P2）
+
+- [ ] 为 VAD/ASR/LLM/TTS 增加请求级分段指标和 trace id。
+  - 指标：开口检测、尾静音、ASR 首字/终字、LLM 首 token/结束、TTS 首包/首声、播放结束。
+- [ ] 降低 ASR 音频 chunk（当前默认 100 ms）并做网络/CPU A/B。
+- [ ] 将固定 1.8 秒尾静音改为自适应 endpointing，区分短指令和自然对话。
+- [ ] ASR WebSocket 长连接复用，避免每轮重新握手；补心跳、超时、取消和重连状态机。
+- [ ] LLM 改为流式输出，按完整短句/标点增量触发 TTS；TTS 改为流式首包播放。
+- [ ] 把同步 `ASR -> LLM -> TTS` 改为可取消的后台 pipeline，支持 generation id 和插话打断。
+- [ ] 音频队列增加上限和 backpressure；取消后清理旧音频块，避免旧回答恢复播放。
+- [ ] 补 ASR/TTS 重试、熔断、错误码分类和降级策略。
+- [ ] 评估把本地 VAD、降噪或轻量 ASR 部署为 OM。
+  - 先确认云网络是否为主瓶颈；若上 NPU，沿用本文件的算子 profiling、混合精度和准确率流程。
+- [ ] 打通视觉事件与语音对话 trace，避免动作视频播放、TTS 和麦克风监听互相阻塞。
+
+## 16. 正确性、可复现性与交付门禁（P0）
+
+- [ ] 新增 ONNX/OM 契约检查工具。
+  - 校验模型 checksum、输入名/shape/dtype/layout、输出数/shape/dtype，以及 wrapper 预期。
+  - 启动时发现契约不匹配应 fail-fast，不能靠 buffer size 猜 dtype 后继续运行。
+- [ ] 建立 ONNX Runtime/参考框架 vs OM 的逐层或关键节点对齐工具。
+  - 覆盖随机输入、真实帧、边界输入和至少 100 帧数据集。
+- [ ] 为每个候选 OM 保存 golden set。
+  - Pose：bbox、17 点、confidence；Face：bbox/score；Expression：6 logits/probabilities。
+- [ ] 把性能回归加入自动化门禁。
+  - 板端环境允许时比较 P50/P95；无板环境至少运行契约、预处理和后处理测试。
+  - 性能阈值要允许温度噪声，但明显回退必须阻止替换默认 OM。
+- [ ] 完成真实互动验收。
+  - `WAVE/HEART/CHEER` 每类至少 10 次；6 类表情每类至少 10 次；记录混淆、漏检和误触发。
+  - 覆盖多人、距离、侧身、遮挡、弱光、逆光和连续触发。
+- [ ] 完成异常恢复验收。
+  - USB 拔插、UDP 丢包/乱序、后端重启、PC 断连、ASR/TTS 超时、SIGINT 和重复启动。
+- [ ] 每个完成项在本文追加“环境、命令、数据、结论、回退开关”；没有数据的任务不能勾选。
+
 ## 建议实施顺序
 
-1. 完成基线和细粒度 profiling。
-2. 实现运行时开关，先降低压测干扰。
-3. 优化 ACL/OM wrapper 的数据搬运。
-4. 做表情分支异步和低频 tracking。
-5. 根据 profiling 结果再投入 DVPP/AIPP 和模型重转。
+1. **P0-证据**：完成真实 310B 的 `msprof` 算子基线、ATC/GE 图映射和准确率基线。
+2. **P0-高收益模型项**：完成 `yolo26n-pose` 动作回归、n512 OM；评估 YuNet 320 输入、裁剪未用 keypoint head。
+3. **P0-Runtime**：共享 ACL context，补全 stage trace 和 latest-frame 队列，修复 expression uint8/AIPP 输入分支。
+4. **P1-编译优化**：消除 AICPU fallback/TransData 热点，验证算子融合与混合精度策略矩阵。
+5. **P1-设备数据链**：落地 AIPP uint8 输入，再根据收益评估 DVPP ROI 和异步 stream/双缓冲。
+6. **P1-端到端**：优化 TCP/后端/player 队列与 TTL，流式化 ASR/LLM/TTS。
+7. **P2-专项研发**：仅针对 profiler 证明的稳定热点进行结构化剪枝、蒸馏或 Ascend C 自定义算子。
 
 ## 2026-07-16 第一轮优化实测：ACL 输出零拷贝
 
