@@ -1,5 +1,15 @@
 # Smart IP Interaction 智能 IP 互动系统
 
+> 2026-07-18: the pipeline now has opt-in `cpu`, `aipp` and `dvpp_aipp`
+> preprocessing backends. Defaults remain the legacy CPU/float32 path. The
+> current verified source is the Hikrobot GigE camera; see
+> `../../../docs/DVPP_AIPP_INTEGRATION_REPORT.md` for contracts, rollback,
+> board results and launch commands. PYNQ raw NV12 is prepared but was not
+> hardware-connected in this validation run. The default pose model is now the
+> contract-matched `yolo26n-pose-640.om`; its packed-BGR AIPP and experimental
+> DVPP+NV12-AIPP variants passed board A/B checks. Packed-BGR AIPP is the
+> recommended Hik path. Face AIPP remains opt-in pending model-specific parity.
+
 本目录是 Ascend 310B 侧的智能视觉交互主链路。它接收本地摄像头、视频文件或 PYNQ 发来的 UDP 视频流，完成姿态识别、动作规则判断、人脸检测和 6 类表情识别，然后通过 TCP 将互动事件发送到 PC 后端，由后端驱动熊二 IP 视频播放器。
 
 ## 运行链路
@@ -170,15 +180,6 @@ python scripts/benchmark/summarize_hardware_e2e.py \
 
 输出的 `hardware_e2e_summary.md` 包含动作/表情准确率、端到端延迟、FPS、UDP 丢包率和稳定性统计。若未提供 trial CSV，脚本只汇总性能和稳定性，不计算准确率。
 
-ACL 输出默认复用 pinned host buffer 的 NumPy 视图以避免逐帧 bytes copy。返回数组只在同一模型 session 的下一次推理前有效；需要长期持有输出或排查 CANN 兼容性时，设置 `SMART_IP_ACL_ZERO_COPY_OUTPUT=0` 回到兼容路径。
-
-姿态和人脸默认复用固定 NCHW 输入 buffer，表情默认使用融合 OpenCV blob 预处理。兼容性排查时可分别设置：
-
-```bash
-export SMART_IP_REUSE_INPUT_BUFFER=0
-export SMART_IP_EXPRESSION_FUSED_PREPROCESS=0
-```
-
 ### 最新硬件压测快照
 
 归档目录：
@@ -244,28 +245,19 @@ PC_VIDEO_CTRL_PORT = 5567
 ```
 
 播放器优先使用 WebSocket 指令，同时兼容 UDP 控制通道。
-默认会在互动视频播放期间忽略新的切换指令，保证当前视频完整播完；需要临时允许打断时设置 `SMART_IP_PLAYER_ALLOW_INTERRUPT=1`。
 
 ## 模型文件
 
 姿态识别：
 
-- 310B 生产首选：`models/om/yolo26s-pose.om`
-- 310B 性能候选：`models/om/yolo26n-pose-640.om`（动作准确率回归完成前不作为默认）
-- 轻量模型静态 ONNX：`models/onnx/yolo26n-pose-640.onnx`、`models/onnx/yolo26n-pose-512.onnx`
-- 可选 NPU 路径：`models/onnx/yolo26s-pose.onnx` + OpenCV DNN CANN/NPU
+- 310B 生产首选：`models/om/yolo26n-pose-640.om`
+- 可选 NPU 路径：`models/onnx/yolo26n-pose-640.onnx` + OpenCV DNN CANN/NPU
 - 本地调试权重：`yolo26n-pose.pt`
 
 `PoseInfer` 默认强制 `ACL + OM + NPU`，启动日志会打印 `pose_backend=acl_om_npu` 以及 OM 输入/输出尺寸；如果 CANN/ACL 未加载或 `.om` 不可用，会直接报错，避免静默回退到 CPU/PT。需要临时指定模型可设置：
 
 ```bash
-export SMART_IP_POSE_MODEL=/root/userdata/ciciec/ascend_310B/smart_ip_interaction/models/om/yolo26s-pose.om
-```
-
-临时测试已验证的 n640 性能候选：
-
-```bash
-export SMART_IP_POSE_MODEL=/path/to/smart_ip_interaction/models/om/yolo26n-pose-640.om
+export SMART_IP_POSE_MODEL=models/om/yolo26n-pose-640.om
 ```
 
 仅本地调试时才建议显式打开 PT 回退：

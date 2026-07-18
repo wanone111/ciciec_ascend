@@ -1,0 +1,177 @@
+{
+  "source": "artifacts/profiling/20260717/face_yunet640/raw/PROF_000001_20260717213111690_LKGLBGBRBFLOQCBC/mindstudio_profiler_output/op_summary_20260717213125.csv",
+  "model": "face_detection_yunet_2023mar_640",
+  "inferences": 1,
+  "rows": 105,
+  "mean_device_task_total_ms": 6.297799999999999,
+  "task_types": {
+    "AI_VECTOR_CORE": {
+      "duration_us": 1954.18,
+      "calls": 50
+    },
+    "AI_CORE": {
+      "duration_us": 4343.62,
+      "calls": 55
+    }
+  },
+  "operator_types": {
+    "Conv2D": {
+      "duration_us": 4294.259999999999,
+      "calls": 53
+    },
+    "TransData": {
+      "duration_us": 861.58,
+      "calls": 13
+    },
+    "Cast": {
+      "duration_us": 538.26,
+      "calls": 13
+    },
+    "MaxPoolV3": {
+      "duration_us": 243.74,
+      "calls": 4
+    },
+    "Transpose": {
+      "duration_us": 212.04,
+      "calls": 12
+    },
+    "Add": {
+      "duration_us": 75.4,
+      "calls": 2
+    },
+    "ResizeNearestNeighborV2": {
+      "duration_us": 49.36,
+      "calls": 2
+    },
+    "Sigmoid": {
+      "duration_us": 23.16,
+      "calls": 6
+    }
+  },
+  "aicpu": {
+    "calls": 0,
+    "duration_us": 0
+  },
+  "top_ops": [
+    {
+      "name": "Conv_0function_graph_0/Conv_0Conv_0function_graph_0/Conv_0_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 1283.98,
+      "share_percent": 20.3877544539363
+    },
+    {
+      "name": "trans_TransData_1",
+      "op_type": "TransData",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 761.46,
+      "share_percent": 12.090888881831754
+    },
+    {
+      "name": "Conv_16function_graph_5/Conv_16Conv_16function_graph_5/Conv_16_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 496.42,
+      "share_percent": 7.882435136079268
+    },
+    {
+      "name": "Conv_3function_graph_1/Conv_3Conv_3function_graph_1/Conv_3_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 490.6,
+      "share_percent": 7.790021912413861
+    },
+    {
+      "name": "trans_Cast_0",
+      "op_type": "Cast",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 468.42,
+      "share_percent": 7.43783543459621
+    },
+    {
+      "name": "Conv_2",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 334.98,
+      "share_percent": 5.319000285814095
+    },
+    {
+      "name": "Conv_13function_graph_4/Conv_13Conv_13function_graph_4/Conv_13_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 207.86,
+      "share_percent": 3.3005176410810133
+    },
+    {
+      "name": "Conv_10function_graph_3/Conv_10Conv_10function_graph_3/Conv_10_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 207.08,
+      "share_percent": 3.2881323636825566
+    },
+    {
+      "name": "Conv_15",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 128.82,
+      "share_percent": 2.0454761980374103
+    },
+    {
+      "name": "Conv_20function_graph_6/Conv_20Conv_20function_graph_6/Conv_20_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 108.24,
+      "share_percent": 1.718695417447363
+    },
+    {
+      "name": "Conv_52function_graph_14/Conv_52Conv_52function_graph_14/Conv_52_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 107.96,
+      "share_percent": 1.7142494204325325
+    },
+    {
+      "name": "Conv_23function_graph_7/Conv_23Conv_23function_graph_7/Conv_23_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 107.78,
+      "share_percent": 1.711391279494427
+    },
+    {
+      "name": "MaxPool_5",
+      "op_type": "MaxPoolV3",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 106.22,
+      "share_percent": 1.6866207246975138
+    },
+    {
+      "name": "MaxPool_18",
+      "op_type": "MaxPoolV3",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 99.58,
+      "share_percent": 1.5811870812029603
+    },
+    {
+      "name": "Conv_12",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 76.44,
+      "share_percent": 1.2137571850487474
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "variant": "aipp_nv12",
+  "soc_version": "Ascend310B1",
+  "atc_version": "package_name=Ascend-cann-toolkit;version=7.0.RC1",
+  "atc_command": "atc --framework=5 --model=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/emotion_mobilenetv3_6cls.onnx --output=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/emotion_mobilenetv3_6cls_aipp_nv12 --input_shape=image:1,3,112,112 --soc_version=Ascend310B1 --insert_op_conf=/home/HwHiAiUser/Desktop/ciciec_ascend-main/Scripts/ascend_310b/aipp/expression_nv12_fullrange_112.cfg",
+  "input_name": "image",
+  "onnx_input_shape": "1,3,112,112",
+  "onnx": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/emotion_mobilenetv3_6cls.onnx",
+    "sha256": "795698f9359f5d147cbafecf249bddb9e45f6912667a030603d065ec7b3313d7"
+  },
+  "om": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/emotion_mobilenetv3_6cls_aipp_nv12.om",
+    "sha256": "d66137981d3693539b4f2f898c63ed09d55cda634aecb0cf5d2f83b1cf148cac"
+  },
+  "aipp_cfg": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/Scripts/ascend_310b/aipp/expression_nv12_fullrange_112.cfg",
+    "sha256": "021c8dcb4c1a851f4467915bf3fccf0c71a4968957b5806db2b78153efb3f6d2"
+  },
+  "status": "converted_not_yet_parity_validated"
+}

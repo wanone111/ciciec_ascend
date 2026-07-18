@@ -1,0 +1,543 @@
+/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/src/inference/acl_om.py:264: Warning: acl.util.ptr_to_numpy will be deprecated. Please use acl.util.ptr_to_bytes instead.
+  view = ptr_to_numpy(host_ptr, shape, NPY_FLOAT32)
+/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/src/inference/acl_om.py:415: Warning: acl.util.numpy_to_ptr will be deprecated. Please use acl.util.bytes_to_ptr instead.
+  return numpy_to_ptr(arr), arr
+2022-04-08 04:23:23.063584: E external/org_tensorflow/tensorflow/core/framework/node_def_util.cc:675] NodeDef mentions attribute input_para_type_list which is not in the op definition: Op<name=Mod; signature=x:T, y:T -> z:T; attr=T:type,allowed=[DT_INT32, DT_INT64, DT_HALF, DT_HALF, DT_BFLOAT16, DT_FLOAT, DT_DOUBLE]> This may be expected if your graph generating binary is newer  than this binary. Unknown attributes will be ignored. NodeDef: {{node model.23/Mod}}
+{
+  "status": "measured_on_board",
+  "task": "pose",
+  "candidate_mode": "float_nchw",
+  "baseline": {
+    "path": "models/om/yolo26n-pose-640.om",
+    "sha256": "fa86f3896f831c154d30e8b8139f82e6c7d1628e9b4c3b7643d971983f04f15b"
+  },
+  "candidate": {
+    "path": "models/om/yolo26n-pose-640_audit_float.om",
+    "sha256": "ec65cc8c918dc8be453225157dbfbf243d13f2b101474d16a9f3fbd9b5fa1dbe"
+  },
+  "samples": [
+    {
+      "sample": "solid_red",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.6696580000825634,
+        "acl_execute_ms": 159.38699699972858,
+        "acl_d2h_ms": 0.09145900003204588,
+        "acl_input_pack_ms": 0.301377000141656,
+        "acl_output_decode_ms": 0.006729000233463012,
+        "acl_total_ms": 161.55668000010337,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.6720120001991745,
+        "acl_execute_ms": 20.728152000174305,
+        "acl_d2h_ms": 0.0656879997222859,
+        "acl_input_pack_ms": 0.06943800008230028,
+        "acl_output_decode_ms": 0.005688000328518683,
+        "acl_total_ms": 22.593873999994685,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "solid_green",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.510074000179884,
+        "acl_execute_ms": 19.90981200015085,
+        "acl_d2h_ms": 0.06612500010305666,
+        "acl_input_pack_ms": 0.06858400001874543,
+        "acl_output_decode_ms": 0.00637500033917604,
+        "acl_total_ms": 21.650638000210165,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.4515940001729177,
+        "acl_execute_ms": 19.75499799982572,
+        "acl_d2h_ms": 0.06633299972236273,
+        "acl_input_pack_ms": 0.04908300024908385,
+        "acl_output_decode_ms": 0.005416000021796208,
+        "acl_total_ms": 21.37182299975393,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "solid_blue",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.7143250001936394,
+        "acl_execute_ms": 19.716665000032663,
+        "acl_d2h_ms": 0.08870900001056725,
+        "acl_input_pack_ms": 0.07158399967011064,
+        "acl_output_decode_ms": 0.006562999715242768,
+        "acl_total_ms": 21.68913799960137,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.7063249997590901,
+        "acl_execute_ms": 19.56814300001497,
+        "acl_d2h_ms": 0.07012600008238223,
+        "acl_input_pack_ms": 0.05316700026014587,
+        "acl_output_decode_ms": 0.004541999715002021,
+        "acl_total_ms": 21.449551999921823,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "gray_114",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.664720999997371,
+        "acl_execute_ms": 19.750602999920375,
+        "acl_d2h_ms": 0.07193800001914497,
+        "acl_input_pack_ms": 0.0692500002514862,
+        "acl_output_decode_ms": 0.006667000434390502,
+        "acl_total_ms": 21.653116999914346,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.5943859998515109,
+        "acl_execute_ms": 19.749601999592414,
+        "acl_d2h_ms": 0.0828969996291562,
+        "acl_input_pack_ms": 0.06910499996592989,
+        "acl_output_decode_ms": 0.007020999873930123,
+        "acl_total_ms": 21.55859499998769,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "color_bars",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.7135339999185817,
+        "acl_execute_ms": 19.795623999925738,
+        "acl_d2h_ms": 0.07918800019979244,
+        "acl_input_pack_ms": 0.072270999680768,
+        "acl_output_decode_ms": 0.006875000053696567,
+        "acl_total_ms": 21.76878399995985,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.7581999995854858,
+        "acl_execute_ms": 19.79066600006263,
+        "acl_d2h_ms": 0.08735499977774452,
+        "acl_input_pack_ms": 0.07020899965937133,
+        "acl_output_decode_ms": 0.006499999926745659,
+        "acl_total_ms": 21.77180499984388,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "horizontal_color_bars",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.8254499996146478,
+        "acl_execute_ms": 19.79593600026419,
+        "acl_d2h_ms": 0.07216699987111497,
+        "acl_input_pack_ms": 0.08433400034846272,
+        "acl_output_decode_ms": 0.006374999884428689,
+        "acl_total_ms": 21.89515999998548,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.6934710001805797,
+        "acl_execute_ms": 19.578017999720032,
+        "acl_d2h_ms": 0.0641259998701571,
+        "acl_input_pack_ms": 0.06633400016653468,
+        "acl_output_decode_ms": 0.006167000265122624,
+        "acl_total_ms": 21.4573860002929,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "checkerboard_red_blue",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.548012000057497,
+        "acl_execute_ms": 19.82687400004579,
+        "acl_d2h_ms": 0.07020899965937133,
+        "acl_input_pack_ms": 0.07131299980756012,
+        "acl_output_decode_ms": 0.006374999884428689,
+        "acl_total_ms": 21.637011999700917,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.528219000192621,
+        "acl_execute_ms": 19.587893999869266,
+        "acl_d2h_ms": 0.07039599995550816,
+        "acl_input_pack_ms": 0.05370799999582232,
+        "acl_output_decode_ms": 0.005041999884269899,
+        "acl_total_ms": 21.291717999702087,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "rgb_gradient",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.5574909998576913,
+        "acl_execute_ms": 19.67422699999588,
+        "acl_d2h_ms": 0.07875100027376902,
+        "acl_input_pack_ms": 0.07143800030462444,
+        "acl_output_decode_ms": 0.006458999905589735,
+        "acl_total_ms": 21.478719000242563,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.5464699999938603,
+        "acl_execute_ms": 19.580205000238493,
+        "acl_d2h_ms": 0.07527099978688057,
+        "acl_input_pack_ms": 0.052771000355278375,
+        "acl_output_decode_ms": 0.004687999989982927,
+        "acl_total_ms": 21.30567600033828,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "hik_frame.jpg",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.611615999991045,
+        "acl_execute_ms": 19.693080999786616,
+        "acl_d2h_ms": 0.08308399992529303,
+        "acl_input_pack_ms": 0.07089600012477604,
+        "acl_output_decode_ms": 0.0063340003180201165,
+        "acl_total_ms": 21.55809500027317,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 1.4741980003236677,
+        "acl_execute_ms": 19.658789000004617,
+        "acl_d2h_ms": 0.07120800000848249,
+        "acl_input_pack_ms": 0.05710400000680238,
+        "acl_output_decode_ms": 0.006062000011297641,
+        "acl_total_ms": 21.31846800011772,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "dvpp_profile": null,
+      "dvpp_geometry": null,
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    }
+  ],
+  "acceptance_note": "AIPP is inside model execute; no separate AIPP time is claimed"
+}

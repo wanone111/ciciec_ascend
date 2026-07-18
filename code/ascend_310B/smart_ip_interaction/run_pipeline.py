@@ -1,7 +1,7 @@
 """
 主推理流水线
 ============
-输入：摄像头（默认）、视频文件，或硬件 UDP 视频流（PYNQ→310B→PC）
+输入：OpenCV 摄像头/视频文件、海康 GigE 工业相机，或硬件 UDP 视频流
 
 流程（每帧）：
   ┌─ YOLO-Pose ────────────────────────────────────────────────────┐
@@ -18,6 +18,8 @@
 import sys
 import os
 import time
+import hashlib
+import atexit
 
 import numpy as np
 
@@ -39,6 +41,7 @@ from behavior.event_builder import build_action_event, build_expression_event
 from inference.pose_infer import PoseInfer
 from inference.expression_infer import ExpressionInfer
 from inference.face_detector import FaceDetector
+from inference.dvpp import DvppProcessor
 from interaction.action_mapper import map_event_to_command
 from communication.tcp_sender import TCPSender
 from inference.ar_overlay import AROverlay
@@ -93,12 +96,29 @@ def _env_float(name, default, min_value=None):
     return value
 
 
+def _choice(name, default, allowed):
+    value = os.environ.get(name, default).strip().lower()
+    if value not in allowed:
+        raise RuntimeError(f"{name}={value!r}; expected one of {sorted(allowed)}")
+    return value
+
+
+def _sha256(path):
+    if not path or not os.path.isfile(path):
+        return None
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 # ─────────────────────────── 配置 ───────────────────────────
 # 310B 生产路径：默认强制使用 ACL + OM，避免静默回退到 CPU/PT。
 POSE_REQUIRE_NPU   = _env_bool("SMART_IP_POSE_REQUIRE_NPU", True)
 POSE_ALLOW_PT_FALLBACK = _env_bool("SMART_IP_POSE_ALLOW_PT_FALLBACK", False)
 POSE_DEFAULT_MODEL_PATH = (
-    os.path.join(PROJECT_ROOT, "models", "om", "yolo26s-pose.om")
+    os.path.join(PROJECT_ROOT, "models", "om", "yolo26n-pose-640.om")
     if POSE_REQUIRE_NPU or not POSE_ALLOW_PT_FALLBACK
     else os.path.join(PROJECT_ROOT, "yolo26n-pose.pt")
 )
@@ -125,6 +145,19 @@ EMOTION_MODEL_PATH = (
 )
 NUM_EMOTION_CLASSES = 6
 
+# Opt-in preprocessing modes; defaults retain the verified CPU production path.
+PREPROCESS_BACKEND = _choice("SMART_IP_PREPROCESS_BACKEND", "cpu", {"cpu", "aipp", "dvpp_aipp"})
+DVPP_ENABLE = _env_bool("SMART_IP_DVPP_ENABLE", PREPROCESS_BACKEND == "dvpp_aipp")
+RAW_NV12_ENABLE = _env_bool("SMART_IP_RAW_NV12_ENABLE", False)
+POSE_INPUT_MODE = _choice("SMART_IP_POSE_INPUT_MODE", "float_nchw", {"float_nchw", "aipp_bgr_u8", "aipp_nv12"})
+FACE_INPUT_MODE = _choice("SMART_IP_FACE_INPUT_MODE", "float_nchw", {"float_nchw", "aipp_bgr_u8", "aipp_nv12"})
+EXPR_INPUT_MODE = _choice("SMART_IP_EXPR_INPUT_MODE", "float_nchw", {"float_nchw", "aipp_bgr_u8", "aipp_nv12"})
+KEEP_BGR_FOR_DISPLAY = _env_bool("SMART_IP_KEEP_BGR_FOR_DISPLAY", True)
+DVPP_DEVICE_INPUT_MODE = _choice("SMART_IP_DVPP_DEVICE_INPUT_MODE", "d2d", {"d2d", "external"})
+POSE_AIPP_CFG = os.environ.get("SMART_IP_POSE_AIPP_CFG", "")
+FACE_AIPP_CFG = os.environ.get("SMART_IP_FACE_AIPP_CFG", "")
+EXPR_AIPP_CFG = os.environ.get("SMART_IP_EXPR_AIPP_CFG", "")
+
 # ── 视频源选择 ────────────────────────────────────────────────
 # USE_UDP_STREAM = False 时使用本地源（摄像头或视频文件）
 # USE_UDP_STREAM = True  时使用硬件 UDP 视频流（PYNQ→310B→PC）
@@ -132,6 +165,21 @@ USE_UDP_STREAM = _env_bool("SMART_IP_USE_UDP", True)
 
 # 本地源：0 = 摄像头；填路径 = 视频文件（USE_UDP_STREAM=False 时生效）
 VIDEO_SOURCE = _env_video_source("SMART_IP_VIDEO_SOURCE", 0)
+
+# 非 UDP 视频后端：opencv 或 hik_gige。
+VIDEO_BACKEND = os.environ.get("SMART_IP_VIDEO_BACKEND", "opencv").strip().lower()
+HIK_CAMERA_IP = os.environ.get("SMART_IP_HIK_CAMERA_IP", "").strip()
+HIK_SERIAL_NUMBER = os.environ.get("SMART_IP_HIK_SERIAL_NUMBER", "").strip()
+HIK_DEVICE_INDEX = _env_int("SMART_IP_HIK_DEVICE_INDEX", 0, min_value=0)
+HIK_TIMEOUT_MS = _env_int("SMART_IP_HIK_TIMEOUT_MS", 1000, min_value=1)
+HIK_SDK_ROOT = os.environ.get("SMART_IP_HIK_SDK_ROOT", "/opt/MVS")
+HIK_AUTO_EXPOSURE = _env_bool("SMART_IP_HIK_AUTO_EXPOSURE", True)
+HIK_AUTO_GAIN = _env_bool("SMART_IP_HIK_AUTO_GAIN", True)
+HIK_LATEST_FRAME = _env_bool("SMART_IP_HIK_LATEST_FRAME", True)
+HIK_ACQUISITION_FPS = _env_float("SMART_IP_HIK_ACQUISITION_FPS", 12.0, min_value=0.0)
+HIK_MAX_CONSECUTIVE_READ_FAILURES = _env_int(
+    "SMART_IP_HIK_MAX_CONSECUTIVE_READ_FAILURES", 5, min_value=1
+)
 
 # UDP 流配置（USE_UDP_STREAM=True 时生效）
 UDP_LISTEN_PORT = int(os.environ.get("SMART_IP_UDP_PORT", "9090"))
@@ -141,6 +189,8 @@ UDP_MODULE_PATH = os.environ.get("SMART_IP_UDP_MODULE_PATH", "/root/userdata/cic
 # 后端地址
 BACKEND_HOST = os.environ.get("SMART_IP_BACKEND_HOST", "192.168.137.1")
 BACKEND_PORT = int(os.environ.get("SMART_IP_BACKEND_PORT", "9000"))
+TCP_QUEUE_SIZE = _env_int("SMART_IP_TCP_QUEUE_SIZE", 30, min_value=1)
+TCP_MESSAGE_TTL = _env_float("SMART_IP_TCP_MESSAGE_TTL", 5.0, min_value=0.0)
 
 # 表情事件最短推送间隔（秒）
 EXPR_SEND_INTERVAL = _env_float("SMART_IP_EXPR_SEND_INTERVAL", 1.5, min_value=0.0)
@@ -156,6 +206,7 @@ FACE_TRACK_TTL = _env_int("SMART_IP_FACE_TRACK_TTL", 6, min_value=1)
 ENABLE_OVERLAY = _env_bool("SMART_IP_ENABLE_OVERLAY", True)
 ENABLE_AR = _env_bool("SMART_IP_ENABLE_AR", True)
 ACL_PROFILE = _env_bool("SMART_IP_ACL_PROFILE", False)
+MAX_FRAMES = _env_int("SMART_IP_MAX_FRAMES", 0, min_value=0)
 
 # AR 道具
 AR_PROP_PATH = os.path.join(PROJECT_ROOT,"assets", "bear_ears.png")
@@ -244,9 +295,9 @@ def draw_overlay(frame, action_label, expr_label, expr_conf, fps, tcp_ok):
 
 def acl_profile_fields(prefix, owner):
     session = getattr(owner, "_om_session", None)
-    profile = getattr(session, "last_profile", None)
-    if not profile:
-        return {}
+    profile = {}
+    profile.update(getattr(owner, "last_profile", None) or {})
+    profile.update(getattr(session, "last_profile", None) or {})
     return {f"{prefix}_{key}": value for key, value in profile.items()}
 
 
@@ -283,6 +334,33 @@ def open_video_source():
                 return None
             return cap
     else:
+        if VIDEO_BACKEND == "hik_gige":
+            try:
+                from capture import HikGigESource
+
+                print(
+                    "[INFO] 使用海康 GigE 工业相机"
+                    f" ip={HIK_CAMERA_IP or 'auto'} serial={HIK_SERIAL_NUMBER or 'auto'}"
+                )
+                cap = HikGigESource(
+                    camera_ip=HIK_CAMERA_IP,
+                    serial_number=HIK_SERIAL_NUMBER,
+                    device_index=HIK_DEVICE_INDEX,
+                    timeout_ms=HIK_TIMEOUT_MS,
+                    sdk_root=HIK_SDK_ROOT,
+                    auto_exposure=HIK_AUTO_EXPOSURE,
+                    auto_gain=HIK_AUTO_GAIN,
+                    latest_frame=HIK_LATEST_FRAME,
+                    acquisition_fps=HIK_ACQUISITION_FPS,
+                )
+                print(f"[INFO] 海康相机已连接: {cap.device_info}")
+                return cap
+            except Exception as exc:
+                print(f"[ERROR] 海康 GigE 相机启动失败: {exc}")
+                return None
+        if VIDEO_BACKEND != "opencv":
+            print(f"[ERROR] 不支持的视频后端: {VIDEO_BACKEND}")
+            return None
         print(f"[INFO] 使用本地视频源: {VIDEO_SOURCE}")
         cap = cv2.VideoCapture(VIDEO_SOURCE)
         if not cap.isOpened():
@@ -299,11 +377,54 @@ def read_frame_with_info(cap):
     return ret, frame, {}
 
 
+def read_pipeline_frame(cap):
+    raw_enabled = DVPP_ENABLE and RAW_NV12_ENABLE and hasattr(cap, "read_raw_with_info")
+    if not raw_enabled:
+        ok, frame, info = read_frame_with_info(cap)
+        return ok, frame, info, None
+    ok, raw, info = cap.read_raw_with_info()
+    if not ok or raw is None:
+        return False, None, info, None
+    if raw.pixel_format != getattr(cap, "PIX_FMT_NV12", 3) or not info.get("raw_nv12_valid"):
+        info["raw_nv12_fallback"] = True
+        bgr = cap._to_bgr(raw) if hasattr(cap, "_to_bgr") else None
+        return bgr is not None, bgr, info, None
+    need_bgr = (
+        KEEP_BGR_FOR_DISPLAY or ENABLE_OVERLAY or ENABLE_AR
+        or POSE_INPUT_MODE != "aipp_nv12" or FACE_INPUT_MODE != "aipp_nv12"
+        or EXPR_INPUT_MODE != "aipp_nv12"
+    )
+    if need_bgr:
+        frame = cap._to_bgr(raw)
+        if frame is None:
+            return False, None, info, None
+        info["nv12_to_bgr_reason"] = "display_or_cpu_fallback"
+    else:
+        frame = np.broadcast_to(np.zeros((1, 1, 3), np.uint8), (raw.height, raw.width, 3))
+    return True, frame, info, raw
+
+
+def _input_contract(session, configured_mode):
+    dims, size = session.input_dims[0], session.input_sizes[0]
+    count = int(np.prod(dims)) if dims else 0
+    return {
+        "configured_mode": configured_mode, "dims": dims, "bytes": size,
+        "inferred_dtype_validation_only": (
+            "uint8" if count and size == count else
+            "float32" if count and size == count * 4 else "opaque_or_padded"
+        ),
+        "inferred_layout_validation_only": (
+            "NHWC" if dims and len(dims) == 4 and dims[-1] in (1, 3) else "NCHW_or_AIPP"
+        ),
+    }
+
+
 def _event_trace(prefix, frame_idx, frame_info, model_event):
     now_ts = time.time()
     return {
         "event_id": f"{prefix}-{frame_idx}-{time.time_ns()}",
         "pipeline_ts": now_ts,
+        "pipeline_monotonic_ns": time.monotonic_ns(),
         "model_event_ts": model_event.get("timestamp", now_ts) if isinstance(model_event, dict) else now_ts,
         "frame_idx": frame_idx,
         "source_frame_id": frame_info.get("frame_id"),
@@ -312,12 +433,19 @@ def _event_trace(prefix, frame_idx, frame_info, model_event):
 
 
 def main():
+    if DVPP_DEVICE_INPUT_MODE == "external":
+        raise RuntimeError(
+            "SMART_IP_DVPP_DEVICE_INPUT_MODE=external is blocked until board dataset lifetime validation; use d2d"
+        )
     bench_logger = JsonlLogger.from_env("pipeline")
     bench_frame_stride = _env_int("SMART_IP_BENCH_FRAME_STRIDE", 1, min_value=0)
     bench_logger.log(
         "pipeline_start",
         use_udp_stream=USE_UDP_STREAM,
+        video_backend=VIDEO_BACKEND,
         video_source=str(VIDEO_SOURCE),
+        hik_camera_ip=HIK_CAMERA_IP,
+        hik_serial_number=HIK_SERIAL_NUMBER,
         udp_listen_port=UDP_LISTEN_PORT,
         udp_module_path=UDP_MODULE_PATH,
         backend_host=BACKEND_HOST,
@@ -329,6 +457,11 @@ def main():
         enable_overlay=ENABLE_OVERLAY,
         enable_ar=ENABLE_AR,
         acl_profile=ACL_PROFILE,
+        hik_latest_frame=HIK_LATEST_FRAME,
+        hik_acquisition_fps=HIK_ACQUISITION_FPS,
+        tcp_queue_size=TCP_QUEUE_SIZE,
+        tcp_message_ttl=TCP_MESSAGE_TTL,
+        max_frames=MAX_FRAMES,
         pose_model_path=POSE_MODEL_PATH,
         pose_require_npu=POSE_REQUIRE_NPU,
         pose_allow_pt_fallback=POSE_ALLOW_PT_FALLBACK,
@@ -338,6 +471,24 @@ def main():
         expression_model_path=EMOTION_MODEL_PATH,
         expression_require_npu=EXPR_REQUIRE_NPU,
         expression_allow_torch_fallback=EXPR_ALLOW_TORCH_FALLBACK,
+        preprocess_backend=PREPROCESS_BACKEND,
+        dvpp_enable=DVPP_ENABLE,
+        raw_nv12_enable=RAW_NV12_ENABLE,
+        pose_input_mode=POSE_INPUT_MODE,
+        face_input_mode=FACE_INPUT_MODE,
+        expression_input_mode=EXPR_INPUT_MODE,
+        keep_bgr_for_display=KEEP_BGR_FOR_DISPLAY,
+        dvpp_device_input_mode=DVPP_DEVICE_INPUT_MODE,
+        input_pixel_format="NV12" if RAW_NV12_ENABLE else "BGR",
+        model_checksums={
+            "pose": _sha256(POSE_MODEL_PATH), "face": _sha256(FACE_MODEL_PATH),
+            "expression": _sha256(EMOTION_MODEL_PATH),
+        },
+        aipp_configs={
+            "pose": {"path": POSE_AIPP_CFG or None, "sha256": _sha256(POSE_AIPP_CFG)},
+            "face": {"path": FACE_AIPP_CFG or None, "sha256": _sha256(FACE_AIPP_CFG)},
+            "expression": {"path": EXPR_AIPP_CFG or None, "sha256": _sha256(EXPR_AIPP_CFG)},
+        },
     )
 
     # ── 加载模型 ──
@@ -350,6 +501,7 @@ def main():
         use_npu=True,
         require_npu=POSE_REQUIRE_NPU,
         allow_pt_fallback=POSE_ALLOW_PT_FALLBACK,
+        input_mode=POSE_INPUT_MODE,
     )
     pose_runtime = pose_model.runtime_info()
     print("[INFO] 姿态推理运行时:", pose_runtime)
@@ -361,6 +513,7 @@ def main():
         use_npu=True,
         require_npu=FACE_REQUIRE_NPU,
         allow_opencv_fallback=FACE_ALLOW_OPENCV_FALLBACK,
+        input_mode=FACE_INPUT_MODE,
     )
     face_runtime = face_detector.runtime_info()
     print("[INFO] 人脸检测运行时:", face_runtime)
@@ -374,28 +527,64 @@ def main():
         use_npu=True,
         require_npu=EXPR_REQUIRE_NPU,
         allow_torch_fallback=EXPR_ALLOW_TORCH_FALLBACK,
+        input_mode=EXPR_INPUT_MODE,
     )
     expression_runtime = expr_infer.runtime_info()
     print("[INFO] 表情推理运行时:", expression_runtime)
     bench_logger.log("expression_runtime", **expression_runtime)
+    contracts = {
+        "pose": _input_contract(pose_model._om_session, POSE_INPUT_MODE) if pose_model._om_session else None,
+        "face": _input_contract(face_detector._om_session, FACE_INPUT_MODE) if face_detector._om_session else None,
+        "expression": _input_contract(expr_infer._om_session, EXPR_INPUT_MODE) if expr_infer._om_session else None,
+    }
+    print("[INFO] explicit OM input contracts:", contracts)
+    bench_logger.log("input_contracts", contracts=contracts)
+
+    dvpp = None
+    if DVPP_ENABLE:
+        if pose_model._om_session is None:
+            raise RuntimeError("DVPP requires an ACL OM pose session")
+        dvpp = DvppProcessor(pose_model._om_session.shared_runtime)
+        print("[INFO] DVPP enabled; capabilities:", dvpp.capabilities)
+        bench_logger.log("dvpp_runtime", capabilities=dvpp.capabilities)
 
     # ── AR 道具 ──
     ar = AROverlay(prop_path=AR_PROP_PATH) if ENABLE_AR else None
 
     # ── TCP 推送（后台自动重连）──
     print(f"[INFO] 启动 TCP 推送 → {BACKEND_HOST}:{BACKEND_PORT}")
-    sender = TCPSender(host=BACKEND_HOST, port=BACKEND_PORT)
+    sender = TCPSender(
+        host=BACKEND_HOST,
+        port=BACKEND_PORT,
+        queue_size=TCP_QUEUE_SIZE,
+        message_ttl=TCP_MESSAGE_TTL,
+    )
 
     # ── 打开视频源 ──
     cap = open_video_source()
     if cap is None:
+        if dvpp is not None:
+            dvpp.close()
         face_detector.close()
         expr_infer.close()
         pose_model.close()
         sender.close()
         bench_logger.log("pipeline_stop", frame_idx=0, reason="video_source_open_failed")
         bench_logger.close()
-        return
+        return 2
+
+    def _emergency_cleanup():
+        try:
+            cap.release()
+        except Exception:
+            pass
+        if dvpp is not None:
+            dvpp.close()
+        face_detector.close()
+        expr_infer.close()
+        pose_model.close()
+
+    atexit.register(_emergency_cleanup)
 
     action_sm    = ActionStateMachine()
     stream_server = None
@@ -422,11 +611,14 @@ def main():
         print("[WARN] 未检测到可用 GUI 环境，已禁用 cv2.imshow；推理将继续在无界面模式运行")
     stats_last_print = time.time()
     STATS_PRINT_INTERVAL = 10.0  # seconds
+    consecutive_read_failures = 0
+    stop_reason = "normal"
+    exit_code = 0
     print("[INFO] 开始运行，按 ESC 退出")
 
     while True:
         read_start = time.perf_counter()
-        ret, frame, frame_info = read_frame_with_info(cap)
+        ret, frame, frame_info, raw_frame = read_pipeline_frame(cap)
         read_ms = time_ms(read_start)
         if not ret:
             # 本地视频文件循环播放；UDP 流超时则重试
@@ -437,14 +629,57 @@ def main():
             if USE_UDP_STREAM:
                 # UDP 超时：等待硬件重新发送，不退出
                 continue
+            if VIDEO_BACKEND == "hik_gige":
+                consecutive_read_failures += 1
+                bench_logger.log(
+                    "capture_read_retry",
+                    consecutive_failures=consecutive_read_failures,
+                    maximum=HIK_MAX_CONSECUTIVE_READ_FAILURES,
+                    error=frame_info.get("error") if frame_info else None,
+                )
+                if consecutive_read_failures < HIK_MAX_CONSECUTIVE_READ_FAILURES:
+                    continue
+                stop_reason = "hik_consecutive_read_failures"
+                exit_code = 3
+            elif frame_idx == 0:
+                stop_reason = "video_source_read_failed"
+                exit_code = 3
             break
 
+        consecutive_read_failures = 0
         frame_idx += 1
         frame_start = time.perf_counter()
+        source_device = None
+
+        def ensure_source_device(stage):
+            """Upload at most once, and only when an NV12 branch actually runs."""
+            nonlocal source_device
+            if source_device is not None:
+                return source_device
+            if dvpp is None:
+                raise RuntimeError(f"{stage} requires DVPP, but DVPP is disabled")
+            try:
+                source_device = (
+                    dvpp.upload_nv12(raw_frame.data, raw_frame.width, raw_frame.height)
+                    if raw_frame is not None else dvpp.upload_bgr_or_rgb(frame)
+                )
+            except Exception as exc:
+                raise RuntimeError(
+                    f"DVPP upload failed: frame_id={frame_info.get('frame_id')}, "
+                    f"size={frame.shape[1]}x{frame.shape[0]}, "
+                    f"pixel_format={frame_info.get('pixel_format')}, error={exc}"
+                ) from exc
+            return source_device
 
         # ── Stage 1a：YOLO 姿态推理 → 动作识别 ──
         pose_start = time.perf_counter()
-        results = pose_model(frame, verbose=False)
+        if POSE_INPUT_MODE == "aipp_nv12":
+            source_device = ensure_source_device("pose aipp_nv12")
+            pose_device, geometry = dvpp.make_pose_letterbox(source_device, 640)
+            ratio_pad = ((geometry.ratio, geometry.ratio), geometry.pad)
+            results = pose_model.predict_device(frame, pose_device, ratio_pad)
+        else:
+            results = pose_model(frame, verbose=False)
         pose_ms = time_ms(pose_start)
         if ENABLE_OVERLAY:
             annotated = results[0].plot() if (
@@ -502,14 +737,44 @@ def main():
                 or expr_eval_count % FACE_DETECT_INTERVAL == 0
             )
             if should_detect_face:
-                face_roi, detected_bbox = face_detector.detect_best(frame)
+                if FACE_INPUT_MODE == "aipp_nv12":
+                    source_device = ensure_source_device("face aipp_nv12")
+                    face_device, face_geometry = dvpp.make_face_canvas(source_device)
+                    faces = face_detector.detect_all_device(
+                        face_device, frame.shape, face_geometry.scale
+                    )
+                    face_roi = None
+                    detected_bbox = None
+                    if faces:
+                        best = max(faces, key=lambda item: item[4])
+                        h, w = frame.shape[:2]
+                        x1, y1, x2, y2 = [int(round(v)) for v in best[:4]]
+                        pad = int(max(x2 - x1, y2 - y1) * 0.15)
+                        detected_bbox = (
+                            max(0, x1 - pad), max(0, y1 - pad),
+                            min(w, x2 + pad), min(h, y2 + pad),
+                        )
+                else:
+                    face_roi, detected_bbox = face_detector.detect_best(frame)
                 if detected_bbox is not None:
                     face_bbox = detected_bbox
                     face_bbox_age = 0
             else:
-                face_roi = crop_bbox(frame, face_bbox)
-            if face_roi is not None:
+                face_roi = crop_bbox(frame, face_bbox) if EXPR_INPUT_MODE != "aipp_nv12" else None
+            if face_bbox is not None and EXPR_INPUT_MODE == "aipp_nv12":
+                source_device = ensure_source_device("expression aipp_nv12")
+                cropped = dvpp.crop_expression(source_device, face_bbox, 112)
+                if cropped is not None:
+                    expression_device, expression_geometry = cropped
+                    frame_info["expression_dvpp_geometry"] = expression_geometry
+                    result = expr_infer.predict_smooth_device(expression_device)
+                else:
+                    result = None
+            elif face_roi is not None:
                 result = expr_infer.predict_smooth(face_roi)
+            else:
+                result = None
+            if result is not None:
                 expr_label = result["expression"]
                 expr_conf  = result["confidence"]
             expr_ms = time_ms(expr_start)
@@ -552,6 +817,12 @@ def main():
         fps = 1.0 / max(cur_time - prev_time, 1e-6)
         prev_time = cur_time
         frame_total_ms = time_ms(frame_start)
+        capture_to_pipeline_ms = None
+        captured_monotonic_ns = frame_info.get("captured_monotonic_ns")
+        if isinstance(captured_monotonic_ns, int):
+            capture_to_pipeline_ms = (
+                time.monotonic_ns() - captured_monotonic_ns
+            ) / 1_000_000.0
 
         if bench_frame_stride > 0 and frame_idx % bench_frame_stride == 0:
             profile_fields = {}
@@ -567,6 +838,8 @@ def main():
                 pose_ms=pose_ms,
                 expression_ms=expr_ms,
                 frame_total_ms=frame_total_ms,
+                capture_to_pipeline_ms=capture_to_pipeline_ms,
+                frame_completed_monotonic_ns=time.monotonic_ns(),
                 fps=fps,
                 action_label=action_label,
                 expression_label=expr_label,
@@ -575,6 +848,11 @@ def main():
                 pose_backend=pose_model.backend,
                 face_backend=face_detector.backend,
                 expression_backend=expr_infer.backend,
+                preprocess_backend=PREPROCESS_BACKEND,
+                pose_input_mode=POSE_INPUT_MODE,
+                face_input_mode=FACE_INPUT_MODE,
+                expression_input_mode=EXPR_INPUT_MODE,
+                dvpp_profile=(dvpp.last_profile if dvpp is not None else {}),
                 **profile_fields,
             )
 
@@ -591,10 +869,21 @@ def main():
             now = time.time()
             if now - stats_last_print > STATS_PRINT_INTERVAL:
                 stats_last_print = now
-                if USE_UDP_STREAM and hasattr(cap, "get_detailed_stats"):
+                if hasattr(cap, "get_detailed_stats"):
                     stats = cap.get_detailed_stats()
                     if stats:
-                        bench_logger.log("udp_stats", **stats)
+                        bench_logger.log("source_stats", **stats)
+                    if stats and stats.get("source") == "hik_gige":
+                        print(
+                            "[STATS] hik frames={frames} timeouts={timeouts} "
+                            "lost_packets={lost_packets} capture_fps={capture_fps:.2f}".format(
+                                frames=stats.get("frames", 0),
+                                timeouts=stats.get("timeouts", 0),
+                                lost_packets=stats.get("lost_packets", 0),
+                                capture_fps=stats.get("capture_fps", 0.0),
+                            )
+                        )
+                    elif stats:
                         loss = stats.get("packet_loss_rate_per_mille", 0) / 10.0
                         print(
                             "[STATS] recv_pkt={recv_pkt} valid_pkt={valid_pkt} drop_pkt={drop_pkt} "
@@ -615,6 +904,11 @@ def main():
                                 e2e_max=stats.get("sender_latency_max_us", 0),
                             )
                         )
+                bench_logger.log(
+                    "transport_stats",
+                    tcp=sender.stats(),
+                    stream=stream_server.stats() if stream_server is not None else None,
+                )
         except Exception:
             pass
 
@@ -627,7 +921,17 @@ def main():
                 print(f"[WARN] cv2.imshow 不可用，切换为无界面模式: {e}")
                 gui_enabled = False
 
+        if MAX_FRAMES > 0 and frame_idx >= MAX_FRAMES:
+            print(f"[INFO] 已达到 SMART_IP_MAX_FRAMES={MAX_FRAMES}，正常结束")
+            break
+
+    if hasattr(cap, "get_detailed_stats"):
+        final_source_stats = cap.get_detailed_stats()
+        if final_source_stats:
+            bench_logger.log("source_stats", final=True, **final_source_stats)
     cap.release()
+    if dvpp is not None:
+        dvpp.close()
     face_detector.close()
     expr_infer.close()
     pose_model.close()
@@ -636,13 +940,26 @@ def main():
             cv2.destroyAllWindows()
         except cv2.error:
             pass
+    bench_logger.log("transport_stats", final=True, tcp=sender.stats())
     sender.close()
     if stream_server is not None:
         stream_server.close()
-    bench_logger.log("pipeline_stop", frame_idx=frame_idx)
+    bench_logger.log(
+        "pipeline_stop",
+        frame_idx=frame_idx,
+        reason=stop_reason,
+        exit_code=exit_code,
+        tcp=sender.stats(),
+        stream=stream_server.stats() if stream_server is not None else None,
+        logger=bench_logger.stats(),
+    )
     bench_logger.close()
+    atexit.unregister(_emergency_cleanup)
     print("[INFO] 退出")
 
 
+    return exit_code
+
+
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

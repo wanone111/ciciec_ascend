@@ -1,0 +1,129 @@
+{
+  "status": "measured_on_board",
+  "task": "expression",
+  "baseline": {
+    "path": "models/om/emotion_mobilenetv3_6cls.om",
+    "sha256": "b2a412df43ff9a28585c2b30687647386e365ccfac25607f69bc5b7699cfe5bf"
+  },
+  "candidate": {
+    "path": "models/om/emotion_mobilenetv3_6cls_aipp_bgr_u8.om",
+    "sha256": "14f269ec2548921bbf5b229fd91174d0d4e2872a03978393eba91000b54a43d1"
+  },
+  "samples": [
+    {
+      "sample": "solid_red",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            6
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {},
+      "candidate_profile": {},
+      "top1_baseline": 5,
+      "top1_candidate": 5,
+      "probability_max_abs": 0.0
+    },
+    {
+      "sample": "solid_green",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            6
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {},
+      "candidate_profile": {},
+      "top1_baseline": 5,
+      "top1_candidate": 5,
+      "probability_max_abs": 0.0
+    },
+    {
+      "sample": "solid_blue",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            6
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {},
+      "candidate_profile": {},
+      "top1_baseline": 5,
+      "top1_candidate": 5,
+      "probability_max_abs": 0.0
+    },
+    {
+      "sample": "gray_114",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            6
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {},
+      "candidate_profile": {},
+      "top1_baseline": 5,
+      "top1_candidate": 5,
+      "probability_max_abs": 0.0
+    },
+    {
+      "sample": "color_bars",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            6
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {},
+      "candidate_profile": {},
+      "top1_baseline": 5,
+      "top1_candidate": 5,
+      "probability_max_abs": 0.0
+    },
+    {
+      "sample": "hik_frame.jpg",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            6
+          ],
+          "max_abs": 0.0078125,
+          "mean_abs": 0.0032552083333333335
+        }
+      ],
+      "baseline_profile": {},
+      "candidate_profile": {},
+      "top1_baseline": 5,
+      "top1_candidate": 5,
+      "probability_max_abs": 0.00019963085651397705
+    }
+  ],
+  "acceptance_note": "AIPP is inside model execute; no separate AIPP time is claimed"
+}

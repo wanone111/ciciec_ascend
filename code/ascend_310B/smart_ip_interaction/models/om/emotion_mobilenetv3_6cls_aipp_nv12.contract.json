@@ -1,0 +1,39 @@
+{
+  "models": [
+    {
+      "configured_mode": "aipp_nv12",
+      "device_id": 0,
+      "inputs": [
+        {
+          "bytes": 18816,
+          "dims": [
+            1,
+            112,
+            112,
+            3
+          ],
+          "dtype_validation_only": "opaque_or_padded",
+          "layout_validation_only": "NHWC",
+          "name": "image",
+          "theoretical_tight_bytes": 18816,
+          "tight_bytes_match": true
+        }
+      ],
+      "model": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/emotion_mobilenetv3_6cls_aipp_nv12.om",
+      "outputs": [
+        {
+          "bytes": 24,
+          "dims": [
+            1,
+            6
+          ],
+          "name": "PartitionedCall_/classifier/classifier.3/Gemm_add_9:0:logits"
+        }
+      ],
+      "runtime_refcount": 1,
+      "sha256": "d66137981d3693539b4f2f898c63ed09d55cda634aecb0cf5d2f83b1cf148cac",
+      "shared_context": true
+    }
+  ],
+  "note": "dtype/layout inference is validation only; explicit mode is authoritative"
+}

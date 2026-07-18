@@ -1,0 +1,29 @@
+{
+  "variant": "aipp_bgr",
+  "soc_version": "Ascend310B1",
+  "atc_version": "package_name=Ascend-cann-toolkit;version=7.0.RC1",
+  "atc_command": "atc --framework=5 --model=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/yolo26n-pose-640.onnx --output=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/yolo26n-pose-640_aipp_bgr_u8 --input_shape=images:1,3,640,640 --soc_version=Ascend310B1 --insert_op_conf=/home/HwHiAiUser/Desktop/ciciec_ascend-main/Scripts/ascend_310b/aipp/pose_bgr_u8_640.cfg",
+  "input_name": "images",
+  "onnx_input_shape": "1,3,640,640",
+  "onnx": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/yolo26n-pose-640.onnx",
+    "sha256": "8e8f081fc6b4dcad12fac12fb4cfb14d5c2667fb85b4eaf510e9d3a51f722a86"
+  },
+  "om": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/yolo26n-pose-640_aipp_bgr_u8.om",
+    "sha256": "28ba7dd809699de271d75c710c4b1a17afa4e780de51c21c13044d76f6664bd6"
+  },
+  "aipp_cfg": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/Scripts/ascend_310b/aipp/pose_bgr_u8_640.cfg",
+    "sha256": "05b726c9b370758404f414c4e20e6802a8fddababfe662c1c0a0df78c92549be"
+  },
+  "status": "parity_validated_on_board",
+  "validation": {
+    "artifact": "artifacts/aipp/pose_n640_bgr_zidane.json",
+    "sha256": "1b6b937d859455c6437633bc9f6daea6c6186ef39ff1dd7d53db3d72f9821601",
+    "main_bbox_iou": 1.0,
+    "main_score_abs": 0.0,
+    "keypoint_xy_max_abs_px": 0.5,
+    "action_match": true
+  }
+}

@@ -26,10 +26,22 @@ import threading
 import importlib
 import sys
 import os
+from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import cv2
 import numpy as np
+
+
+@dataclass(frozen=True)
+class RawVideoFrame:
+    data: np.ndarray
+    width: int
+    height: int
+    pixel_format: int
+    frame_id: int
+    timestamp_us: int
+    recv_ts: float
 
 
 class UDPVideoSource:
@@ -89,14 +101,21 @@ class UDPVideoSource:
         # 注意：此回调在 C++ epoll 线程中执行，避免复杂 Python 操作
         # 只做数据拷贝，转换推迟到主线程
         try:
+            raw = RawVideoFrame(
+                data=np.ascontiguousarray(np.asarray(frame.data, dtype=np.uint8).reshape(-1)).copy(),
+                width=int(frame.width), height=int(frame.height),
+                pixel_format=int(frame.pixel_format),
+                frame_id=int(getattr(frame, "frame_id", -1)),
+                timestamp_us=int(getattr(frame, "timestamp_us", 0)),
+                recv_ts=time.time(),
+            )
             # 队列满时丢弃最旧帧，保证实时性
             if self._frame_queue.full():
                 try:
                     self._frame_queue.get_nowait()
                 except queue.Empty:
                     pass
-            # 直接放入 pybind11 frame 对象，在主线程中转换
-            self._frame_queue.put_nowait(frame)
+            self._frame_queue.put_nowait(raw)
         except queue.Full:
             pass
         except Exception as e:
@@ -120,6 +139,13 @@ class UDPVideoSource:
                 return bgr  # imdecode 输出已是 BGR
 
             elif fmt == self.PIX_FMT_NV12:
+                expected = w * h * 3 // 2
+                if w <= 0 or h <= 0 or w % 2 or h % 2 or data.size != expected:
+                    print(
+                        "[UDPVideoSource] invalid NV12 frame: "
+                        f"size={w}x{h}, expected_bytes={expected}, actual_bytes={data.size}"
+                    )
+                    return None
                 # NV12: Y 平面(h行) + UV 交错(h/2行) → 总高 = h*3/2
                 yuv = data.reshape((h * 3 // 2, w))
                 return cv2.cvtColor(yuv, cv2.COLOR_YUV2BGR_NV12)
@@ -143,22 +169,44 @@ class UDPVideoSource:
             "width": int(getattr(frame, "width", 0)),
             "height": int(getattr(frame, "height", 0)),
             "pixel_format": int(getattr(frame, "pixel_format", 0)),
-            "recv_ts": time.time(),
+            "recv_ts": float(getattr(frame, "recv_ts", time.time())),
         }
+
+    def read_raw_with_info(self) -> Tuple[bool, Optional[RawVideoFrame], dict]:
+        """Return an owned contiguous raw frame without calling cvtColor."""
+        try:
+            frame = self._frame_queue.get(timeout=self._read_timeout)
+        except queue.Empty:
+            return False, None, {}
+        info = self._metadata(frame)
+        if frame.pixel_format == self.PIX_FMT_NV12:
+            expected = frame.width * frame.height * 3 // 2
+            valid = (
+                frame.width > 0 and frame.height > 0
+                and frame.width % 2 == 0 and frame.height % 2 == 0
+                and frame.data.size == expected
+            )
+            info["raw_nv12_valid"] = valid
+            if not valid:
+                info["diagnostic"] = (
+                    f"invalid NV12: expected_bytes={expected}, actual_bytes={frame.data.size}, "
+                    f"size={frame.width}x{frame.height}"
+                )
+                self.last_frame_info = info
+                return False, None, dict(info)
+        else:
+            info["raw_nv12_valid"] = False
+            info["diagnostic"] = "raw DVPP path only accepts PIX_FMT_NV12"
+        self.last_frame_info = info
+        return True, frame, dict(info)
 
     def read_with_info(self) -> Tuple[bool, Optional[np.ndarray], dict]:
         """阻塞等待下一帧，返回 OpenCV 帧和 UDP 帧元数据。"""
-        try:
-            frame = self._frame_queue.get(timeout=self._read_timeout)
-            # 在主线程中进行 pybind11 对象转换（避免 GIL 冲突）
-            bgr = self._to_bgr(frame)
-            if bgr is not None:
-                self.last_frame_info = self._metadata(frame)
-                return True, bgr, dict(self.last_frame_info)
-            else:
-                return False, None, {}
-        except queue.Empty:
-            return False, None, {}
+        ok, frame, info = self.read_raw_with_info()
+        if not ok or frame is None:
+            return False, None, info
+        bgr = self._to_bgr(frame)
+        return (True, bgr, info) if bgr is not None else (False, None, info)
 
     def read(self) -> Tuple[bool, Optional[np.ndarray]]:
         """阻塞等待下一帧，超时返回 (False, None)。"""

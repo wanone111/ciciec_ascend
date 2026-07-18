@@ -1,0 +1,21 @@
+Device_id,Level,API Name,Time(us),Count,Avg(us),Min(us),Max(us),Variance
+0,runtime,CmoTaskLaunch,2248.601,95,23.6695,11.605,109.438,171.8906
+0,runtime,ContextCreate,5996.687,1,5996.687,5996.687,5996.687,0
+0,runtime,ContextSetCurrent,2.896,1,2.896,2.896,2.896,0
+0,runtime,CtxGetOverflowAddr,2.229,1,2.229,2.229,2.229,0
+0,runtime,DevBinaryRegister,1186.998,105,11.3047,7.105,92.833,93.4536
+0,runtime,DevMalloc,1327.793,6,221.2988,11.521,771.521,90082.1512
+0,runtime,FunctionRegister,951.439,105,9.0613,6.292,23.292,7.6458
+0,runtime,GetFunctionByName,155.042,105,1.4766,0.896,5.479,0.4109
+0,runtime,KernelLaunch,1823.979,76,23.9997,14.792,554.938,3768.1212
+0,runtime,MemCopySync,241.61,106,2.2793,0.75,138.958,178.0781
+0,runtime,ModelBindStream,457.584,1,457.584,457.584,457.584,0
+0,runtime,ModelCreate,262.438,1,262.438,262.438,262.438,0
+0,runtime,QueryFunctionRegistered,156.397,105,1.4895,1.084,3.479,0.0942
+0,runtime,StreamCreate,410.229,1,410.229,410.229,410.229,0
+0,runtime,StreamSyncTaskFinish,0,1,0,0,0,0
+0,acl,aclmdlLoadFromFile,393520.541,1,393520.541,393520.541,393520.541,0
+0,acl,aclrtCreateContext,6029.167,1,6029.167,6029.167,6029.167,0
+0,acl,aclrtSetCurrentContext,14.25,1,14.25,14.25,14.25,0
+0,acl,aclrtSetDevice,23144775327.469,1,23144775327.469,23144775327.469,23144775327.469,0
+0,node,launch,2775.524,76,36.5201,26.208,589.146,4085.118

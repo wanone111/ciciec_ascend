@@ -1,0 +1,18 @@
+{
+    "binFileName":"te_concatd_684dfef1a21af271a53ba24f5ed1a560853fea2f2644e95a5c7a7f420db03eb1_1",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "coreType":"VectorCore",
+    "deterministic":"ignore",
+    "kernelName":"te_concatd_684dfef1a21af271a53ba24f5ed1a560853fea2f2644e95a5c7a7f420db03eb1_1__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF_AIVEC",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null,
+        null,
+        null
+    ],
+    "sha256":"7eeab9116d79371ffd60b2235441027aaac06005faf0414a6118d535cc3598d1"
+}

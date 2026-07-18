@@ -1,0 +1,18 @@
+{
+    "KBHit":false,
+    "binFileName":"te_fused_op_batch_matmul_v2_mul_6c78b06d60e259ab65bd4797b07b8e79aade3ee052cdee98fe117628cec4a5b2_0",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "deterministic":"ignore",
+    "kernelName":"te_fused_op_batch_matmul_v2_mul_6c78b06d60e259ab65bd4797b07b8e79aade3ee052cdee98fe117628cec4a5b2_0__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null,
+        null,
+        null
+    ],
+    "sha256":"580a24a6bbeaec3e3fc62f93552b3163faf3878d0d244d3a8e06d7504bbf9951"
+}

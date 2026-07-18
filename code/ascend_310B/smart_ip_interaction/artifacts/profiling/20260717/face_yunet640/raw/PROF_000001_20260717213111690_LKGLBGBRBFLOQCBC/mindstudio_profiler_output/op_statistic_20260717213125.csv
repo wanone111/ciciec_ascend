@@ -1,0 +1,9 @@
+Device_id,Model Name,OP Type,Core Type,Count,Total Time(us),Min Time(us),Avg Time(us),Max Time(us),Ratio(%)
+0,face_detection_yunet_2023mar_640,Conv2D,AI_CORE,53,4294.26,4.72,81.023,1283.98,68.1867
+0,face_detection_yunet_2023mar_640,TransData,AI_VECTOR_CORE,13,861.58,3.66,66.275,761.46,13.6806
+0,face_detection_yunet_2023mar_640,Cast,AI_VECTOR_CORE,13,538.26,2.76,41.404,468.42,8.5468
+0,face_detection_yunet_2023mar_640,MaxPoolV3,AI_VECTOR_CORE,4,243.74,12.4,60.935,106.22,3.8702
+0,face_detection_yunet_2023mar_640,Transpose,AI_VECTOR_CORE,12,212.04,3.48,17.67,75.98,3.3669
+0,face_detection_yunet_2023mar_640,Add,AI_VECTOR_CORE,2,75.4,17.1,37.7,58.3,1.1972
+0,face_detection_yunet_2023mar_640,ResizeNearestNeighborV2,AI_CORE,2,49.36,12.6,24.68,36.76,0.7838
+0,face_detection_yunet_2023mar_640,Sigmoid,AI_VECTOR_CORE,6,23.16,3.26,3.86,4.54,0.3677

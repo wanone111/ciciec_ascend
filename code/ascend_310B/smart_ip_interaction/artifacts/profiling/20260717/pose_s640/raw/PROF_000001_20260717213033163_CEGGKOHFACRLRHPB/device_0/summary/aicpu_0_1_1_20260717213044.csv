@@ -1,0 +1,2 @@
+Timestamp(us),Node,Compute_time(us),Memcpy_time(us),Task_time(us),Dispatch_time(us),Total_time(us),Stream ID,Task ID
+1784295034984457.8,model.23/Mod,87,3,122.34,52,460,3,2

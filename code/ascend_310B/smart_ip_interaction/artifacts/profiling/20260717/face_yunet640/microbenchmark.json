@@ -1,0 +1,27 @@
+{
+  "acl_profile_mean_ms": {
+    "acl_d2h_ms": 0.5446807508633356,
+    "acl_execute_ms": 7.532088375228341,
+    "acl_h2d_ms": 2.0514792504400248,
+    "acl_input_pack_ms": 0.07013275035205879,
+    "acl_output_decode_ms": 0.021880623080505757,
+    "acl_total_ms": 10.307011250006326
+  },
+  "device_id": 0,
+  "execute_wall_ms": {
+    "max": 15.154238997638458,
+    "mean": 10.32505537432371,
+    "p50": 9.637502000259701,
+    "p95": 15.154238997638458
+  },
+  "input_dims": [
+    1,
+    3,
+    640,
+    640
+  ],
+  "input_dtype": "float32",
+  "model": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/face_detection_yunet_2023mar_640.om",
+  "runs": 8,
+  "warmup": 3
+}

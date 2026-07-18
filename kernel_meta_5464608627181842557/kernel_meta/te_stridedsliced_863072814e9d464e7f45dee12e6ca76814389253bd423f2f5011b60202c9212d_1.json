@@ -1,0 +1,17 @@
+{
+    "KBHit":false,
+    "binFileName":"te_stridedsliced_863072814e9d464e7f45dee12e6ca76814389253bd423f2f5011b60202c9212d_1",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "coreType":"VectorCore",
+    "deterministic":"ignore",
+    "kernelName":"te_stridedsliced_863072814e9d464e7f45dee12e6ca76814389253bd423f2f5011b60202c9212d_1__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF_AIVEC",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null
+    ],
+    "sha256":"e025fe4cdc679312e81c8ccc1819129141c12e4d63f54e7851634faf92d26bc8"
+}

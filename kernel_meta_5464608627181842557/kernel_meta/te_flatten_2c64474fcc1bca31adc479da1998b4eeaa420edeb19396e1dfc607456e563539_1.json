@@ -1,0 +1,18 @@
+{
+    "binFileName":"te_flatten_2c64474fcc1bca31adc479da1998b4eeaa420edeb19396e1dfc607456e563539_1",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "coreType":"VectorCore",
+    "deterministic":"ignore",
+    "kernelName":"te_flatten_2c64474fcc1bca31adc479da1998b4eeaa420edeb19396e1dfc607456e563539_1__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF_AIVEC",
+    "memoryStamping":[
+        -1
+    ],
+    "opParaSize":128,
+    "parameters":[
+        null,
+        null
+    ],
+    "sha256":"e1d09ddad4768f1acc363424ccbd3aedae7813fc83b4361b3594d197288d8cae"
+}

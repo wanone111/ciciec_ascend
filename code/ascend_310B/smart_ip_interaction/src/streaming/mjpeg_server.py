@@ -144,6 +144,8 @@ class MJPEGServer:
 
     def publish(self, frame):
         """Submit the latest frame without JPEG work on the inference thread."""
+        if frame is None:
+            return False
         with self._pending_condition:
             if self._pending_frame is not None:
                 with self._stats_lock:
@@ -159,13 +161,18 @@ class MJPEGServer:
         next_encode_at = 0.0
         while not self._stop_event.is_set():
             with self._pending_condition:
-                self._pending_condition.wait_for(
+                ready = self._pending_condition.wait_for(
                     lambda: self._pending_frame is not None
                     or self._stop_event.is_set(),
                     timeout=1.0,
                 )
                 if self._stop_event.is_set():
                     break
+                # A condition wait can time out or wake spuriously.  In both
+                # cases there is no frame to encode, so keep waiting instead
+                # of dereferencing None below.
+                if not ready or self._pending_frame is None:
+                    continue
                 frame = self._pending_frame
                 self._pending_frame = None
 

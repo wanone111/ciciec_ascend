@@ -1,0 +1,18 @@
+{
+  "variant": "audit_float",
+  "soc_version": "Ascend310B1",
+  "atc_version": "package_name=Ascend-cann-toolkit;version=7.0.RC1",
+  "atc_command": "atc --framework=5 --model=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/yolo26n-pose-640.onnx --output=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/yolo26n-pose-640_audit_float --input_shape=images:1,3,640,640 --soc_version=Ascend310B1",
+  "input_name": "images",
+  "onnx_input_shape": "1,3,640,640",
+  "onnx": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/yolo26n-pose-640.onnx",
+    "sha256": "8e8f081fc6b4dcad12fac12fb4cfb14d5c2667fb85b4eaf510e9d3a51f722a86"
+  },
+  "om": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/yolo26n-pose-640_audit_float.om",
+    "sha256": "ec65cc8c918dc8be453225157dbfbf243d13f2b101474d16a9f3fbd9b5fa1dbe"
+  },
+  "aipp_cfg": null,
+  "status": "converted"
+}

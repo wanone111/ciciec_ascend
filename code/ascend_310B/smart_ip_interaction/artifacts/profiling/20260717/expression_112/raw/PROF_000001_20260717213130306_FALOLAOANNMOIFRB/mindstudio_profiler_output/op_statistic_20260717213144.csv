@@ -1,0 +1,11 @@
+Device_id,Model Name,OP Type,Core Type,Count,Total Time(us),Min Time(us),Avg Time(us),Max Time(us),Ratio(%)
+0,emotion_mobilenetv3_6cls,Conv2D,AI_CORE,34,381.62,4.48,11.224,31.34,42.4069
+0,emotion_mobilenetv3_6cls,AutomaticBufferFusionOp,AI_VECTOR_CORE,19,128.16,4.3,6.745,14.42,14.2416
+0,emotion_mobilenetv3_6cls,MatMulV2,AI_CORE,2,104.4,6.2,52.2,98.2,11.6013
+0,emotion_mobilenetv3_6cls,FullyConnection,AI_CORE,18,96.22,2.92,5.345,12.14,10.6923
+0,emotion_mobilenetv3_6cls,ReduceMeanD,AI_VECTOR_CORE,10,56.68,3.92,5.668,9.28,6.2985
+0,emotion_mobilenetv3_6cls,Mul,AI_VECTOR_CORE,9,40.14,3.38,4.46,6,4.4605
+0,emotion_mobilenetv3_6cls,TransData,AI_VECTOR_CORE,2,35.7,3.06,17.85,32.64,3.9671
+0,emotion_mobilenetv3_6cls,HardSigmoid,AI_VECTOR_CORE,9,31.2,3,3.466,4.5,3.4671
+0,emotion_mobilenetv3_6cls,Cast,AI_VECTOR_CORE,2,22.92,2.82,11.46,20.1,2.5469
+0,emotion_mobilenetv3_6cls,Flatten,AI_VECTOR_CORE,1,2.86,2.86,2.86,2.86,0.3178

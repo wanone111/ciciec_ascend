@@ -1,0 +1,237 @@
+{
+  "source": "artifacts/profiling/20260717/pose_s640/raw/PROF_000001_20260717213033163_CEGGKOHFACRLRHPB/mindstudio_profiler_output/op_summary_20260717213048.csv",
+  "model": "yolo26s-pose",
+  "inferences": 1,
+  "rows": 201,
+  "mean_device_task_total_ms": 30.70264000000001,
+  "task_types": {
+    "AI_VECTOR_CORE": {
+      "duration_us": 10585.18,
+      "calls": 83
+    },
+    "AI_CORE": {
+      "duration_us": 19636.7,
+      "calls": 117
+    },
+    "AI_CPU": {
+      "duration_us": 480.76,
+      "calls": 1
+    }
+  },
+  "operator_types": {
+    "Conv2D": {
+      "duration_us": 19043.14,
+      "calls": 111
+    },
+    "GatherElements": {
+      "duration_us": 5556.5599999999995,
+      "calls": 3
+    },
+    "TransData": {
+      "duration_us": 1127.26,
+      "calls": 20
+    },
+    "SoftmaxV2": {
+      "duration_us": 1012.38,
+      "calls": 2
+    },
+    "SplitVD": {
+      "duration_us": 954.04,
+      "calls": 12
+    },
+    "Transpose": {
+      "duration_us": 646.1,
+      "calls": 1
+    },
+    "Mod": {
+      "duration_us": 480.76,
+      "calls": 1
+    },
+    "Add": {
+      "duration_us": 417.12000000000006,
+      "calls": 15
+    },
+    "BatchMatMulV2": {
+      "duration_us": 392.08000000000004,
+      "calls": 4
+    },
+    "Cast": {
+      "duration_us": 388.26000000000005,
+      "calls": 6
+    },
+    "ResizeNearestNeighborV2": {
+      "duration_us": 201.48000000000002,
+      "calls": 2
+    },
+    "ConcatD": {
+      "duration_us": 143.2,
+      "calls": 5
+    },
+    "MaxPoolV3": {
+      "duration_us": 86.53999999999999,
+      "calls": 3
+    },
+    "TopKD": {
+      "duration_us": 64.18,
+      "calls": 2
+    },
+    "StridedSliceD": {
+      "duration_us": 60.26,
+      "calls": 4
+    },
+    "AutomaticBufferFusionOp": {
+      "duration_us": 37.48,
+      "calls": 1
+    },
+    "Sigmoid": {
+      "duration_us": 33.06,
+      "calls": 2
+    },
+    "GatherV2": {
+      "duration_us": 21.74,
+      "calls": 1
+    },
+    "Tile": {
+      "duration_us": 18.98,
+      "calls": 2
+    },
+    "Mul": {
+      "duration_us": 6.82,
+      "calls": 1
+    },
+    "Flatten": {
+      "duration_us": 5.66,
+      "calls": 2
+    },
+    "Sub": {
+      "duration_us": 5.54,
+      "calls": 1
+    }
+  },
+  "aicpu": {
+    "calls": 0,
+    "duration_us": 0
+  },
+  "top_ops": [
+    {
+      "name": "/model.23/GatherElements_2",
+      "op_type": "GatherElements",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 5395.24,
+      "share_percent": 17.57256053551095
+    },
+    {
+      "name": "/model.0/conv/Conv/model.0/act/Sigmoid/model.0/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 1852.8,
+      "share_percent": 6.034660211630007
+    },
+    {
+      "name": "/model.3/conv/Conv/model.3/act/Sigmoid/model.3/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 1143.02,
+      "share_percent": 3.722872039668249
+    },
+    {
+      "name": "/model.5/conv/Conv/model.5/act/Sigmoid/model.5/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 1026.62,
+      "share_percent": 3.343751547098228
+    },
+    {
+      "name": "/model.2/cv2/conv/Conv/model.2/cv2/act/Sigmoid/model.2/cv2/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 1024.98,
+      "share_percent": 3.338409986893634
+    },
+    {
+      "name": "/model.1/conv/Conv/model.1/act/Sigmoid/model.1/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 987.0,
+      "share_percent": 3.2147072694725916
+    },
+    {
+      "name": "/model.16/cv1/conv/Conv/model.16/cv1/act/Sigmoid/model.16/cv1/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 778.14,
+      "share_percent": 2.5344400351240144
+    },
+    {
+      "name": "trans_TransData_1",
+      "op_type": "TransData",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 758.06,
+      "share_percent": 2.469038493106781
+    },
+    {
+      "name": "PartitionedCall_/model.23/Transpose_Transpose_85",
+      "op_type": "Transpose",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 646.1,
+      "share_percent": 2.10437929767603
+    },
+    {
+      "name": "/model.4/cv2/conv/Conv/model.4/cv2/act/Sigmoid/model.4/cv2/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 595.64,
+      "share_percent": 1.940028609917583
+    },
+    {
+      "name": "/model.2/cv1/conv/Conv/model.2/cv1/act/Sigmoid/model.2/cv1/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 523.02,
+      "share_percent": 1.7035017184190018
+    },
+    {
+      "name": "/model.7/conv/Conv/model.7/act/Sigmoid/model.7/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 510.48,
+      "share_percent": 1.6626583251472833
+    },
+    {
+      "name": "/model.23/one2one_cv4.0/one2one_cv4.0.0/conv/Conv/model.23/one2one_cv4.0/one2one_cv4.0.0/act/Sigmoid/model.23/one2one_cv4.0/one2one_cv4.0.0/act/Mul",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 509.82,
+      "share_percent": 1.6605086728698244
+    },
+    {
+      "name": "/model.10/m/m.0/attn/Softmax",
+      "op_type": "SoftmaxV2",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 506.32,
+      "share_percent": 1.6491090017014818
+    },
+    {
+      "name": "/model.22/m.0/m.0.1/attn/Softmax",
+      "op_type": "SoftmaxV2",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 506.06,
+      "share_percent": 1.6482621689861192
+    }
+  ]
+}

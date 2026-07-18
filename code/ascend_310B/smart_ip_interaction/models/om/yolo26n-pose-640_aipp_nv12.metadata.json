@@ -1,0 +1,33 @@
+{
+  "variant": "aipp_nv12",
+  "soc_version": "Ascend310B1",
+  "atc_version": "package_name=Ascend-cann-toolkit;version=7.0.RC1",
+  "atc_command": "atc --framework=5 --model=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/yolo26n-pose-640.onnx --output=/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/yolo26n-pose-640_aipp_nv12 --input_shape=images:1,3,640,640 --soc_version=Ascend310B1 --insert_op_conf=/home/HwHiAiUser/Desktop/ciciec_ascend-main/Scripts/ascend_310b/aipp/pose_nv12_fullrange_640.cfg",
+  "input_name": "images",
+  "onnx_input_shape": "1,3,640,640",
+  "onnx": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/onnx/yolo26n-pose-640.onnx",
+    "sha256": "8e8f081fc6b4dcad12fac12fb4cfb14d5c2667fb85b4eaf510e9d3a51f722a86"
+  },
+  "om": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/yolo26n-pose-640_aipp_nv12.om",
+    "sha256": "005b03b4aa019ef1c10a80a7d298f77b84875464ef0b428d396e4d0e325b7786"
+  },
+  "aipp_cfg": {
+    "path": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/Scripts/ascend_310b/aipp/pose_nv12_fullrange_640.cfg",
+    "sha256": "bf677c516fbd7db150d7a60d6e5077c5ba8f0e6be5cf5d99ef9851ddb6a6684d"
+  },
+  "status": "parity_validated_on_board_experimental_for_bgr_camera",
+  "validation": {
+    "artifact": "artifacts/aipp/pose_n640_nv12_zidane.json",
+    "sha256": "e45fc7e5220aea3dacc29b86faf214c7844054fc5c5881cc5fd66dec27d7e15d",
+    "visualization": "artifacts/aipp/pose_n640_nv12_visuals/zidane_pose_compare.jpg",
+    "visualization_sha256": "26771d70d4c1d41ec3011da410c99e190acf8e6d4a82f451b671c4c7790d833c",
+    "main_bbox_iou": 0.9954495765295045,
+    "main_score_abs": 0.0,
+    "keypoint_xy_max_abs_px": 6.5,
+    "keypoint_xy_mean_abs_px": 0.5808823704719543,
+    "action_match": true,
+    "production_note": "Validated numerically, but not recommended for Hik BGR because host BGR-to-NV12 dominates latency."
+  }
+}

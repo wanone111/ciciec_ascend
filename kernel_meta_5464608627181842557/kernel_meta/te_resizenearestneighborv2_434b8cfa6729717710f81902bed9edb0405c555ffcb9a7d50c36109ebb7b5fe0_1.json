@@ -1,0 +1,18 @@
+{
+    "binFileName":"te_resizenearestneighborv2_434b8cfa6729717710f81902bed9edb0405c555ffcb9a7d50c36109ebb7b5fe0_1",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "deterministic":"ignore",
+    "kernelName":"te_resizenearestneighborv2_434b8cfa6729717710f81902bed9edb0405c555ffcb9a7d50c36109ebb7b5fe0_1__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF",
+    "memoryStamping":[
+        -1
+    ],
+    "opParaSize":128,
+    "parameters":[
+        null,
+        null,
+        null
+    ],
+    "sha256":"4c3f17384bfb1e7a4f85dba70667c21eca7b39aa2ab00d53f2305043bb29b44d"
+}

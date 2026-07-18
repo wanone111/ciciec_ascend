@@ -1,0 +1,102 @@
+{
+  "status": "measured_on_board",
+  "source_size": [
+    1928,
+    1078
+  ],
+  "pose": {
+    "geometry": {
+      "ratio": 0.33195020746887965,
+      "pad": [
+        0.0,
+        140.0
+      ],
+      "resized": [
+        640,
+        358
+      ],
+      "borders": [
+        0,
+        140,
+        0,
+        142
+      ]
+    },
+    "stride": [
+      640,
+      640
+    ],
+    "y_padding_is_114": true,
+    "uv_range": [
+      53,
+      147
+    ]
+  },
+  "face": {
+    "geometry": {
+      "scale": 0.33195020746887965,
+      "resized": [
+        640,
+        358
+      ],
+      "paste_roi": [
+        0,
+        0,
+        639,
+        357
+      ]
+    },
+    "stride": [
+      640,
+      640
+    ],
+    "bottom_right_y": 0,
+    "bottom_right_uv": [
+      128,
+      128
+    ]
+  },
+  "expression": {
+    "geometry": {
+      "original_bbox": [
+        482.0,
+        215.60000000000002,
+        1446.0,
+        862.4000000000001
+      ],
+      "aligned_bbox": [
+        482,
+        214,
+        1445,
+        861
+      ],
+      "scale": [
+        0.11618257261410789,
+        0.1728395061728395
+      ]
+    },
+    "stride": [
+      112,
+      112
+    ],
+    "bytes": 18816
+  },
+  "dvpp_profile": {
+    "dvpp_h2d_ms": 2.3416000003635418,
+    "dvpp_h2d_bytes": 3130512,
+    "dvpp_vpc_ms": 0.6932549995326553,
+    "dvpp_crop_paste_api": "cann_7_six_args",
+    "pose_requested_pad": [
+      0.0,
+      141.0
+    ],
+    "pose_actual_pad": [
+      0.0,
+      140.0
+    ],
+    "pose_alignment_delta": [
+      0.0,
+      -1.0
+    ]
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "source": "artifacts/profiling/20260717/expression_112/raw/PROF_000001_20260717213130306_FALOLAOANNMOIFRB/mindstudio_profiler_output/op_summary_20260717213144.csv",
+  "model": "emotion_mobilenetv3_6cls",
+  "inferences": 1,
+  "rows": 106,
+  "mean_device_task_total_ms": 0.8998999999999998,
+  "task_types": {
+    "AI_VECTOR_CORE": {
+      "duration_us": 317.66,
+      "calls": 52
+    },
+    "AI_CORE": {
+      "duration_us": 582.24,
+      "calls": 54
+    }
+  },
+  "operator_types": {
+    "Conv2D": {
+      "duration_us": 381.61999999999995,
+      "calls": 34
+    },
+    "AutomaticBufferFusionOp": {
+      "duration_us": 128.16000000000003,
+      "calls": 19
+    },
+    "MatMulV2": {
+      "duration_us": 104.4,
+      "calls": 2
+    },
+    "FullyConnection": {
+      "duration_us": 96.22,
+      "calls": 18
+    },
+    "ReduceMeanD": {
+      "duration_us": 56.68000000000001,
+      "calls": 10
+    },
+    "Mul": {
+      "duration_us": 40.14,
+      "calls": 9
+    },
+    "TransData": {
+      "duration_us": 35.7,
+      "calls": 2
+    },
+    "HardSigmoid": {
+      "duration_us": 31.200000000000003,
+      "calls": 9
+    },
+    "Cast": {
+      "duration_us": 22.92,
+      "calls": 2
+    },
+    "Flatten": {
+      "duration_us": 2.86,
+      "calls": 1
+    }
+  },
+  "aicpu": {
+    "calls": 0,
+    "duration_us": 0
+  },
+  "top_ops": [
+    {
+      "name": "trans_TransData_263PartitionedCall_/classifier/classifier.0/Gemm_MatMulV2_3",
+      "op_type": "MatMulV2",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 98.2,
+      "share_percent": 10.91232359151017
+    },
+    {
+      "name": "trans_TransData_1",
+      "op_type": "TransData",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 32.64,
+      "share_percent": 3.627069674408268
+    },
+    {
+      "name": "/features/features.11/block/block.1/block.1.0/Conv",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 31.34,
+      "share_percent": 3.4826091787976448
+    },
+    {
+      "name": "/features/features.10/block/block.1/block.1.0/Conv",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 24.2,
+      "share_percent": 2.6891876875208363
+    },
+    {
+      "name": "/features/features.7/block/block.3/block.3.0/Conv",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 23.36,
+      "share_percent": 2.595843982664741
+    },
+    {
+      "name": "/features/features.4/block/block.3/block.3.0/Conv",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 21.94,
+      "share_percent": 2.4380486720746752
+    },
+    {
+      "name": "trans_Cast_0",
+      "op_type": "Cast",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 20.1,
+      "share_percent": 2.2335815090565623
+    },
+    {
+      "name": "/features/features.0/features.0.0/Conv",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 19.02,
+      "share_percent": 2.113568174241583
+    },
+    {
+      "name": "/features/features.5/block/block.1/block.1.0/Conv",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 17.96,
+      "share_percent": 1.9957773085898436
+    },
+    {
+      "name": "/features/features.6/block/block.1/block.1.0/Conv",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 17.76,
+      "share_percent": 1.9735526169574402
+    },
+    {
+      "name": "/features/features.0/features.0.2/HardSigmoid/features/features.0/features.0.2/Mul",
+      "op_type": "AutomaticBufferFusionOp",
+      "task_type": "AI_VECTOR_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 14.42,
+      "share_percent": 1.6024002666962998
+    },
+    {
+      "name": "/features/features.10/block/block.3/block.3.0/Convfunction_graph_17//features/features.10/block/block.3/block.3.0/Conv/features/features.10/block/block.3/block.3.0/Convfunction_graph_17//features/features.10/block/block.3/block.3.0/Conv_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 12.98,
+      "share_percent": 1.442382486942994
+    },
+    {
+      "name": "/features/features.5/block/block.3/block.3.0/Convfunction_graph_9//features/features.5/block/block.3/block.3.0/Conv/features/features.5/block/block.3/block.3.0/Convfunction_graph_9//features/features.5/block/block.3/block.3.0/Conv_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 12.34,
+      "share_percent": 1.3712634737193024
+    },
+    {
+      "name": "/features/features.10/block/block.2/fc1/Convfunction_graph_16//features/features.10/block/block.2/fc1/Conv/features/features.10/block/block.2/fc1/Convfunction_graph_16//features/features.10/block/block.2/fc1/Conv_pass.1",
+      "op_type": "FullyConnection",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 12.14,
+      "share_percent": 1.3490387820868988
+    },
+    {
+      "name": "/features/features.11/block/block.3/block.3.0/Convfunction_graph_19//features/features.11/block/block.3/block.3.0/Conv/features/features.11/block/block.3/block.3.0/Convfunction_graph_19//features/features.11/block/block.3/block.3.0/Conv_pass.1",
+      "op_type": "Conv2D",
+      "task_type": "AI_CORE",
+      "calls": 1,
+      "mean_per_inference_us": 12.14,
+      "share_percent": 1.3490387820868988
+    }
+  ]
+}

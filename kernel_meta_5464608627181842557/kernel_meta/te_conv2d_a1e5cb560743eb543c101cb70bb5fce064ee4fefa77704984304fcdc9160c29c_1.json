@@ -1,0 +1,20 @@
+{
+    "KBHit":false,
+    "binFileName":"te_conv2d_a1e5cb560743eb543c101cb70bb5fce064ee4fefa77704984304fcdc9160c29c_1",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "coreType":"AiCore",
+    "deterministic":"ignore",
+    "kernelName":"te_conv2d_a1e5cb560743eb543c101cb70bb5fce064ee4fefa77704984304fcdc9160c29c_1__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF_AICUBE",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null,
+        null,
+        null
+    ],
+    "sha256":"94814f68ad94d2a15eade1aaa3ee14487c98f4044b3e4f46f8998df1d75e6a35",
+    "weight_repeat":1
+}

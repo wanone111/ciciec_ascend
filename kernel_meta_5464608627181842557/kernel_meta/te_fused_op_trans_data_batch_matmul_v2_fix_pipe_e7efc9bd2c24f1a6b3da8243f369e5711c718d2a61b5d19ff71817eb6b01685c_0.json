@@ -1,0 +1,18 @@
+{
+    "KBHit":false,
+    "binFileName":"te_fused_op_trans_data_batch_matmul_v2_fix_pipe_e7efc9bd2c24f1a6b3da8243f369e5711c718d2a61b5d19ff71817eb6b01685c_0",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "coreType":"AiCore",
+    "deterministic":"ignore",
+    "kernelName":"te_fused_op_trans_data_batch_matmul_v2_fix_pipe_e7efc9bd2c24f1a6b3da8243f369e5711c718d2a61b5d19ff71817eb6b01685c_0__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF_AICUBE",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null,
+        null
+    ],
+    "sha256":"c2443d1d7a0a5076aa32ea2f28e6d18be04c63906b4f02b4ad75b73953925901"
+}

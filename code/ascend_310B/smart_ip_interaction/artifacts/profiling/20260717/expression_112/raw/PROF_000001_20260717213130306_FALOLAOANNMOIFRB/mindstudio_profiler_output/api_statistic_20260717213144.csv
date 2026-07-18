@@ -1,0 +1,16 @@
+Device_id,Level,API Name,Time(us),Count,Avg(us),Min(us),Max(us),Variance
+0,runtime,ContextCreate,913.021,1,913.021,913.021,913.021,0
+0,runtime,ContextSetCurrent,2.584,1,2.584,2.584,2.584,0
+0,runtime,CtxGetOverflowAddr,2.375,1,2.375,2.375,2.375,0
+0,runtime,DevBinaryRegister,1155.14,106,10.8975,7.73,27.98,11.4265
+0,runtime,DevMalloc,1376.687,3,458.8957,8.271,1157.812,251065.1276
+0,runtime,FunctionRegister,997.659,106,9.4119,7.104,22.812,5.259
+0,runtime,MemCopySync,1531.938,1,1531.938,1531.938,1531.938,0
+0,runtime,ModelBindStream,448.646,1,448.646,448.646,448.646,0
+0,runtime,ModelCreate,231.646,1,231.646,231.646,231.646,0
+0,runtime,StreamCreate,417.208,1,417.208,417.208,417.208,0
+0,runtime,StreamSyncTaskFinish,0,1,0,0,0,0
+0,acl,aclmdlLoadFromFile,391202.833,1,391202.833,391202.833,391202.833,0
+0,acl,aclrtCreateContext,936.833,1,936.833,936.833,936.833,0
+0,acl,aclrtSetCurrentContext,11.5,1,11.5,11.5,11.5,0
+0,acl,aclrtSetDevice,23163419216.909,1,23163419216.909,23163419216.909,23163419216.909,0

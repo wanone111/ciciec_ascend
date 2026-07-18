@@ -8,6 +8,7 @@ only as an explicit non-production fallback.
 from __future__ import annotations
 
 import os
+import time
 
 import cv2
 import numpy as np
@@ -27,6 +28,7 @@ class FaceDetector:
         device_id=0,
         input_size=(640, 640),
         top_k=5,
+        input_mode="float_nchw",
     ):
         self.model_path = model_path
         self.score_threshold = score_threshold
@@ -37,10 +39,14 @@ class FaceDetector:
         self.device_id = device_id
         self.input_size = tuple(input_size)
         self.top_k = top_k
+        if input_mode not in ("float_nchw", "aipp_bgr_u8", "aipp_nv12"):
+            raise ValueError(f"unsupported face input_mode={input_mode!r}")
+        self.input_mode = input_mode
         self._last_input_size = self.input_size
         self.detector = None
         self._om_session = None
         self._backend = "uninitialized"
+        self.last_profile = {}
         self.reuse_input_buffer = _env_bool("SMART_IP_REUSE_INPUT_BUFFER", True)
         self._input_canvas = None
         self._om_input_buffer = None
@@ -48,7 +54,9 @@ class FaceDetector:
         if model_path.lower().endswith(".om"):
             if not self.use_npu:
                 raise RuntimeError("Refusing to load face OM with use_npu=False")
-            self._om_session = AclOmSession(model_path, device_id=device_id)
+            self._om_session = AclOmSession(
+                model_path, device_id=device_id, input_mode=self.input_mode
+            )
             self._backend = "acl_om_npu"
             print(f"[FACE] using ACL OM/NPU: {model_path}")
         else:
@@ -80,6 +88,7 @@ class FaceDetector:
             "face_require_npu": self.require_npu,
             "face_allow_opencv_fallback": self.allow_opencv_fallback,
             "face_device_id": self.device_id,
+            "face_input_mode": self.input_mode,
         }
         if self._om_session is not None:
             info.update(
@@ -87,6 +96,10 @@ class FaceDetector:
                 face_om_input_sizes=self._om_session.input_sizes,
                 face_om_output_dims=self._om_session.output_dims,
                 face_om_output_sizes=self._om_session.output_sizes,
+                face_om_input_names=self._om_session.input_names,
+                face_om_output_names=self._om_session.output_names,
+                face_acl_shared_context=True,
+                face_acl_runtime_refcount=self._om_session.runtime_refcount,
             )
         return info
 
@@ -138,8 +151,12 @@ class FaceDetector:
         return out
 
     def _detect_om(self, frame):
+        total_start = time.perf_counter()
+        preprocess_start = time.perf_counter()
         input_tensor, scale = self._preprocess_om(frame)
+        preprocess_ms = _elapsed_ms(preprocess_start)
         outputs = self._om_session.execute(input_tensor)
+        postprocess_start = time.perf_counter()
         heads = _reshape_yunet_outputs(outputs)
         faces = _decode_yunet(
             heads,
@@ -149,6 +166,11 @@ class FaceDetector:
             top_k=self.top_k,
         )
         if not faces:
+            self.last_profile = {
+                "preprocess_ms": preprocess_ms,
+                "postprocess_ms": _elapsed_ms(postprocess_start),
+                "model_total_ms": _elapsed_ms(total_start),
+            }
             return []
 
         h, w = frame.shape[:2]
@@ -162,7 +184,36 @@ class FaceDetector:
             y2 = float(np.clip(y2, 0, h))
             if x2 > x1 and y2 > y1:
                 scaled.append((x1, y1, x2, y2, score))
+        self.last_profile = {
+            "preprocess_ms": preprocess_ms,
+            "postprocess_ms": _elapsed_ms(postprocess_start),
+            "model_total_ms": _elapsed_ms(total_start),
+        }
         return scaled
+
+    def detect_all_device(self, device_image, source_shape, scale):
+        if self.input_mode != "aipp_nv12" or self._om_session is None:
+            raise RuntimeError(f"face device input requires aipp_nv12, got {self.input_mode}")
+        total_start = time.perf_counter()
+        outputs = self._om_session.execute_device_input(device_image.ptr, device_image.size)
+        post_start = time.perf_counter()
+        faces = _decode_yunet(
+            _reshape_yunet_outputs(outputs), input_size=self.input_size,
+            score_threshold=self.score_threshold, nms_threshold=self.nms_threshold,
+            top_k=self.top_k,
+        )
+        h, w = source_shape[:2]
+        mapped = []
+        for x1, y1, x2, y2, score in faces:
+            x1, x2 = float(np.clip(x1 / scale, 0, w)), float(np.clip(x2 / scale, 0, w))
+            y1, y2 = float(np.clip(y1 / scale, 0, h)), float(np.clip(y2 / scale, 0, h))
+            if x2 > x1 and y2 > y1:
+                mapped.append((x1, y1, x2, y2, score))
+        self.last_profile = {
+            "preprocess_ms": 0.0, "postprocess_ms": _elapsed_ms(post_start),
+            "model_total_ms": _elapsed_ms(total_start),
+        }
+        return mapped
 
     def _preprocess_om(self, frame):
         if self._om_session is None:
@@ -173,7 +224,8 @@ class FaceDetector:
         scale = min(model_w / max(w, 1), model_h / max(h, 1))
         new_w, new_h = int(round(w * scale)), int(round(h * scale))
         resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-        if self.reuse_input_buffer:
+        reuse_input_buffer = getattr(self, "reuse_input_buffer", False)
+        if reuse_input_buffer:
             canvas_shape = (model_h, model_w, 3)
             if self._input_canvas is None or self._input_canvas.shape != canvas_shape:
                 self._input_canvas = np.empty(canvas_shape, dtype=np.uint8)
@@ -185,19 +237,31 @@ class FaceDetector:
 
         dims = self._om_session.input_dims[0]
         expected_size = self._om_session.input_sizes[0]
+        input_mode = getattr(self, "input_mode", None)
+        if input_mode == "aipp_nv12":
+            raise RuntimeError("face aipp_nv12 requires detect_all_device()")
+        if input_mode == "aipp_bgr_u8":
+            packed = np.ascontiguousarray(canvas, dtype=np.uint8)
+            if packed.nbytes != expected_size:
+                raise RuntimeError(
+                    f"face AIPP BGR contract mismatch: model={self.model_path}, dims={dims}, "
+                    f"expected_bytes={expected_size}, actual_bytes={packed.nbytes}, "
+                    f"input_mode={self.input_mode}"
+                )
+            return packed, scale
         elem_count = prod(dims) if dims else 1 * 3 * model_h * model_w
         if expected_size == elem_count * np.dtype(np.float32).itemsize:
             dtype = np.float32
-        elif expected_size == elem_count:
-            tensor = canvas.astype(np.uint8)
-            dtype = np.uint8
-        else:
+        elif input_mode == "float_nchw" or expected_size != elem_count:
             raise RuntimeError(
-                f"Unsupported face OM input contract: dims={dims}, expected_size={expected_size}"
+                f"face float_nchw contract mismatch: dims={dims}, expected_size={expected_size}, "
+                f"input_mode={input_mode}"
             )
+        else:
+            dtype = np.uint8
 
         is_nhwc = bool(dims and len(dims) == 4 and dims[-1] in (1, 3))
-        if dtype is np.float32 and not is_nhwc and self.reuse_input_buffer:
+        if dtype is np.float32 and not is_nhwc and reuse_input_buffer:
             shape = tuple(dims) if dims else (1, 3, model_h, model_w)
             if self._om_input_buffer is None or self._om_input_buffer.shape != shape:
                 self._om_input_buffer = np.empty(shape, dtype=np.float32)
@@ -256,6 +320,10 @@ def _env_bool(name, default):
     if raw is None:
         return default
     return raw.strip().lower() not in ("0", "false", "no", "off")
+
+
+def _elapsed_ms(start):
+    return (time.perf_counter() - start) * 1000.0
 
 
 def _decode_yunet(heads, input_size, score_threshold, nms_threshold, top_k=5):

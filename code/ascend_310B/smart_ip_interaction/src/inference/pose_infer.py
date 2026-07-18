@@ -8,6 +8,7 @@ NPU path, while PT/Ultralytics loading is disabled unless callers opt in.
 from __future__ import annotations
 
 import os
+import time
 from dataclasses import dataclass
 from functools import reduce
 from operator import mul
@@ -121,6 +122,7 @@ class PoseInfer:
         require_npu: bool = True,
         allow_pt_fallback: bool = False,
         device_id: int = 0,
+        input_mode: str = "float_nchw",
     ):
         self.cfg = PoseModelConfig(
             model_path=model_path,
@@ -134,11 +136,15 @@ class PoseInfer:
         )
         self.names = {0: "person"}
         self.kpt_shape = (17, 3)
+        if input_mode not in ("float_nchw", "aipp_bgr_u8", "aipp_nv12"):
+            raise ValueError(f"unsupported pose input_mode={input_mode!r}")
+        self.input_mode = input_mode
 
         self._torch_model = None
         self._net = None
         self._om_session: _AclOmSession | None = None
         self._backend = "uninitialized"
+        self.last_profile: dict[str, float] = {}
         self._input_shape = (self.cfg.imgsz, self.cfg.imgsz)
         self.reuse_input_buffer = _env_bool("SMART_IP_REUSE_INPUT_BUFFER", True)
         self._om_input_buffer: np.ndarray | None = None
@@ -168,6 +174,7 @@ class PoseInfer:
             "pose_require_npu": self.cfg.require_npu,
             "pose_allow_pt_fallback": self.cfg.allow_pt_fallback,
             "pose_device_id": self.cfg.device_id,
+            "pose_input_mode": self.input_mode,
         }
         if self._om_session is not None:
             info.update(
@@ -175,6 +182,10 @@ class PoseInfer:
                 pose_om_output_sizes=self._om_session.output_sizes,
                 pose_om_input_dims=self._om_session.input_dims,
                 pose_om_output_dims=self._om_session.output_dims,
+                pose_om_input_names=self._om_session.input_names,
+                pose_om_output_names=self._om_session.output_names,
+                pose_acl_shared_context=True,
+                pose_acl_runtime_refcount=self._om_session.runtime_refcount,
             )
         return info
 
@@ -184,10 +195,12 @@ class PoseInfer:
             candidates.append(preferred)
 
         project_root = self._project_root
+        candidates.append(os.path.join(project_root, "models", "om", "yolo26n-pose-640.om"))
         candidates.append(os.path.join(project_root, "models", "om", "yolo26s-pose.om"))
 
         if not self.cfg.require_npu or self.cfg.allow_pt_fallback:
             candidates.extend([
+                os.path.join(project_root, "models", "onnx", "yolo26n-pose-640.onnx"),
                 os.path.join(project_root, "models", "onnx", "yolo26s-pose.onnx"),
                 os.path.join(project_root, "..", "..", "..", "..", "test", "yolo26s-pose.onnx"),
             ])
@@ -206,7 +219,7 @@ class PoseInfer:
                 return abs_path
 
         raise FileNotFoundError(
-            "Cannot find pose model. Production expects models/om/yolo26s-pose.om. "
+            "Cannot find pose model. Production expects models/om/yolo26n-pose-640.om. "
             "Set SMART_IP_POSE_MODEL to a valid .om path, or explicitly allow a "
             "non-production fallback in code."
         )
@@ -214,7 +227,25 @@ class PoseInfer:
     def _load_om(self, model_path: str) -> None:
         if not self.cfg.use_npu:
             raise RuntimeError("Refusing to load OM with use_npu=False")
-        self._om_session = _AclOmSession(model_path, self.cfg.device_id)
+        self._om_session = _AclOmSession(
+            model_path, self.cfg.device_id, input_mode=self.input_mode
+        )
+        dims = self._om_session.input_dims[0]
+        if dims and len(dims) == 4:
+            if _infer_layout(dims) == "NHWC":
+                model_h, model_w = int(dims[1]), int(dims[2])
+            else:
+                model_h, model_w = int(dims[2]), int(dims[3])
+            if model_h != model_w:
+                raise RuntimeError(
+                    f"Pose OM requires a square static input, got {dims}"
+                )
+            if self.cfg.imgsz != model_h:
+                print(
+                    f"[POSE] override imgsz={self.cfg.imgsz} with OM contract {model_h}"
+                )
+                self.cfg.imgsz = model_h
+                self._input_shape = (model_h, model_w)
         self._backend = "acl_om_npu"
         print(f"[POSE] using ACL OM/NPU model: {model_path}")
         print(f"[POSE] OM input sizes={self._om_session.input_sizes}, output sizes={self._om_session.output_sizes}")
@@ -239,7 +270,7 @@ class PoseInfer:
         if self.cfg.require_npu:
             raise RuntimeError(
                 "Pose ONNX was selected, but OpenCV DNN CANN/NPU is unavailable. "
-                "Use models/om/yolo26s-pose.om with ACL, or rebuild OpenCV with CANN."
+                "Use models/om/yolo26n-pose-640.om with ACL, or rebuild OpenCV with CANN."
             )
 
         self._net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
@@ -285,18 +316,30 @@ class PoseInfer:
 
         expected_size = self._om_session.input_sizes[0]
         dims = self._om_session.input_dims[0]
+        input_mode = getattr(self, "input_mode", None)
+        if input_mode == "aipp_nv12":
+            raise RuntimeError("pose aipp_nv12 requires predict_device()")
+        if input_mode == "aipp_bgr_u8":
+            packed = np.ascontiguousarray(image, dtype=np.uint8)
+            if packed.nbytes != expected_size:
+                raise RuntimeError(
+                    f"pose AIPP BGR contract mismatch: model={self.model_path}, dims={dims}, "
+                    f"expected_bytes={expected_size}, actual_bytes={packed.nbytes}, "
+                    f"input_mode={self.input_mode}"
+                )
+            return packed
         layout = _infer_layout(dims)
         elem_count = _prod(dims) if dims else image.size
         dtype: type[np.float32] | type[np.uint8]
         if expected_size == elem_count * np.dtype(np.float32).itemsize:
             dtype = np.float32
-        elif expected_size == elem_count:
-            dtype = np.uint8
-        else:
+        elif input_mode == "float_nchw" or expected_size != elem_count:
             raise RuntimeError(
-                f"Unsupported pose OM input contract: dims={dims}, expected_size={expected_size}. "
-                "Expected float32 or uint8 image tensor."
+                f"pose float_nchw contract mismatch: dims={dims}, expected_size={expected_size}, "
+                f"input_mode={input_mode}"
             )
+        else:
+            dtype = np.uint8
 
         if dtype is np.float32:
             if layout == "NCHW" and self.reuse_input_buffer:
@@ -313,7 +356,6 @@ class PoseInfer:
         else:
             rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             tensor = rgb.astype(np.uint8)
-
         if layout == "NHWC":
             tensor = tensor[np.newaxis, ...]
         else:
@@ -321,13 +363,41 @@ class PoseInfer:
         return np.ascontiguousarray(tensor, dtype=dtype)
 
     def _forward_om(self, frame: np.ndarray):
+        total_start = time.perf_counter()
+        preprocess_start = time.perf_counter()
         img, ratio_pad = self._letterbox(frame, self.cfg.imgsz)
         input_array = self._prepare_om_input(img)
+        preprocess_ms = _elapsed_ms(preprocess_start)
         outputs = self._om_session.execute(input_array) if self._om_session is not None else []
         if not outputs:
             raise RuntimeError("Pose OM returned no outputs")
+        postprocess_start = time.perf_counter()
         output = _reshape_unknown_pose_output(outputs[0])
-        return [self._postprocess_output(output, frame, ratio_pad)]
+        result = self._postprocess_output(output, frame, ratio_pad)
+        self.last_profile = {
+            "preprocess_ms": preprocess_ms,
+            "postprocess_ms": _elapsed_ms(postprocess_start),
+            "model_total_ms": _elapsed_ms(total_start),
+        }
+        return [result]
+
+    def predict_device(self, frame: np.ndarray, device_image, ratio_pad):
+        if self.input_mode != "aipp_nv12" or self._om_session is None:
+            raise RuntimeError(f"pose predict_device requires aipp_nv12, got {self.input_mode}")
+        total_start = time.perf_counter()
+        outputs = self._om_session.execute_device_input(device_image.ptr, device_image.size)
+        if not outputs:
+            raise RuntimeError("Pose OM returned no outputs")
+        post_start = time.perf_counter()
+        result = self._postprocess_output(
+            _reshape_unknown_pose_output(outputs[0]), frame, ratio_pad
+        )
+        self.last_profile = {
+            "preprocess_ms": 0.0,
+            "postprocess_ms": _elapsed_ms(post_start),
+            "model_total_ms": _elapsed_ms(total_start),
+        }
+        return [result]
 
     def _forward_onnx(self, frame: np.ndarray):
         img, ratio_pad = self._letterbox(frame, self.cfg.imgsz)
@@ -420,6 +490,10 @@ def _env_bool(name: str, default: bool) -> bool:
     if raw is None:
         return default
     return raw.strip().lower() not in ("0", "false", "no", "off")
+
+
+def _elapsed_ms(start: float) -> float:
+    return (time.perf_counter() - start) * 1000.0
 
 
 def _infer_layout(dims: list[int] | None) -> str:

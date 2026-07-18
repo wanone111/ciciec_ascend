@@ -1,0 +1,19 @@
+{
+    "KBHit":true,
+    "binFileName":"te_fused_op_conv2d_sigmoid_mul_1f53afd2b8c717d6b5998b144d0528f976057187db2bdb6042fabb6c04f0f8f2_0",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "deterministic":"ignore",
+    "kernelName":"te_fused_op_conv2d_sigmoid_mul_1f53afd2b8c717d6b5998b144d0528f976057187db2bdb6042fabb6c04f0f8f2_0__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null,
+        null,
+        null
+    ],
+    "sha256":"1a67c53b6f9424f2afa44c37e01edb043d9f1ad0ab60ea610dce3f6b4fe472bf",
+    "weight_repeat":1
+}

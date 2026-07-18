@@ -1,0 +1,941 @@
+/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/src/inference/acl_om.py:264: Warning: acl.util.ptr_to_numpy will be deprecated. Please use acl.util.ptr_to_bytes instead.
+  view = ptr_to_numpy(host_ptr, shape, NPY_FLOAT32)
+/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/src/inference/acl_om.py:415: Warning: acl.util.numpy_to_ptr will be deprecated. Please use acl.util.bytes_to_ptr instead.
+  return numpy_to_ptr(arr), arr
+2022-04-08 04:42:52.660926: E external/org_tensorflow/tensorflow/core/framework/node_def_util.cc:675] NodeDef mentions attribute input_para_type_list which is not in the op definition: Op<name=Mod; signature=x:T, y:T -> z:T; attr=T:type,allowed=[DT_INT32, DT_INT64, DT_HALF, DT_HALF, DT_BFLOAT16, DT_FLOAT, DT_DOUBLE]> This may be expected if your graph generating binary is newer  than this binary. Unknown attributes will be ignored. NodeDef: {{node model.23/Mod}}
+{
+  "status": "measured_on_board",
+  "task": "pose",
+  "candidate_mode": "aipp_nv12",
+  "baseline": {
+    "path": "models/om/yolo26n-pose-640_audit_float.om",
+    "sha256": "ec65cc8c918dc8be453225157dbfbf243d13f2b101474d16a9f3fbd9b5fa1dbe"
+  },
+  "candidate": {
+    "path": "models/om/yolo26n-pose-640_aipp_nv12.om",
+    "sha256": "005b03b4aa019ef1c10a80a7d298f77b84875464ef0b428d396e4d0e325b7786"
+  },
+  "samples": [
+    {
+      "sample": "solid_red",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 630.77734375,
+          "mean_abs": 54.92347734807179
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 2.0105980001972057,
+        "acl_execute_ms": 160.12743999999657,
+        "acl_d2h_ms": 0.07866800024203258,
+        "acl_input_pack_ms": 0.29681500018341467,
+        "acl_output_decode_ms": 0.007374999768217094,
+        "acl_total_ms": 162.61833299995487,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.25962700055970345,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 18.964263999805553,
+        "acl_d2h_ms": 0.06547999964823248,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.005562000296777114,
+        "acl_total_ms": 19.340308000209916
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.47975400048017036,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 42.62345700044534,
+        "dvpp_vpc_ms": 4.732034999506141,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "solid_green",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 728.875,
+          "mean_abs": 22.16011971856767
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.6533659991182503,
+        "acl_execute_ms": 20.318273000157205,
+        "acl_d2h_ms": 0.07895799990365049,
+        "acl_input_pack_ms": 0.06929200026206672,
+        "acl_output_decode_ms": 0.006250000296859071,
+        "acl_total_ms": 22.22535000055359,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.25031499990291195,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 18.263425000441202,
+        "acl_d2h_ms": 0.07693799943808699,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.006978999408602249,
+        "acl_total_ms": 18.658594000044104
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.49008699988917215,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 48.250893999465916,
+        "dvpp_vpc_ms": 4.269676999683725,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "solid_blue",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 662.05859375,
+          "mean_abs": 120.81495683051689
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.819263000470528,
+        "acl_execute_ms": 20.170564000181912,
+        "acl_d2h_ms": 0.07470900072803488,
+        "acl_input_pack_ms": 0.0716459999239305,
+        "acl_output_decode_ms": 0.006604999725823291,
+        "acl_total_ms": 22.244038000280852,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.2469179999025073,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 17.928276999555237,
+        "acl_d2h_ms": 0.05941699964751024,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.004478999471757561,
+        "acl_total_ms": 18.28650799961906
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.46873199971741997,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 36.6298300004928,
+        "dvpp_vpc_ms": 0.8388599999307189,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "gray_114",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 0.0,
+          "mean_abs": 0.0
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.6572829999859096,
+        "acl_execute_ms": 19.793727999967814,
+        "acl_d2h_ms": 0.0665420002405881,
+        "acl_input_pack_ms": 0.07262600047397427,
+        "acl_output_decode_ms": 0.005791000148747116,
+        "acl_total_ms": 21.68697099932615,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.24516800021956442,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 17.90998500018759,
+        "acl_d2h_ms": 0.07168800038925838,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.005312000212143175,
+        "acl_total_ms": 18.275321000146505
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.4636490002667415,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 33.12649199961015,
+        "dvpp_vpc_ms": 0.8422769997196156,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "color_bars",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 633.6171875,
+          "mean_abs": 55.71853934741857
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.7168459999084007,
+        "acl_execute_ms": 19.74768599939125,
+        "acl_d2h_ms": 0.06416700034606038,
+        "acl_input_pack_ms": 0.07047999952192185,
+        "acl_output_decode_ms": 0.0063340003180201165,
+        "acl_total_ms": 21.692366000024776,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.24127199958456913,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 17.93000599991501,
+        "acl_d2h_ms": 0.06985500021983171,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.005271000190987252,
+        "acl_total_ms": 18.29190400076186
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.48308700024790596,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 33.69989200018608,
+        "dvpp_vpc_ms": 0.8344650004801224,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "horizontal_color_bars",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 694.6875,
+          "mean_abs": 47.89214589990719
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.6549700003452017,
+        "acl_execute_ms": 19.819414999801666,
+        "acl_d2h_ms": 0.06783400021959096,
+        "acl_input_pack_ms": 0.06935500005056383,
+        "acl_output_decode_ms": 0.006271000529523008,
+        "acl_total_ms": 21.707387999413186,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.24245999975391896,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 17.9473810003401,
+        "acl_d2h_ms": 0.06220900013431674,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.005186999260331504,
+        "acl_total_ms": 18.303049999303767
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.48217099993053125,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 34.30512599970825,
+        "dvpp_vpc_ms": 0.829610000437242,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "checkerboard_red_blue",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 634.1640625,
+          "mean_abs": 38.26887404838152
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.723032999507268,
+        "acl_execute_ms": 19.81526899999153,
+        "acl_d2h_ms": 0.075230000220472,
+        "acl_input_pack_ms": 0.07254199954331852,
+        "acl_output_decode_ms": 0.00618800004303921,
+        "acl_total_ms": 21.781679000014265,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.24166799994418398,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 17.86094300041441,
+        "acl_d2h_ms": 0.060833999668830074,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.00473000000056345,
+        "acl_total_ms": 18.21306999954686
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.4751290007334319,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 33.58620400013024,
+        "dvpp_vpc_ms": 0.8555069998692488,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "rgb_gradient",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 647.1015625,
+          "mean_abs": 56.8395162892969
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.6704279996702098,
+        "acl_execute_ms": 19.7609780007042,
+        "acl_d2h_ms": 0.0745209999877261,
+        "acl_input_pack_ms": 0.07541699960711412,
+        "acl_output_decode_ms": 0.005707999662263319,
+        "acl_total_ms": 21.67678300065745,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.24120999933074927,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 17.906359999869892,
+        "acl_d2h_ms": 0.06002099962643115,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.004938000529364217,
+        "acl_total_ms": 18.25730000018666
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.44354500005283626,
+        "dvpp_h2d_bytes": 614400,
+        "dvpp_bgr_to_nv12_ms": 31.733294000332535,
+        "dvpp_vpc_ms": 0.8429019999312004,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          0.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 1.0,
+        "pad": [
+          0.0,
+          0.0
+        ],
+        "resized": [
+          640,
+          640
+        ],
+        "borders": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "hik_frame.jpg",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 636.62890625,
+          "mean_abs": 88.00037916007446
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.720242000374128,
+        "acl_execute_ms": 19.80212400030723,
+        "acl_d2h_ms": 0.06675100030406611,
+        "acl_input_pack_ms": 0.07345900030486519,
+        "acl_output_decode_ms": 0.006959000529604964,
+        "acl_total_ms": 21.75899199937703,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.2452099997753976,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 18.040735999420576,
+        "acl_d2h_ms": 0.08004200026334729,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.006479999683506321,
+        "acl_total_ms": 18.432405000567087
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 2.2747450002498226,
+        "dvpp_h2d_bytes": 3130512,
+        "dvpp_bgr_to_nv12_ms": 172.03254800006107,
+        "dvpp_vpc_ms": 1.570532000187086,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          141.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          140.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          -1.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 0.33195020746887965,
+        "pad": [
+          0.0,
+          140.0
+        ],
+        "resized": [
+          640,
+          358
+        ],
+        "borders": [
+          0,
+          140,
+          0,
+          142
+        ]
+      },
+      "pose": {
+        "detections_baseline": 0,
+        "detections_candidate": 0,
+        "main_bbox_iou": null,
+        "main_score_abs": null,
+        "keypoint_xy_max_abs_px": null,
+        "keypoint_xy_mean_abs_px": null,
+        "action_baseline": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": false,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    },
+    {
+      "sample": "zidane.jpg",
+      "outputs": [
+        {
+          "output": 0,
+          "shape": [
+            1,
+            300,
+            57
+          ],
+          "max_abs": 641.40625,
+          "mean_abs": 121.43148799312742
+        }
+      ],
+      "baseline_profile": {
+        "acl_h2d_ms": 1.661657999648014,
+        "acl_execute_ms": 19.9764380004126,
+        "acl_d2h_ms": 0.09547999979986344,
+        "acl_input_pack_ms": 0.07418800032610307,
+        "acl_output_decode_ms": 0.006332999873848166,
+        "acl_total_ms": 21.917181000389974,
+        "acl_h2d_bytes": 4915200,
+        "acl_d2d_ms": 0.0,
+        "acl_d2d_bytes": 0
+      },
+      "candidate_profile": {
+        "acl_h2d_ms": 0.0,
+        "acl_h2d_bytes": 0,
+        "acl_d2d_ms": 0.2419399997961591,
+        "acl_d2d_bytes": 614400,
+        "acl_execute_ms": 17.9147759999978,
+        "acl_d2h_ms": 0.08012600028450834,
+        "acl_input_pack_ms": 0.0,
+        "acl_output_decode_ms": 0.00527099928149255,
+        "acl_total_ms": 18.28802900035953
+      },
+      "dvpp_profile": {
+        "dvpp_h2d_ms": 0.9225069998137769,
+        "dvpp_h2d_bytes": 1382400,
+        "dvpp_bgr_to_nv12_ms": 74.31404300041322,
+        "dvpp_vpc_ms": 1.012882999930298,
+        "dvpp_crop_paste_api": "cann_7_six_args",
+        "pose_requested_pad": [
+          0.0,
+          140.0
+        ],
+        "pose_actual_pad": [
+          0.0,
+          140.0
+        ],
+        "pose_alignment_delta": [
+          0.0,
+          0.0
+        ]
+      },
+      "dvpp_geometry": {
+        "ratio": 0.5,
+        "pad": [
+          0.0,
+          140.0
+        ],
+        "resized": [
+          640,
+          360
+        ],
+        "borders": [
+          0,
+          140,
+          0,
+          140
+        ]
+      },
+      "pose": {
+        "detections_baseline": 2,
+        "detections_candidate": 2,
+        "main_bbox_iou": 0.9954495765295045,
+        "main_score_abs": 0.0,
+        "keypoint_xy_max_abs_px": 6.5,
+        "keypoint_xy_mean_abs_px": 0.5808823704719543,
+        "action_baseline": {
+          "wave": false,
+          "heart": true,
+          "cheer": false
+        },
+        "action_candidate": {
+          "wave": false,
+          "heart": true,
+          "cheer": false
+        },
+        "action_match": true
+      }
+    }
+  ],
+  "acceptance_note": "AIPP is inside model execute; no separate AIPP time is claimed"
+}

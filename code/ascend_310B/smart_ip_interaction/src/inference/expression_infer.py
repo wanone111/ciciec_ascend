@@ -1,5 +1,6 @@
 from collections import deque
 import os
+import time
 
 import cv2
 import numpy as np
@@ -21,7 +22,8 @@ _RIGHT_EAR = 4
 class ExpressionInfer:
     def __init__(self, model_path, device=None, img_size=112, num_classes=6,
                  smooth_window=7, use_npu=True, require_npu=True,
-                 allow_torch_fallback=False, device_id=0):
+                 allow_torch_fallback=False, device_id=0,
+                 input_mode="float_nchw"):
         self.device = device
         self.img_size = img_size
         self.num_classes = num_classes
@@ -31,6 +33,9 @@ class ExpressionInfer:
         self.allow_torch_fallback = allow_torch_fallback
         self.device_id = device_id
         self.model_path = model_path
+        if input_mode not in ("float_nchw", "aipp_bgr_u8", "aipp_nv12"):
+            raise ValueError(f"unsupported expression input_mode={input_mode!r}")
+        self.input_mode = input_mode
 
         self._net = None
         self._om_session = None
@@ -39,12 +44,15 @@ class ExpressionInfer:
         self._image_cls = None
         self.transform = None
         self._backend = "uninitialized"
+        self.last_profile = {}
         self.fused_preprocess = _env_bool("SMART_IP_EXPRESSION_FUSED_PREPROCESS", True)
 
         if model_path.lower().endswith(".om") and os.path.exists(model_path):
             if not self.use_npu:
                 raise RuntimeError("Refusing to load emotion OM with use_npu=False")
-            self._om_session = AclOmSession(model_path, device_id=device_id)
+            self._om_session = AclOmSession(
+                model_path, device_id=device_id, input_mode=self.input_mode
+            )
             self._backend = "acl_om_npu"
             print(f"[EXPR] using ACL OM/NPU: {model_path}")
         elif model_path.lower().endswith(".onnx") and os.path.exists(model_path):
@@ -120,6 +128,7 @@ class ExpressionInfer:
             "expression_require_npu": self.require_npu,
             "expression_allow_torch_fallback": self.allow_torch_fallback,
             "expression_device_id": self.device_id,
+            "expression_input_mode": self.input_mode,
         }
         if self._om_session is not None:
             info.update(
@@ -127,6 +136,10 @@ class ExpressionInfer:
                 expression_om_input_sizes=self._om_session.input_sizes,
                 expression_om_output_dims=self._om_session.output_dims,
                 expression_om_output_sizes=self._om_session.output_sizes,
+                expression_om_input_names=self._om_session.input_names,
+                expression_om_output_names=self._om_session.output_names,
+                expression_acl_shared_context=True,
+                expression_acl_runtime_refcount=self._om_session.runtime_refcount,
             )
         return info
 
@@ -136,10 +149,19 @@ class ExpressionInfer:
     def predict_bgr(self, bgr_img):
         """输入 BGR numpy 图像，返回原始单帧结果（不含平滑）。"""
         if self._om_session is not None:
+            total_start = time.perf_counter()
+            preprocess_start = time.perf_counter()
             input_array = self._preprocess_om(bgr_img)
+            preprocess_ms = _elapsed_ms(preprocess_start)
             logits = np.asarray(self._om_session.execute(input_array)[0], dtype=np.float32).reshape(-1)
+            postprocess_start = time.perf_counter()
             probs = _softmax(logits)
             pred_idx = int(np.argmax(probs))
+            self.last_profile = {
+                "preprocess_ms": preprocess_ms,
+                "postprocess_ms": _elapsed_ms(postprocess_start),
+                "model_total_ms": _elapsed_ms(total_start),
+            }
         elif self._net is not None:
             rgb = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2RGB)
             blob = cv2.dnn.blobFromImage(
@@ -176,17 +198,32 @@ class ExpressionInfer:
             raise RuntimeError("Emotion OM session is not initialized")
         dims = self._om_session.input_dims[0]
         expected_size = self._om_session.input_sizes[0]
+        input_mode = getattr(self, "input_mode", None)
+        if input_mode == "aipp_nv12":
+            raise RuntimeError("expression aipp_nv12 requires predict_device()")
+        if input_mode == "aipp_bgr_u8":
+            resized = cv2.resize(
+                bgr_img, (self.img_size, self.img_size), interpolation=cv2.INTER_LINEAR
+            )
+            packed = np.ascontiguousarray(resized, dtype=np.uint8)
+            if packed.nbytes != expected_size:
+                raise RuntimeError(
+                    f"expression AIPP BGR contract mismatch: model={self.model_path}, dims={dims}, "
+                    f"expected_bytes={expected_size}, actual_bytes={packed.nbytes}, "
+                    f"input_mode={self.input_mode}"
+                )
+            return packed
         elem_count = prod(dims) if dims else 1 * 3 * self.img_size * self.img_size
         is_nhwc = bool(dims and len(dims) == 4 and dims[-1] in (1, 3))
         if expected_size == elem_count * np.dtype(np.float32).itemsize:
             dtype = np.float32
-        elif expected_size == elem_count:
-            tensor = rgb.astype(np.uint8)
-            dtype = np.uint8
-        else:
+        elif input_mode == "float_nchw" or expected_size != elem_count:
             raise RuntimeError(
-                f"Unsupported emotion OM input contract: dims={dims}, expected_size={expected_size}"
+                f"expression float_nchw contract mismatch: dims={dims}, expected_size={expected_size}, "
+                f"input_mode={input_mode}"
             )
+        else:
+            dtype = np.uint8
         if dtype is np.float32 and not is_nhwc and self.fused_preprocess:
             return cv2.dnn.blobFromImage(
                 bgr_img,
@@ -206,6 +243,35 @@ class ExpressionInfer:
         else:
             tensor = tensor.transpose(2, 0, 1)[np.newaxis, ...]
         return np.ascontiguousarray(tensor, dtype=dtype)
+
+    def predict_device(self, device_image):
+        if self.input_mode != "aipp_nv12" or self._om_session is None:
+            raise RuntimeError(
+                f"expression predict_device requires aipp_nv12, got {self.input_mode}"
+            )
+        total_start = time.perf_counter()
+        logits = np.asarray(
+            self._om_session.execute_device_input(device_image.ptr, device_image.size)[0],
+            dtype=np.float32,
+        ).reshape(-1)
+        post_start = time.perf_counter()
+        probs = _softmax(logits)
+        pred_idx = int(np.argmax(probs))
+        self.last_profile = {
+            "preprocess_ms": 0.0, "postprocess_ms": _elapsed_ms(post_start),
+            "model_total_ms": _elapsed_ms(total_start),
+        }
+        return {
+            "expression": self.class_names[pred_idx],
+            "confidence": float(probs[pred_idx]), "probs": probs,
+        }
+
+    def predict_smooth_device(self, device_image):
+        raw = self.predict_device(device_image)
+        self._vote_buffer.append(raw["probs"])
+        avg_probs = np.mean(self._vote_buffer, axis=0)
+        index = int(avg_probs.argmax())
+        return {"expression": self.class_names[index], "confidence": float(avg_probs[index])}
 
     def predict_smooth(self, bgr_img):
         """推理 + 滑动窗口多数投票，返回平滑后的表情标签和置信度。"""
@@ -294,3 +360,7 @@ def _env_bool(name, default):
     if raw is None:
         return default
     return raw.strip().lower() not in ("0", "false", "no", "off")
+
+
+def _elapsed_ms(start):
+    return (time.perf_counter() - start) * 1000.0

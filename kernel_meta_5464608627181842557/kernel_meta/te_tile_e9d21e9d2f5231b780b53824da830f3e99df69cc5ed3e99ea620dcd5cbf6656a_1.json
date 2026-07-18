@@ -1,0 +1,17 @@
+{
+    "binFileName":"te_tile_e9d21e9d2f5231b780b53824da830f3e99df69cc5ed3e99ea620dcd5cbf6656a_1",
+    "binFileSuffix":".o",
+    "blockDim":1,
+    "coreType":"VectorCore",
+    "deterministic":"ignore",
+    "kernelName":"te_tile_e9d21e9d2f5231b780b53824da830f3e99df69cc5ed3e99ea620dcd5cbf6656a_1__kernel0",
+    "magic":"RT_DEV_BINARY_MAGIC_ELF_AIVEC",
+    "memoryStamping":[],
+    "opParaSize":0,
+    "parameters":[
+        null,
+        null,
+        null
+    ],
+    "sha256":"b35517f93d8ec5237eb514f8b52dec33a649ba3e2d9b3b1cc942f13e63b3bfcc"
+}

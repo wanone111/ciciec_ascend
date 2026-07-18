@@ -1,0 +1,40 @@
+{
+  "models": [
+    {
+      "configured_mode": "aipp_bgr_u8",
+      "device_id": 0,
+      "inputs": [
+        {
+          "bytes": 1228800,
+          "dims": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype_validation_only": "uint8",
+          "layout_validation_only": "NHWC",
+          "name": "images",
+          "theoretical_tight_bytes": 1228800,
+          "tight_bytes_match": true
+        }
+      ],
+      "model": "/home/HwHiAiUser/Desktop/ciciec_ascend-main/code/ascend_310B/smart_ip_interaction/models/om/yolo26n-pose-640_aipp_bgr_u8.om",
+      "outputs": [
+        {
+          "bytes": 68400,
+          "dims": [
+            1,
+            300,
+            57
+          ],
+          "name": "/model.23/Concat_8:0:output0"
+        }
+      ],
+      "runtime_refcount": 1,
+      "sha256": "28ba7dd809699de271d75c710c4b1a17afa4e780de51c21c13044d76f6664bd6",
+      "shared_context": true
+    }
+  ],
+  "note": "dtype/layout inference is validation only; explicit mode is authoritative"
+}
